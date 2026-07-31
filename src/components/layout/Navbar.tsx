@@ -5,10 +5,14 @@ import Link from 'next/link';
 import { Menu, X, Home } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user, isAuthenticated, logout } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -27,11 +31,21 @@ export function Navbar() {
     { name: 'Contact', href: '#' },
   ];
 
+  const handleLogout = async () => {
+    try {
+      await fetch('http://localhost:5000/api/v1/auth/logout');
+      logout();
+      router.push('/');
+    } catch (error) {
+      console.error('Logout failed', error);
+    }
+  };
+
   return (
     <nav
       className={cn(
         "fixed top-0 left-0 right-0 z-40 transition-all duration-300",
-        isScrolled ? "bg-white/90 backdrop-blur-md shadow-sm py-4" : "bg-transparent py-6"
+        isScrolled || !isAuthenticated ? (isScrolled ? "bg-white/90 backdrop-blur-md shadow-sm py-4" : "bg-transparent py-6") : "bg-white shadow-sm py-4"
       )}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -65,12 +79,47 @@ export function Navbar() {
               ))}
             </div>
             <div className="flex items-center gap-4">
-              <Button variant="ghost" className={cn(
-                isScrolled ? "text-primary" : "text-primary lg:text-white hover:text-primary lg:hover:bg-white/10"
-              )}>
-                Login
-              </Button>
-              <Button variant="accent">Sign Up</Button>
+              {isAuthenticated ? (
+                <>
+                  <Link href="/profile" className={cn(
+                    "flex items-center gap-2 text-sm font-medium transition-colors hover:text-accent",
+                    isScrolled ? "text-gray-700" : "text-white"
+                  )}>
+                    {user?.profilePicture ? (
+                      <img src={`http://localhost:5000${user.profilePicture}`} alt="Profile" className="w-8 h-8 rounded-full object-cover" />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold border border-white/20">
+                        {user?.fullName?.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <span className="hidden xl:block">{user?.fullName}</span>
+                  </Link>
+                  <Link href="/dashboard/properties" className={cn(
+                    "text-sm font-medium transition-colors hover:text-accent",
+                    isScrolled ? "text-gray-700" : "text-white"
+                  )}>
+                    My Properties
+                  </Link>
+                  <Button variant="outline" onClick={handleLogout} className={cn(
+                    isScrolled ? "border-primary text-primary" : "border-white text-white hover:bg-white/10"
+                  )}>
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Link href="/login">
+                    <Button variant="ghost" className={cn(
+                      isScrolled ? "text-primary" : "text-primary lg:text-white hover:text-primary lg:hover:bg-white/10"
+                    )}>
+                      Login
+                    </Button>
+                  </Link>
+                  <Link href="/register">
+                    <Button variant="accent">Sign Up</Button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
 
@@ -102,8 +151,26 @@ export function Navbar() {
             </Link>
           ))}
           <div className="flex flex-col gap-2 pt-4 border-t border-gray-100">
-            <Button variant="outline" className="w-full">Login</Button>
-            <Button variant="accent" className="w-full">Sign Up</Button>
+            {isAuthenticated ? (
+              <>
+                <Link href="/profile">
+                  <Button variant="outline" className="w-full">Profile</Button>
+                </Link>
+                <Link href="/dashboard/properties">
+                  <Button variant="outline" className="w-full">My Properties</Button>
+                </Link>
+                <Button variant="ghost" onClick={handleLogout} className="w-full text-red-500">Logout</Button>
+              </>
+            ) : (
+              <>
+                <Link href="/login" className="w-full">
+                  <Button variant="outline" className="w-full">Login</Button>
+                </Link>
+                <Link href="/register" className="w-full">
+                  <Button variant="accent" className="w-full">Sign Up</Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}

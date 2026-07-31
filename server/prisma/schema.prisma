@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  VISITOR
+  USER
+  ADMIN
+}
+
+enum PropertyStatus {
+  DRAFT
+  PENDING_APPROVAL
+  PUBLISHED
+  REJECTED
+}
+
+model User {
+  id                     String    @id @default(uuid())
+  fullName               String
+  email                  String    @unique
+  mobileNumber           String?
+  password               String
+  profilePicture         String?
+  role                   Role      @default(USER)
+  isEmailVerified        Boolean   @default(false)
+  emailVerificationToken String?
+  resetPasswordToken     String?
+  resetPasswordExpires   DateTime?
+  createdAt              DateTime   @default(now())
+  updatedAt              DateTime   @updatedAt
+  properties             Property[]
+}
+
+model Property {
+  id               String         @id @default(uuid())
+  title            String
+  description      String
+  propertyType     String
+  saleOrRent       String
+  price            Float
+  negotiable       Boolean        @default(false)
+  bedrooms         Int?
+  bathrooms        Int?
+  parking          Int?
+  landSize         Float?
+  houseSize        Float?
+  yearBuilt        Int?
+  
+  address          String
+  district         String
+  city             String
+  latitude         Float?
+  longitude        Float?
+  
+  amenities        String[]
+  nearbyFacilities String[]
+  
+  contactPhone     String
+  contactEmail     String
+  whatsappNumber   String?
+  
+  images           String[]
+  video            String?
+  
+  status           PropertyStatus @default(DRAFT)
+  
+  userId           String
+  user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+}
