@@ -24,11 +24,12 @@ export function Navbar() {
 
   const navLinks = [
     { name: 'Home', href: '/' },
-    { name: 'Buy', href: '#' },
-    { name: 'Rent', href: '#' },
-    { name: 'Sell', href: '#' },
-    { name: 'About', href: '#' },
-    { name: 'Contact', href: '#' },
+    { name: 'Buy', href: '/buy' },
+    { name: 'Rent', href: '/rent' },
+    { name: 'Search', href: '/search' },
+    { name: 'Sell', href: '/add-property' },
+    { name: 'About', href: '#about' },
+    { name: 'Contact', href: '#contact' },
   ];
 
   const handleLogout = async () => {

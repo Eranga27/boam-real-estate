@@ -1,258 +1,475 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-import { Badge } from '@/components/ui/Badge';
-import { MapPin, Bed, Bath, Square, Calendar, Phone, Mail, CheckCircle2, Video } from 'lucide-react';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import {
+  MapPin, Bed, Bath, Square, Calendar, Phone, Mail, CheckCircle2,
+  Video, Heart, Share2, Flag, ChevronLeft, ChevronRight, Car,
+  LandPlot, ExternalLink, Eye, ArrowLeft
+} from 'lucide-react';
 
 export default function PropertyDetails() {
   const params = useParams();
   const id = params.id as string;
   const [property, setProperty] = useState<any>(null);
+  const [relatedProperties, setRelatedProperties] = useState<any[]>([]);
+  const [recentlyViewed, setRecentlyViewed] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState(0);
+  const [saved, setSaved] = useState(false);
+  const [reportSent, setReportSent] = useState(false);
+  const [showShareMenu, setShowShareMenu] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
+
+  const updateRecentlyViewed = useCallback((prop: any) => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
+      const filtered = stored.filter((p: any) => p.id !== prop.id);
+      const updated = [prop, ...filtered].slice(0, 6);
+      localStorage.setItem('recentlyViewed', JSON.stringify(updated));
+    } catch {}
+  }, []);
 
   useEffect(() => {
+    if (!id) return;
     const fetchProperty = async () => {
       try {
         const res = await fetch(`http://localhost:5000/api/v1/properties/${id}`);
         const data = await res.json();
         if (data.success) {
           setProperty(data.data);
+          updateRecentlyViewed(data.data);
+          // Fetch related
+          const relRes = await fetch(
+            `http://localhost:5000/api/v1/properties?propertyType=${data.data.propertyType}&saleOrRent=${data.data.saleOrRent}&limit=4`
+          );
+          const relData = await relRes.json();
+          if (relData.success) {
+            setRelatedProperties(relData.data.filter((p: any) => p.id !== id));
+          }
         }
       } catch (err) {
-        console.error('Error fetching property', err);
+        console.error(err);
       } finally {
         setLoading(false);
       }
     };
+    fetchProperty();
 
-    if (id) {
-      fetchProperty();
+    // Load saved state
+    try {
+      const savedIds = JSON.parse(localStorage.getItem('savedProperties') || '[]');
+      setSaved(savedIds.includes(id));
+      const rv = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
+      setRecentlyViewed(rv.filter((p: any) => p.id !== id).slice(0, 4));
+    } catch {}
+  }, [id, updateRecentlyViewed]);
+
+  const handleSave = () => {
+    try {
+      const savedIds = JSON.parse(localStorage.getItem('savedProperties') || '[]');
+      const updated = saved ? savedIds.filter((sid: string) => sid !== id) : [...savedIds, id];
+      localStorage.setItem('savedProperties', JSON.stringify(updated));
+      setSaved(!saved);
+    } catch {}
+  };
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      try { await navigator.share({ title: property?.title, url }); } catch {}
+    } else {
+      setShowShareMenu(true);
     }
-  }, [id]);
+  };
 
-  if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading property details...</div>;
-  }
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      setCopySuccess(true);
+      setTimeout(() => { setCopySuccess(false); setShowShareMenu(false); }, 2000);
+    });
+  };
 
-  if (!property) {
-    return <div className="min-h-screen flex items-center justify-center">Property not found.</div>;
-  }
+  const handleReport = () => {
+    setReportSent(true);
+    setTimeout(() => setReportSent(false), 3000);
+  };
+
+  const prevImage = () => setActiveImage(i => (i - 1 + (property?.images?.length || 1)) % (property?.images?.length || 1));
+  const nextImage = () => setActiveImage(i => (i + 1) % (property?.images?.length || 1));
+
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+  if (!property) return (
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+      <h2 className="text-2xl font-bold text-gray-700">Property not found</h2>
+      <Link href="/buy"><Button variant="outline"><ArrowLeft className="w-4 h-4 mr-2" />Browse Properties</Button></Link>
+    </div>
+  );
+
+  const mapsUrl = (property.latitude && property.longitude)
+    ? `https://www.google.com/maps/embed/v1/place?key=YOUR_GOOGLE_MAPS_KEY&q=${property.latitude},${property.longitude}&zoom=15`
+    : `https://www.google.com/maps/embed/v1/search?key=YOUR_GOOGLE_MAPS_KEY&q=${encodeURIComponent(`${property.address}, ${property.city}, ${property.district}`)}`;
+
+  const staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(`${property.address}, ${property.city}`)}&zoom=14&size=600x300&markers=color:red|${encodeURIComponent(`${property.address}, ${property.city}`)}&key=YOUR_GOOGLE_MAPS_KEY`;
 
   return (
-    <main className="min-h-screen bg-light-gray py-12">
+    <main className="min-h-screen bg-light-gray py-10">
       <div className="max-w-7xl mx-auto px-4">
-        
-        {/* Header Section */}
-        <div className="mb-8">
-          <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <Badge variant={property.saleOrRent === 'Sale' ? 'accent' : 'secondary'}>
-                  For {property.saleOrRent}
-                </Badge>
+
+        {/* Back Navigation */}
+        <div className="flex items-center gap-4 mb-6">
+          <Link href="/buy" className="flex items-center text-sm text-gray-500 hover:text-primary transition-colors">
+            <ArrowLeft className="w-4 h-4 mr-1" /> Back to listings
+          </Link>
+          <span className="text-gray-300">/</span>
+          <span className="text-sm text-gray-500">{property.propertyType}</span>
+          <span className="text-gray-300">/</span>
+          <span className="text-sm text-gray-800 font-medium line-clamp-1 max-w-[200px]">{property.title}</span>
+        </div>
+
+        {/* Header */}
+        <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 mb-6">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="flex-1">
+              <div className="flex flex-wrap items-center gap-2 mb-3">
+                <Badge variant={property.saleOrRent === 'Sale' ? 'accent' : 'secondary'}>For {property.saleOrRent}</Badge>
                 <Badge variant="outline">{property.propertyType}</Badge>
+                {property.negotiable && <Badge variant="gray">Negotiable</Badge>}
               </div>
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">{property.title}</h1>
-              <div className="flex items-center text-gray-500">
-                <MapPin className="w-4 h-4 mr-1" />
-                <span>{property.address}, {property.city}, {property.district}</span>
-              </div>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">{property.title}</h1>
+              <p className="flex items-center text-gray-500 text-sm">
+                <MapPin className="w-4 h-4 mr-1 flex-shrink-0 text-primary" />
+                {property.address}, {property.city}, {property.district}
+              </p>
             </div>
             <div className="text-right">
               <div className="text-3xl font-bold text-primary">
                 ${property.price.toLocaleString()}
-                {property.saleOrRent === 'Rent' && <span className="text-lg font-normal text-gray-500"> /mo</span>}
+                {property.saleOrRent === 'Rent' && <span className="text-lg font-normal text-gray-500">/mo</span>}
               </div>
-              {property.negotiable && (
-                <div className="text-sm text-gray-500 mt-1">Price is negotiable</div>
-              )}
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2 mt-3 justify-end relative">
+                <button
+                  onClick={handleSave}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${saved ? 'bg-red-50 border-red-200 text-red-600' : 'bg-gray-50 border-gray-200 text-gray-600 hover:border-red-200 hover:text-red-500'}`}
+                >
+                  <Heart className={`w-4 h-4 ${saved ? 'fill-red-500 text-red-500' : ''}`} />
+                  {saved ? 'Saved' : 'Save'}
+                </button>
+                <button onClick={handleShare} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border border-gray-200 bg-gray-50 text-gray-600 hover:border-primary hover:text-primary transition-all">
+                  <Share2 className="w-4 h-4" /> Share
+                </button>
+                <button onClick={handleReport} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${reportSent ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-gray-50 border-gray-200 text-gray-600 hover:border-orange-200 hover:text-orange-500'}`}>
+                  <Flag className="w-4 h-4" /> {reportSent ? 'Reported' : 'Report'}
+                </button>
+                {showShareMenu && (
+                  <div className="absolute top-10 right-0 bg-white rounded-xl shadow-lg border border-gray-100 p-3 z-10 min-w-[200px]">
+                    <p className="text-xs text-gray-500 mb-2 font-medium">Share this listing</p>
+                    <button onClick={handleCopyLink} className="w-full text-left text-sm px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors">
+                      {copySuccess ? '✓ Link Copied!' : '📋 Copy Link'}
+                    </button>
+                    <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}`} target="_blank" rel="noopener noreferrer" className="block text-sm px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors">
+                      📘 Share on Facebook
+                    </a>
+                    <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}&text=${encodeURIComponent(property.title)}`} target="_blank" rel="noopener noreferrer" className="block text-sm px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors">
+                      🐦 Share on X / Twitter
+                    </a>
+                    <a href={`https://wa.me/?text=${encodeURIComponent(`${property.title} - ${typeof window !== 'undefined' ? window.location.href : ''}`)}`} target="_blank" rel="noopener noreferrer" className="block text-sm px-3 py-2 rounded-lg hover:bg-green-50 transition-colors text-green-700">
+                      📱 Share on WhatsApp
+                    </a>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
-          {/* Main Content: Images & Details */}
-          <div className="lg:col-span-2 space-y-8">
-            
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-6">
+
             {/* Image Gallery */}
-            <div className="bg-white rounded-3xl p-4 shadow-sm border border-gray-100">
+            <div className="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100">
               {property.images && property.images.length > 0 ? (
                 <>
-                  <div className="relative aspect-video rounded-2xl overflow-hidden mb-4">
-                    <img 
-                      src={property.images[activeImage]} 
-                      alt="Property" 
-                      className="w-full h-full object-cover transition-opacity duration-300"
+                  <div className="relative aspect-[16/9] bg-gray-100">
+                    <motion.img
+                      key={activeImage}
+                      src={property.images[activeImage]}
+                      alt="Property"
+                      className="w-full h-full object-cover"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.3 }}
                     />
-                  </div>
-                  <div className="flex gap-4 overflow-x-auto pb-2">
-                    {property.images.map((img: string, idx: number) => (
-                      <button 
-                        key={idx}
-                        onClick={() => setActiveImage(idx)}
-                        className={`relative w-24 h-24 flex-shrink-0 rounded-xl overflow-hidden border-2 transition-all ${
-                          activeImage === idx ? 'border-primary shadow-md' : 'border-transparent opacity-70 hover:opacity-100'
-                        }`}
-                      >
-                        <img src={img} alt={`Thumbnail ${idx}`} className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 flex items-center justify-between px-4">
+                      <button onClick={prevImage} className="w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center shadow-md hover:bg-white transition-colors">
+                        <ChevronLeft className="w-5 h-5" />
                       </button>
-                    ))}
+                      <button onClick={nextImage} className="w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center shadow-md hover:bg-white transition-colors">
+                        <ChevronRight className="w-5 h-5" />
+                      </button>
+                    </div>
+                    <div className="absolute bottom-4 right-4 bg-black/50 text-white text-xs px-2.5 py-1 rounded-full backdrop-blur-sm">
+                      {activeImage + 1} / {property.images.length}
+                    </div>
                   </div>
+                  {property.images.length > 1 && (
+                    <div className="flex gap-2 p-4 overflow-x-auto">
+                      {property.images.map((img: string, idx: number) => (
+                        <button key={idx} onClick={() => setActiveImage(idx)}
+                          className={`flex-shrink-0 w-20 h-16 rounded-xl overflow-hidden border-2 transition-all ${activeImage === idx ? 'border-primary' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                        >
+                          <img src={img} alt="" className="w-full h-full object-cover" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </>
               ) : (
-                <div className="aspect-video bg-gray-100 rounded-2xl flex items-center justify-center text-gray-400">
-                  No images available
-                </div>
+                <div className="aspect-[16/9] bg-gray-100 flex items-center justify-center text-gray-400">No images available</div>
               )}
             </div>
 
-            {/* Overview Stats */}
-            <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-wrap gap-8 justify-between items-center">
-              {property.bedrooms && (
-                <div className="flex flex-col items-center">
-                  <Bed className="w-6 h-6 text-primary mb-2" />
-                  <span className="font-bold text-xl">{property.bedrooms}</span>
-                  <span className="text-xs text-gray-500 uppercase">Beds</span>
-                </div>
-              )}
-              {property.bathrooms && (
-                <div className="flex flex-col items-center">
-                  <Bath className="w-6 h-6 text-primary mb-2" />
-                  <span className="font-bold text-xl">{property.bathrooms}</span>
-                  <span className="text-xs text-gray-500 uppercase">Baths</span>
-                </div>
-              )}
-              {property.houseSize && (
-                <div className="flex flex-col items-center">
-                  <Square className="w-6 h-6 text-primary mb-2" />
-                  <span className="font-bold text-xl">{property.houseSize}</span>
-                  <span className="text-xs text-gray-500 uppercase">Sq Ft</span>
-                </div>
-              )}
-              {property.yearBuilt && (
-                <div className="flex flex-col items-center">
-                  <Calendar className="w-6 h-6 text-primary mb-2" />
-                  <span className="font-bold text-xl">{property.yearBuilt}</span>
-                  <span className="text-xs text-gray-500 uppercase">Built</span>
-                </div>
-              )}
+            {/* Stats */}
+            <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+              <div className="flex flex-wrap gap-6 justify-around">
+                {property.bedrooms && (
+                  <div className="flex flex-col items-center gap-1">
+                    <Bed className="w-6 h-6 text-primary" />
+                    <span className="text-2xl font-bold text-gray-900">{property.bedrooms}</span>
+                    <span className="text-xs text-gray-500 uppercase tracking-wider">Bedrooms</span>
+                  </div>
+                )}
+                {property.bathrooms && (
+                  <div className="flex flex-col items-center gap-1">
+                    <Bath className="w-6 h-6 text-primary" />
+                    <span className="text-2xl font-bold text-gray-900">{property.bathrooms}</span>
+                    <span className="text-xs text-gray-500 uppercase tracking-wider">Bathrooms</span>
+                  </div>
+                )}
+                {property.parking && (
+                  <div className="flex flex-col items-center gap-1">
+                    <Car className="w-6 h-6 text-primary" />
+                    <span className="text-2xl font-bold text-gray-900">{property.parking}</span>
+                    <span className="text-xs text-gray-500 uppercase tracking-wider">Parking</span>
+                  </div>
+                )}
+                {property.houseSize && (
+                  <div className="flex flex-col items-center gap-1">
+                    <Square className="w-6 h-6 text-primary" />
+                    <span className="text-2xl font-bold text-gray-900">{property.houseSize.toLocaleString()}</span>
+                    <span className="text-xs text-gray-500 uppercase tracking-wider">House sqft</span>
+                  </div>
+                )}
+                {property.landSize && (
+                  <div className="flex flex-col items-center gap-1">
+                    <LandPlot className="w-6 h-6 text-primary" />
+                    <span className="text-2xl font-bold text-gray-900">{property.landSize.toLocaleString()}</span>
+                    <span className="text-xs text-gray-500 uppercase tracking-wider">Land sqft</span>
+                  </div>
+                )}
+                {property.yearBuilt && (
+                  <div className="flex flex-col items-center gap-1">
+                    <Calendar className="w-6 h-6 text-primary" />
+                    <span className="text-2xl font-bold text-gray-900">{property.yearBuilt}</span>
+                    <span className="text-xs text-gray-500 uppercase tracking-wider">Year Built</span>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Description */}
             <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-              <h3 className="text-xl font-bold mb-4">About this property</h3>
-              <p className="text-gray-600 whitespace-pre-wrap leading-relaxed">
-                {property.description}
-              </p>
+              <h3 className="text-xl font-bold mb-4">About this Property</h3>
+              <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">{property.description}</p>
             </div>
 
-            {/* Amenities & Facilities */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {property.amenities && property.amenities.length > 0 && (
-                <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-                  <h3 className="text-xl font-bold mb-4">Amenities</h3>
-                  <ul className="space-y-3">
-                    {property.amenities.map((item: string, i: number) => (
-                      <li key={i} className="flex items-center text-gray-600">
-                        <CheckCircle2 className="w-5 h-5 text-green-500 mr-3" />
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {property.nearbyFacilities && property.nearbyFacilities.length > 0 && (
-                <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-                  <h3 className="text-xl font-bold mb-4">Nearby Facilities</h3>
-                  <ul className="space-y-3">
-                    {property.nearbyFacilities.map((item: string, i: number) => (
-                      <li key={i} className="flex items-center text-gray-600">
-                        <CheckCircle2 className="w-5 h-5 text-blue-500 mr-3" />
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-            
-            {/* Video (if available) */}
+            {/* Amenities & Nearby */}
+            {(property.amenities?.length > 0 || property.nearbyFacilities?.length > 0) && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {property.amenities?.length > 0 && (
+                  <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+                    <h3 className="text-xl font-bold mb-4">Amenities</h3>
+                    <ul className="space-y-3">
+                      {property.amenities.map((item: string, i: number) => (
+                        <li key={i} className="flex items-center gap-3 text-gray-700">
+                          <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {property.nearbyFacilities?.length > 0 && (
+                  <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+                    <h3 className="text-xl font-bold mb-4">Nearby Facilities</h3>
+                    <ul className="space-y-3">
+                      {property.nearbyFacilities.map((item: string, i: number) => (
+                        <li key={i} className="flex items-center gap-3 text-gray-700">
+                          <CheckCircle2 className="w-5 h-5 text-blue-500 flex-shrink-0" />
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Video */}
             {property.video && (
               <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-                <h3 className="text-xl font-bold mb-4 flex items-center">
-                  <Video className="w-5 h-5 mr-2 text-primary" /> Property Video
+                <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <Video className="w-5 h-5 text-primary" /> Property Video
                 </h3>
-                <div className="relative aspect-video rounded-2xl overflow-hidden bg-black">
+                <div className="aspect-video rounded-2xl overflow-hidden bg-black">
                   <video src={property.video} controls className="w-full h-full" />
                 </div>
               </div>
             )}
-            
+
+            {/* Map */}
+            <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+              <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-primary" /> Location
+              </h3>
+              <div className="rounded-2xl overflow-hidden aspect-[16/9] bg-gray-100 relative">
+                {/* Google Maps embed - will show a map or fallback message */}
+                <iframe
+                  title="Property Location"
+                  width="100%"
+                  height="100%"
+                  loading="lazy"
+                  className="absolute inset-0"
+                  src={`https://maps.google.com/maps?q=${encodeURIComponent(`${property.address}, ${property.city}, ${property.district}`)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                  style={{ border: 0 }}
+                  allowFullScreen
+                />
+              </div>
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${property.address}, ${property.city}, ${property.district}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-sm text-primary mt-3 hover:underline"
+              >
+                <ExternalLink className="w-4 h-4" /> View on Google Maps
+              </a>
+            </div>
+
+            {/* Related Properties */}
+            {relatedProperties.length > 0 && (
+              <div>
+                <h3 className="text-xl font-bold mb-4">Similar Properties</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {relatedProperties.slice(0, 4).map((rel: any) => (
+                    <Link key={rel.id} href={`/properties/${rel.id}`} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-all group flex">
+                      <div className="w-28 h-28 flex-shrink-0 bg-gray-100 overflow-hidden">
+                        {rel.images?.[0] ? (
+                          <img src={rel.images[0]} alt={rel.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        ) : <div className="w-full h-full bg-gray-100" />}
+                      </div>
+                      <div className="p-4 flex-1 min-w-0">
+                        <p className="font-semibold text-sm text-gray-900 line-clamp-1 group-hover:text-primary transition-colors">{rel.title}</p>
+                        <p className="text-xs text-gray-500 flex items-center mt-1"><MapPin className="w-3 h-3 mr-1" />{rel.city}</p>
+                        <p className="text-primary font-bold mt-2">${rel.price.toLocaleString()}</p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Sidebar: Contact Info */}
+          {/* Sidebar */}
           <div className="space-y-6">
-            <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 sticky top-24">
-              <h3 className="text-xl font-bold mb-6">Contact Agent</h3>
-              
+
+            {/* Contact Card */}
+            <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 sticky top-24">
+              <h3 className="text-lg font-bold mb-5">Contact Agent</h3>
               {property.user && (
-                <div className="flex items-center gap-4 mb-6 pb-6 border-b border-gray-100">
-                  <div className="w-16 h-16 rounded-full bg-gray-200 overflow-hidden">
+                <div className="flex items-center gap-3 mb-5 pb-5 border-b border-gray-100">
+                  <div className="w-14 h-14 rounded-full bg-gray-100 overflow-hidden flex-shrink-0">
                     {property.user.profilePicture ? (
                       <img src={property.user.profilePicture} alt="Agent" className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold text-xl">
+                      <div className="w-full h-full flex items-center justify-center text-xl font-bold text-primary">
                         {property.user.fullName.charAt(0)}
                       </div>
                     )}
                   </div>
                   <div>
-                    <div className="font-bold text-lg">{property.user.fullName}</div>
-                    <div className="text-sm text-gray-500">Listing Agent</div>
+                    <p className="font-bold text-gray-900">{property.user.fullName}</p>
+                    <p className="text-xs text-gray-500">Listing Agent</p>
                   </div>
                 </div>
               )}
-
-              <div className="space-y-4">
-                <a href={`tel:${property.contactPhone}`} className="flex items-center p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
-                  <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-primary shadow-sm mr-4">
-                    <Phone className="w-5 h-5" />
+              <div className="space-y-3">
+                <a href={`tel:${property.contactPhone}`} className="flex items-center gap-3 p-3.5 rounded-xl bg-gray-50 hover:bg-primary/5 hover:border-primary/20 border border-transparent transition-all">
+                  <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center text-primary shadow-sm flex-shrink-0">
+                    <Phone className="w-4 h-4" />
                   </div>
                   <div>
-                    <div className="text-xs text-gray-500 font-medium uppercase tracking-wider">Phone</div>
-                    <div className="font-semibold text-gray-900">{property.contactPhone}</div>
+                    <p className="text-xs text-gray-500 font-medium">Call</p>
+                    <p className="font-semibold text-gray-900 text-sm">{property.contactPhone}</p>
                   </div>
                 </a>
-                
-                <a href={`mailto:${property.contactEmail}`} className="flex items-center p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
-                  <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-blue-500 shadow-sm mr-4">
-                    <Mail className="w-5 h-5" />
+                <a href={`mailto:${property.contactEmail}`} className="flex items-center gap-3 p-3.5 rounded-xl bg-gray-50 hover:bg-blue-50 border border-transparent transition-all">
+                  <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center text-blue-500 shadow-sm flex-shrink-0">
+                    <Mail className="w-4 h-4" />
                   </div>
                   <div>
-                    <div className="text-xs text-gray-500 font-medium uppercase tracking-wider">Email</div>
-                    <div className="font-semibold text-gray-900 truncate max-w-[200px]">{property.contactEmail}</div>
+                    <p className="text-xs text-gray-500 font-medium">Email</p>
+                    <p className="font-semibold text-gray-900 text-sm truncate max-w-[180px]">{property.contactEmail}</p>
                   </div>
                 </a>
-
                 {property.whatsappNumber && (
-                  <a href={`https://wa.me/${property.whatsappNumber.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center p-4 rounded-xl bg-green-50 hover:bg-green-100 transition-colors">
-                    <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-green-600 shadow-sm mr-4">
-                      <Phone className="w-5 h-5" />
+                  <a href={`https://wa.me/${property.whatsappNumber.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3.5 rounded-xl bg-green-50 hover:bg-green-100 border border-transparent transition-all">
+                    <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center text-green-600 shadow-sm flex-shrink-0">
+                      <Phone className="w-4 h-4" />
                     </div>
                     <div>
-                      <div className="text-xs text-green-700 font-medium uppercase tracking-wider">WhatsApp</div>
-                      <div className="font-semibold text-green-900">{property.whatsappNumber}</div>
+                      <p className="text-xs text-green-700 font-medium">WhatsApp</p>
+                      <p className="font-semibold text-green-900 text-sm">{property.whatsappNumber}</p>
                     </div>
                   </a>
                 )}
               </div>
             </div>
+
+            {/* Recently Viewed */}
+            {recentlyViewed.length > 0 && (
+              <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+                <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                  <Eye className="w-5 h-5 text-gray-400" /> Recently Viewed
+                </h3>
+                <div className="space-y-3">
+                  {recentlyViewed.map((rv: any) => (
+                    <Link key={rv.id} href={`/properties/${rv.id}`} className="flex items-center gap-3 group">
+                      <div className="w-14 h-14 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0">
+                        {rv.images?.[0] ? (
+                          <img src={rv.images[0]} alt={rv.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                        ) : <div className="w-full h-full bg-gray-100" />}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-gray-800 group-hover:text-primary transition-colors line-clamp-1">{rv.title}</p>
+                        <p className="text-xs text-primary font-bold">${rv.price?.toLocaleString()}</p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-          
         </div>
       </div>
     </main>

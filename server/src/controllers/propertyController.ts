@@ -222,17 +222,56 @@ export const adminUpdatePropertyStatus = async (req: AuthRequest, res: Response)
 
 export const getAllProperties = async (req: Request, res: Response): Promise<void> => {
   try {
-    // Only return published properties for public
-    const properties = await prisma.property.findMany({
-      where: { status: 'PUBLISHED' },
-      orderBy: { createdAt: 'desc' },
-      include: {
-        user: {
-          select: { fullName: true, profilePicture: true }
+    const { 
+      saleOrRent, propertyType, district, city,
+      minPrice, maxPrice, bedrooms, bathrooms,
+      sort, limit = '20', page = '1'
+    } = req.query;
+
+    const whereClause: any = { status: 'PUBLISHED' };
+
+    if (saleOrRent) whereClause.saleOrRent = saleOrRent as string;
+    if (propertyType) whereClause.propertyType = propertyType as string;
+    if (district) whereClause.district = { contains: district as string, mode: 'insensitive' };
+    if (city) whereClause.city = { contains: city as string, mode: 'insensitive' };
+    if (bedrooms) whereClause.bedrooms = { gte: parseInt(bedrooms as string) };
+    if (bathrooms) whereClause.bathrooms = { gte: parseInt(bathrooms as string) };
+    
+    if (minPrice || maxPrice) {
+      whereClause.price = {};
+      if (minPrice) whereClause.price.gte = parseFloat(minPrice as string);
+      if (maxPrice) whereClause.price.lte = parseFloat(maxPrice as string);
+    }
+
+    let orderByClause: any = { createdAt: 'desc' };
+    if (sort === 'oldest') orderByClause = { createdAt: 'asc' };
+    else if (sort === 'price_asc') orderByClause = { price: 'asc' };
+    else if (sort === 'price_desc') orderByClause = { price: 'desc' };
+
+    const take = parseInt(limit as string);
+    const skip = (parseInt(page as string) - 1) * take;
+
+    const [properties, total] = await Promise.all([
+      prisma.property.findMany({
+        where: whereClause,
+        orderBy: orderByClause,
+        take,
+        skip,
+        include: {
+          user: { select: { fullName: true, profilePicture: true } }
         }
-      }
+      }),
+      prisma.property.count({ where: whereClause })
+    ]);
+
+    res.status(200).json({ 
+      success: true, 
+      count: properties.length,
+      total,
+      totalPages: Math.ceil(total / take),
+      currentPage: parseInt(page as string),
+      data: properties 
     });
-    res.status(200).json({ success: true, data: properties });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
   }
