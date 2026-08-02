@@ -46,7 +46,7 @@ const MOCK_PROPERTIES = [
   },
 ];
 
-export default function Home() {
+export default function HomePage() {
   return (
     <main className="flex-1">
       {/* 1. Hero Section */}
@@ -144,9 +144,9 @@ export default function Home() {
               <div className="w-16 h-16 mx-auto bg-accent/20 text-accent rounded-full flex items-center justify-center mb-6">
                 <Shield className="w-8 h-8" />
               </div>
-              <h3 className="text-xl font-semibold mb-3">Trusted & Secure</h3>
+              <h3 className="text-xl font-semibold mb-3">Trusted &amp; Secure</h3>
               <p className="text-gray-300 text-sm">Every property and agent is thoroughly verified to ensure maximum security and trust.</p>
-            </div>
+            </motion.div>
             <div className="text-center p-6 rounded-2xl bg-white/5 backdrop-blur border border-white/10 hover:-translate-y-2 transition-transform duration-300">
               <div className="w-16 h-16 mx-auto bg-secondary/20 text-secondary rounded-full flex items-center justify-center mb-6">
                 <Building2 className="w-8 h-8" />
