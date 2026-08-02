@@ -101,6 +101,12 @@ export function Navbar() {
                   )}>
                     My Properties
                   </Link>
+                  <Link href="/dashboard/inquiries" className={cn(
+                    "text-sm font-medium transition-colors hover:text-accent",
+                    isScrolled ? "text-gray-700" : "text-white"
+                  )}>
+                    My Inquiries
+                  </Link>
                   <Button variant="outline" onClick={handleLogout} className={cn(
                     isScrolled ? "border-primary text-primary" : "border-white text-white hover:bg-white/10"
                   )}>
@@ -159,6 +165,9 @@ export function Navbar() {
                 </Link>
                 <Link href="/dashboard/properties">
                   <Button variant="outline" className="w-full">My Properties</Button>
+                </Link>
+                <Link href="/dashboard/inquiries">
+                  <Button variant="outline" className="w-full">My Inquiries</Button>
                 </Link>
                 <Button variant="ghost" onClick={handleLogout} className="w-full text-red-500">Logout</Button>
               </>

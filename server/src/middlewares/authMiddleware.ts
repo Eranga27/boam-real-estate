@@ -45,3 +45,27 @@ export const authorize = (...roles: string[]) => {
     next();
   };
 };
+
+/**
+ * optionalAuth — attaches req.user if a valid token is present,
+ * but allows the request to continue even without a token (for guests).
+ */
+export const optionalAuth = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  let token: string | undefined;
+  if (req.cookies?.token) {
+    token = req.cookies.token;
+  } else if (req.headers.authorization?.startsWith('Bearer')) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as any;
+      const user = await prisma.user.findUnique({ where: { id: decoded.id } });
+      if (user) req.user = user;
+    } catch {
+      // Invalid token — just continue as guest
+    }
+  }
+  next();
+};
+

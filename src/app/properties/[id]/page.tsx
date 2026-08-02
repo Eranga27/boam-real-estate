@@ -6,8 +6,9 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import ContactForm from '@/components/ContactForm';
 import {
-  MapPin, Bed, Bath, Square, Calendar, Phone, Mail, CheckCircle2,
+  MapPin, Bed, Bath, Square, Calendar, CheckCircle2,
   Video, Heart, Share2, Flag, ChevronLeft, ChevronRight, Car,
   LandPlot, ExternalLink, Eye, ArrowLeft
 } from 'lucide-react';
@@ -393,57 +394,16 @@ export default function PropertyDetails() {
           {/* Sidebar */}
           <div className="space-y-6">
 
-            {/* Contact Card */}
-            <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 sticky top-24">
-              <h3 className="text-lg font-bold mb-5">Contact Agent</h3>
-              {property.user && (
-                <div className="flex items-center gap-3 mb-5 pb-5 border-b border-gray-100">
-                  <div className="w-14 h-14 rounded-full bg-gray-100 overflow-hidden flex-shrink-0">
-                    {property.user.profilePicture ? (
-                      <img src={property.user.profilePicture} alt="Agent" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-xl font-bold text-primary">
-                        {property.user.fullName.charAt(0)}
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <p className="font-bold text-gray-900">{property.user.fullName}</p>
-                    <p className="text-xs text-gray-500">Listing Agent</p>
-                  </div>
-                </div>
-              )}
-              <div className="space-y-3">
-                <a href={`tel:${property.contactPhone}`} className="flex items-center gap-3 p-3.5 rounded-xl bg-gray-50 hover:bg-primary/5 hover:border-primary/20 border border-transparent transition-all">
-                  <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center text-primary shadow-sm flex-shrink-0">
-                    <Phone className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">Call</p>
-                    <p className="font-semibold text-gray-900 text-sm">{property.contactPhone}</p>
-                  </div>
-                </a>
-                <a href={`mailto:${property.contactEmail}`} className="flex items-center gap-3 p-3.5 rounded-xl bg-gray-50 hover:bg-blue-50 border border-transparent transition-all">
-                  <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center text-blue-500 shadow-sm flex-shrink-0">
-                    <Mail className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">Email</p>
-                    <p className="font-semibold text-gray-900 text-sm truncate max-w-[180px]">{property.contactEmail}</p>
-                  </div>
-                </a>
-                {property.whatsappNumber && (
-                  <a href={`https://wa.me/${property.whatsappNumber.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3.5 rounded-xl bg-green-50 hover:bg-green-100 border border-transparent transition-all">
-                    <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center text-green-600 shadow-sm flex-shrink-0">
-                      <Phone className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-green-700 font-medium">WhatsApp</p>
-                      <p className="font-semibold text-green-900 text-sm">{property.whatsappNumber}</p>
-                    </div>
-                  </a>
-                )}
-              </div>
+            {/* Contact Form Card (sticky) */}
+            <div className="sticky top-24">
+              <ContactForm
+                propertyId={property.id}
+                propertyTitle={property.title}
+                sellerName={property.user?.fullName || 'Property Owner'}
+                sellerPhone={property.contactPhone}
+                sellerEmail={property.contactEmail}
+                whatsappNumber={property.whatsappNumber}
+              />
             </div>
 
             {/* Recently Viewed */}

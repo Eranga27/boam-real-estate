@@ -7,6 +7,7 @@ import path from 'path';
 import authRoutes from './routes/authRoutes';
 import userRoutes from './routes/userRoutes';
 import propertyRoutes from './routes/propertyRoutes';
+import inquiryRoutes from './routes/inquiryRoutes';
 
 dotenv.config();
 
@@ -24,6 +25,7 @@ app.use('/uploads', express.static(path.join(__dirname, '../../uploads')));
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/properties', propertyRoutes);
+app.use('/api/v1/inquiries', inquiryRoutes);
 
 const PORT = process.env.PORT || 5000;
 
