@@ -8,6 +8,7 @@ import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import ContactForm from '@/components/ContactForm';
+import MortgageCalculator from '@/components/MortgageCalculator';
 import {
   MapPin, Bed, Bath, Square, Calendar, CheckCircle2,
   Video, Heart, BookMarked, Share2, Flag, ChevronLeft, ChevronRight, Car,
@@ -234,6 +235,11 @@ export default function PropertyDetails() {
                 )}
               </div>
             </div>
+
+            {/* Mortgage Calculator */}
+            {property.saleOrRent === 'Sale' && (
+              <MortgageCalculator propertyPrice={property.price} />
+            )}
           </div>
         </div>
 
