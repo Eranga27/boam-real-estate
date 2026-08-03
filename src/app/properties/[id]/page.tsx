@@ -3,17 +3,19 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { useAuth } from '@/context/AuthContext';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import ContactForm from '@/components/ContactForm';
 import {
   MapPin, Bed, Bath, Square, Calendar, CheckCircle2,
-  Video, Heart, Share2, Flag, ChevronLeft, ChevronRight, Car,
+  Video, Heart, BookMarked, Share2, Flag, ChevronLeft, ChevronRight, Car,
   LandPlot, ExternalLink, Eye, ArrowLeft
 } from 'lucide-react';
 
 export default function PropertyDetails() {
+  const { isAuthenticated } = useAuth();
   const params = useParams();
   const id = params.id as string;
   const [property, setProperty] = useState<any>(null);
@@ -22,6 +24,7 @@ export default function PropertyDetails() {
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState(0);
   const [saved, setSaved] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
   const [reportSent, setReportSent] = useState(false);
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
@@ -68,7 +71,24 @@ export default function PropertyDetails() {
       const rv = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
       setRecentlyViewed(rv.filter((p: any) => p.id !== id).slice(0, 4));
     } catch {}
-  }, [id, updateRecentlyViewed]);
+
+    // Load favorite state if authenticated
+    if (isAuthenticated) {
+      const fetchFavorites = async () => {
+        try {
+          const token = localStorage.getItem('token');
+          const res = await fetch('http://localhost:5000/api/v1/favorites/ids', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          const data = await res.json();
+          if (data.success && data.data.includes(id)) {
+            setIsFavorite(true);
+          }
+        } catch (err) {}
+      };
+      fetchFavorites();
+    }
+  }, [id, updateRecentlyViewed, isAuthenticated]);
 
   const handleSave = () => {
     try {
@@ -77,6 +97,21 @@ export default function PropertyDetails() {
       localStorage.setItem('savedProperties', JSON.stringify(updated));
       setSaved(!saved);
     } catch {}
+  };
+
+  const handleFavorite = async () => {
+    if (!isAuthenticated) return;
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`http://localhost:5000/api/v1/favorites/${id}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setIsFavorite(data.favorited);
+      }
+    } catch (err) {}
   };
 
   const handleShare = async () => {
@@ -158,11 +193,20 @@ export default function PropertyDetails() {
               </div>
               {/* Action Buttons */}
               <div className="flex items-center gap-2 mt-3 justify-end relative">
+                {isAuthenticated && (
+                  <button
+                    onClick={handleFavorite}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${isFavorite ? 'bg-red-50 border-red-200 text-red-600' : 'bg-gray-50 border-gray-200 text-gray-600 hover:border-red-200 hover:text-red-500'}`}
+                  >
+                    <Heart className={`w-4 h-4 ${isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
+                    {isFavorite ? 'Favorited' : 'Favorite'}
+                  </button>
+                )}
                 <button
                   onClick={handleSave}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${saved ? 'bg-red-50 border-red-200 text-red-600' : 'bg-gray-50 border-gray-200 text-gray-600 hover:border-red-200 hover:text-red-500'}`}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${saved ? 'bg-primary/10 border-primary/20 text-primary' : 'bg-gray-50 border-gray-200 text-gray-600 hover:border-primary/20 hover:text-primary'}`}
                 >
-                  <Heart className={`w-4 h-4 ${saved ? 'fill-red-500 text-red-500' : ''}`} />
+                  <BookMarked className={`w-4 h-4 ${saved ? 'fill-primary text-primary' : ''}`} />
                   {saved ? 'Saved' : 'Save'}
                 </button>
                 <button onClick={handleShare} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border border-gray-200 bg-gray-50 text-gray-600 hover:border-primary hover:text-primary transition-all">
