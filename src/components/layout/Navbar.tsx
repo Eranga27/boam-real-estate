@@ -107,6 +107,14 @@ export function Navbar() {
                   )}>
                     My Inquiries
                   </Link>
+                  {user.role === 'ADMIN' && (
+                    <Link href="/admin" className={cn(
+                      "text-sm font-medium transition-colors hover:text-red-500",
+                      isScrolled ? "text-red-600" : "text-red-400"
+                    )}>
+                      Admin Panel
+                    </Link>
+                  )}
                   <Button variant="outline" onClick={handleLogout} className={cn(
                     isScrolled ? "border-primary text-primary" : "border-white text-white hover:bg-white/10"
                   )}>
@@ -169,6 +177,11 @@ export function Navbar() {
                 <Link href="/dashboard/inquiries">
                   <Button variant="outline" className="w-full">My Inquiries</Button>
                 </Link>
+                {user.role === 'ADMIN' && (
+                  <Link href="/admin">
+                    <Button variant="outline" className="w-full border-red-200 text-red-600 bg-red-50 hover:bg-red-100">Admin Panel</Button>
+                  </Link>
+                )}
                 <Button variant="ghost" onClick={handleLogout} className="w-full text-red-500">Logout</Button>
               </>
             ) : (

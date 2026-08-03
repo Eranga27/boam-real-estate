@@ -33,11 +33,13 @@ model User {
   emailVerificationToken String?
   resetPasswordToken     String?
   resetPasswordExpires   DateTime?
+  isActive               Boolean     @default(true)
   createdAt              DateTime    @default(now())
   updatedAt              DateTime    @updatedAt
   properties             Property[]
   inquiriesSent          Inquiry[]   @relation("BuyerInquiries")
   favorites              Favorite[]
+  auditLogs              AuditLog[]  @relation("AdminLogs")
 }
 
 model Property {
@@ -72,6 +74,7 @@ model Property {
   video            String?
 
   status           PropertyStatus @default(DRAFT)
+  isFeatured       Boolean        @default(false)
 
   userId           String
   user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -110,4 +113,14 @@ model Favorite {
   createdAt  DateTime @default(now())
 
   @@unique([userId, propertyId])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  action    String
+  details   String
+  adminId   String
+  admin     User     @relation("AdminLogs", fields: [adminId], references: [id], onDelete: Cascade)
+  targetId  String?  // ID of the user or property affected
+  createdAt DateTime @default(now())
 }
