@@ -1,24 +1,84 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* @import url() FONT IMPORTS MUST ALWAYS BE AT THE VERY TOP OF THIS FILE, ABOVE THE TAILWIND IMPORTS — DO NOT DELETE THIS COMMENT */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
-:root {
-  --background: #ffffff;
-  --foreground: #12355B;
-  
-  --primary: #12355B;
-  --secondary: #2E8B57;
-  --accent: #F4A300;
-  --light-gray: #F5F7FA;
+/* CRITICAL: THE FOLLOWING TAILWIND IMPORTS MUST NEVER BE DELETED OR REORDERED — DO NOT DELETE THIS COMMENT */
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* END TAILWIND IMPORTS — ALL OTHER CSS MUST GO BELOW THIS LINE */
+
+
+
+
+html {
+  -webkit-font-smoothing: antialiased;
+  scroll-behavior: smooth;
 }
-
 body {
-  background-color: var(--background);
-  color: var(--foreground);
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: #ffffff;
+  color: #0e2a49;
 }
-
-@layer utilities {
-  .glass {
-    @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-lg;
-  }
+::selection {
+  background-color: #F4A300;
+  color: #12355B;
+}
+/* Thin, brand-tinted scrollbars for horizontal card rails */
+.rail-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #c3d5e9 transparent;
+}
+.rail-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+.rail-scroll::-webkit-scrollbar-thumb {
+  background-color: #c3d5e9;
+  border-radius: 999px;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+/* Range slider (price range dual handle) */
+input[type='range'].brand-range {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  pointer-events: none;
+}
+input[type='range'].brand-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  pointer-events: all;
+  height: 20px;
+  width: 20px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 3px solid #12355B;
+  box-shadow: 0 2px 6px rgba(18, 53, 91, 0.3);
+  cursor: pointer;
+}
+input[type='range'].brand-range::-moz-range-thumb {
+  pointer-events: all;
+  height: 20px;
+  width: 20px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 3px solid #12355B;
+  box-shadow: 0 2px 6px rgba(18, 53, 91, 0.3);
+  cursor: pointer;
+}
+/* Floating label inputs */
+.float-field input:focus + label,
+.float-field input:not(:placeholder-shown) + label {
+  transform: translateY(-0.68rem) scale(0.8);
+  color: #12355B;
+  font-weight: 700;
+}
+.leaflet-container {
+  font-family: 'Inter', sans-serif;
+  z-index: 0;
 }

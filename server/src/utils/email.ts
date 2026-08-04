@@ -96,3 +96,18 @@ export const sendInquiryConfirmationEmail = async (opts: {
     console.error('Failed to send confirmation email:', error);
   }
 };
+
+export interface SendEmailOptions {
+  email: string;
+  subject: string;
+  message: string;
+}
+
+export const sendEmail = async (opts: SendEmailOptions): Promise<void> => {
+  await transporter.sendMail({
+    from: `"Boam Real-Estates" <${process.env.EMAIL_USER}>`,
+    to: opts.email,
+    subject: opts.subject,
+    text: opts.message,
+  });
+};

@@ -17,7 +17,7 @@ const steps = [
 ];
 
 export default function AddProperty() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -35,10 +35,12 @@ export default function AddProperty() {
   const [video, setVideo] = useState<File | null>(null);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
-  if (!isLoading && !isAuthenticated) {
-    router.push('/login');
+  // Redirect non-admins
+  if (!isLoading && (!isAuthenticated || user?.role !== 'ADMIN')) {
+    router.push('/');
     return null;
   }
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;

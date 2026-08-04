@@ -1,202 +1,177 @@
 'use client';
-
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Menu, X, Home } from 'lucide-react';
-import { Button } from '../ui/Button';
-import { cn } from '@/lib/utils';
+import { usePathname } from 'next/navigation';
+import { MenuIcon, PhoneIcon, XIcon, UserCircle } from 'lucide-react';
+import { Logo } from '../brand/Logo';
 import { useAuth } from '@/context/AuthContext';
-import { useRouter } from 'next/navigation';
 
 export function Navbar() {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
+  const isHome = pathname === '/';
+  const [scrolled, setScrolled] = useState(!isHome);
+  const [open, setOpen] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
-  const router = useRouter();
+  
+  const isAdmin = user?.role === 'ADMIN';
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const navLinks = [
-    { name: 'Home', href: '/' },
-    { name: 'Buy', href: '/buy' },
-    { name: 'Rent', href: '/rent' },
-    { name: 'Search', href: '/search' },
-    { name: 'Sell', href: '/add-property' },
-    { name: 'About', href: '#about' },
-    { name: 'Contact', href: '#contact' },
+  const links = [
+    { to: '/', label: 'Home' },
+    { to: '/buy', label: 'Buy' },
+    { to: '/rent', label: 'Rent' },
+    { to: '/search', label: 'All Properties' },
+    ...(isAdmin ? [{ to: '/add-property', label: 'Add Property' }] : []),
   ];
 
-  const handleLogout = async () => {
-    try {
-      await fetch('http://localhost:5000/api/v1/auth/logout');
-      logout();
-      router.push('/');
-    } catch (error) {
-      console.error('Logout failed', error);
+  useEffect(() => {
+    if (!isHome) {
+      setScrolled(true);
+      return;
     }
-  };
+    const onScroll = () => setScrolled(window.scrollY > 40);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [isHome]);
+
+  useEffect(() => setOpen(false), [pathname]);
+
+  const solid = scrolled || open;
 
   return (
-    <nav
-      className={cn(
-        "fixed top-0 left-0 right-0 z-40 transition-all duration-300",
-        isScrolled || !isAuthenticated ? (isScrolled ? "bg-white/90 backdrop-blur-md shadow-sm py-4" : "bg-transparent py-6") : "bg-white shadow-sm py-4"
-      )}
+    <header
+      className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
+        solid ? 'bg-white/95 shadow-[0_1px_0_rgba(18,53,91,0.08)] backdrop-blur' : 'bg-transparent'
+      }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="bg-primary text-white p-2 rounded-lg">
-              <Home className="w-6 h-6" />
-            </div>
-            <span className={cn(
-              "text-xl font-bold tracking-tight transition-colors",
-              isScrolled ? "text-primary" : "text-primary lg:text-white"
-            )}>
-              Boam <span className="font-light">Real-Estates</span>
-            </span>
-          </Link>
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:h-[72px] sm:px-6 lg:px-8">
+        <Link href="/" aria-label="Boam Real-Estates home" className="transition-opacity hover:opacity-80">
+          <Logo variant={solid ? 'dark' : 'light'} />
+        </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-8">
-            <div className="flex items-center gap-6">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.name}
-                  href={link.href}
-                  className={cn(
-                    "text-sm font-medium hover:text-accent transition-colors",
-                    isScrolled ? "text-gray-600" : "text-gray-600 lg:text-white/90"
-                  )}
-                >
-                  {link.name}
-                </Link>
-              ))}
-            </div>
-            <div className="flex items-center gap-4">
-              {isAuthenticated ? (
-                <>
-                  <Link href="/profile" className={cn(
-                    "flex items-center gap-2 text-sm font-medium transition-colors hover:text-accent",
-                    isScrolled ? "text-gray-700" : "text-white"
-                  )}>
-                    {user?.profilePicture ? (
-                      <img src={`http://localhost:5000${user.profilePicture}`} alt="Profile" className="w-8 h-8 rounded-full object-cover" />
-                    ) : (
-                      <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold border border-white/20">
-                        {user?.fullName?.charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                    <span className="hidden xl:block">{user?.fullName}</span>
-                  </Link>
-                  <Link href="/dashboard/properties" className={cn(
-                    "text-sm font-medium transition-colors hover:text-accent",
-                    isScrolled ? "text-gray-700" : "text-white"
-                  )}>
-                    My Properties
-                  </Link>
-                  <Link href="/dashboard/inquiries" className={cn(
-                    "text-sm font-medium transition-colors hover:text-accent",
-                    isScrolled ? "text-gray-700" : "text-white"
-                  )}>
-                    My Inquiries
-                  </Link>
-                  {user.role === 'ADMIN' && (
-                    <Link href="/admin" className={cn(
-                      "text-sm font-medium transition-colors hover:text-red-500",
-                      isScrolled ? "text-red-600" : "text-red-400"
-                    )}>
-                      Admin Panel
-                    </Link>
-                  )}
-                  <Button variant="outline" onClick={handleLogout} className={cn(
-                    isScrolled ? "border-primary text-primary" : "border-white text-white hover:bg-white/10"
-                  )}>
-                    Logout
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Link href="/login">
-                    <Button variant="ghost" className={cn(
-                      isScrolled ? "text-primary" : "text-primary lg:text-white hover:text-primary lg:hover:bg-white/10"
-                    )}>
-                      Login
-                    </Button>
-                  </Link>
-                  <Link href="/register">
-                    <Button variant="accent">Sign Up</Button>
-                  </Link>
-                </>
-              )}
-            </div>
-          </div>
+        <nav className="hidden items-center gap-1 lg:flex" aria-label="Main">
+          {links.map((link) => {
+            const isActive = pathname === link.to;
+            return (
+              <Link
+                key={link.to}
+                href={link.to}
+                className={`relative rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
+                  solid
+                    ? isActive
+                      ? 'text-navy-800'
+                      : 'text-navy-800/60 hover:text-navy-800'
+                    : isActive
+                    ? 'text-white'
+                    : 'text-white/70 hover:text-white'
+                }`}
+              >
+                {link.label}
+                {isActive && (
+                  <span className="absolute inset-x-4 -bottom-0.5 h-0.5 rounded-full bg-amber-500" />
+                )}
+              </Link>
+            );
+          })}
+        </nav>
 
-          {/* Mobile Menu Button */}
-          <button
-            className="lg:hidden p-2"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        <div className="hidden items-center gap-3 lg:flex">
+          <a
+            href="tel:+94112345678"
+            className={`flex items-center gap-2 text-sm font-semibold transition-colors ${
+              solid ? 'text-navy-800 hover:text-navy-600' : 'text-white hover:text-amber-300'
+            }`}
           >
-            {isMobileMenuOpen ? (
-              <X className={cn("w-6 h-6", isScrolled ? "text-primary" : "text-white")} />
-            ) : (
-              <Menu className={cn("w-6 h-6", isScrolled ? "text-primary" : "text-white")} />
-            )}
-          </button>
+            <PhoneIcon className="h-4 w-4" aria-hidden="true" />
+            +94 11 234 5678
+          </a>
+          
+          {!isAuthenticated ? (
+            <Link
+              href="/login"
+              className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
+                solid ? 'text-navy-800 hover:bg-navy-50' : 'text-white hover:bg-white/10'
+              }`}
+            >
+              Sign in
+            </Link>
+          ) : (
+            <Link
+              href="/profile"
+              className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
+                solid ? 'text-navy-800 hover:bg-navy-50' : 'text-white hover:bg-white/10'
+              }`}
+            >
+              <UserCircle className="w-5 h-5" />
+              Profile
+            </Link>
+          )}
+
+          <Link
+            href="/search"
+            className="rounded-full bg-amber-500 px-5 py-2.5 text-sm font-bold text-navy-900 shadow-[0_10px_24px_-12px_rgba(244,163,0,0.9)] transition-all hover:-translate-y-0.5 hover:bg-amber-400"
+          >
+            Browse Listings
+          </Link>
         </div>
+
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          aria-label={open ? 'Close menu' : 'Open menu'}
+          className={`grid h-10 w-10 place-items-center rounded-full transition-colors lg:hidden ${
+            solid ? 'text-navy-800 hover:bg-navy-50' : 'text-white hover:bg-white/10'
+          }`}
+        >
+          {open ? <XIcon className="h-5 w-5" /> : <MenuIcon className="h-5 w-5" />}
+        </button>
       </div>
 
-      {/* Mobile Menu */}
-      {isMobileMenuOpen && (
-        <div className="lg:hidden absolute top-full left-0 right-0 bg-white shadow-xl border-t border-gray-100 p-4 flex flex-col gap-4 animate-in slide-in-from-top-2">
-          {navLinks.map((link) => (
-            <Link
-              key={link.name}
-              href={link.href}
-              className="text-gray-800 font-medium p-2 hover:bg-light-gray rounded-lg"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              {link.name}
-            </Link>
-          ))}
-          <div className="flex flex-col gap-2 pt-4 border-t border-gray-100">
-            {isAuthenticated ? (
-              <>
-                <Link href="/profile">
-                  <Button variant="outline" className="w-full">Profile</Button>
+      {open && (
+        <div className="border-t border-navy-100 bg-white px-4 pb-6 pt-4 lg:hidden shadow-lg">
+          <nav className="flex flex-col gap-1" aria-label="Mobile">
+            {links.map((link) => {
+              const isActive = pathname === link.to;
+              return (
+                <Link
+                  key={link.to}
+                  href={link.to}
+                  className={`rounded-xl px-3 py-3 text-base font-semibold transition-colors ${
+                    isActive ? 'bg-navy-50 text-navy-800' : 'text-navy-800/70 hover:bg-navy-50'
+                  }`}
+                >
+                  {link.label}
                 </Link>
-                <Link href="/dashboard/properties">
-                  <Button variant="outline" className="w-full">My Properties</Button>
-                </Link>
-                <Link href="/dashboard/inquiries">
-                  <Button variant="outline" className="w-full">My Inquiries</Button>
-                </Link>
-                {user.role === 'ADMIN' && (
-                  <Link href="/admin">
-                    <Button variant="outline" className="w-full border-red-200 text-red-600 bg-red-50 hover:bg-red-100">Admin Panel</Button>
-                  </Link>
-                )}
-                <Button variant="ghost" onClick={handleLogout} className="w-full text-red-500">Logout</Button>
-              </>
+              );
+            })}
+          </nav>
+          <div className="mt-6 flex flex-col gap-3 pt-4 border-t border-navy-50">
+            {!isAuthenticated ? (
+              <Link
+                href="/login"
+                className="rounded-full border border-navy-200 px-5 py-3 text-center text-sm font-semibold text-navy-800 transition-colors hover:bg-navy-50"
+              >
+                Sign in
+              </Link>
             ) : (
-              <>
-                <Link href="/login" className="w-full">
-                  <Button variant="outline" className="w-full">Login</Button>
-                </Link>
-                <Link href="/register" className="w-full">
-                  <Button variant="accent" className="w-full">Sign Up</Button>
-                </Link>
-              </>
+              <Link
+                href="/profile"
+                className="rounded-full border border-navy-200 px-5 py-3 text-center text-sm font-semibold text-navy-800 transition-colors hover:bg-navy-50 flex items-center justify-center gap-2"
+              >
+                <UserCircle className="w-5 h-5" />
+                Profile
+              </Link>
             )}
+            <Link
+              href="/search"
+              className="rounded-full bg-amber-500 px-5 py-3 text-center text-sm font-bold text-navy-900 transition-colors hover:bg-amber-400"
+            >
+              Browse Listings
+            </Link>
           </div>
         </div>
       )}
-    </nav>
+    </header>
   );
 }

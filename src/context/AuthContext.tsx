@@ -35,14 +35,47 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // In a real app, you would verify the token with the backend here.
-    // For now, we check localStorage
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
+    const verifyAuth = async () => {
+      const storedUser = localStorage.getItem('user');
+      const token = localStorage.getItem('token');
+
+      if (!storedUser || !token) {
+        setIsLoading(false);
+        return;
+      }
+
+      // Optimistically set user from localStorage for fast render
       setUser(JSON.parse(storedUser));
-    }
-    setIsLoading(false);
+
+      // Then verify token with backend in background
+      try {
+        const res = await fetch('http://localhost:5000/api/v1/users/me', {
+          headers: { 'Authorization': `Bearer ${token}` },
+          signal: AbortSignal.timeout(3000), // 3s timeout — don't block the page
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.data) {
+            const freshUser = data.data;
+            setUser(freshUser);
+            localStorage.setItem('user', JSON.stringify(freshUser));
+          }
+        } else {
+          // Token invalid/expired — log out silently
+          setUser(null);
+          localStorage.removeItem('user');
+          localStorage.removeItem('token');
+        }
+      } catch {
+        // Network error — keep the locally cached user for offline tolerance
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    verifyAuth();
   }, []);
+
 
   const login = (userData: User, token: string) => {
     setUser(userData);

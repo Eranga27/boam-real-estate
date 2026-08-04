@@ -19,10 +19,11 @@ interface Property {
 }
 
 export default function MyProperties() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loadingProperties, setLoadingProperties] = useState(true);
+  const isAdmin = user?.role === 'ADMIN';
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -100,20 +101,24 @@ export default function MyProperties() {
             <h1 className="text-3xl font-bold text-primary mb-2">My Properties</h1>
             <p className="text-gray-600">Manage your real estate listings</p>
           </div>
-          <Link href="/add-property">
-            <Button>
-              <Plus className="w-5 h-5 mr-2" /> Add Property
-            </Button>
-          </Link>
+          {isAdmin && (
+            <Link href="/add-property">
+              <Button>
+                <Plus className="w-5 h-5 mr-2" /> Add Property
+              </Button>
+            </Link>
+          )}
         </div>
 
         {properties.length === 0 ? (
           <div className="bg-white rounded-2xl p-12 text-center shadow-sm border border-gray-100">
             <h2 className="text-xl font-semibold mb-2">No Properties Found</h2>
-            <p className="text-gray-500 mb-6">You haven't added any properties yet.</p>
-            <Link href="/add-property">
-              <Button>Add Your First Property</Button>
-            </Link>
+            <p className="text-gray-500 mb-6">{isAdmin ? "You haven't added any properties yet." : "No listings available at the moment."}</p>
+            {isAdmin && (
+              <Link href="/add-property">
+                <Button>Add Your First Property</Button>
+              </Link>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
