@@ -48,7 +48,7 @@ export default function DashboardOverview() {
     const load = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch('http://localhost:5000/api/v1/dashboard/stats', {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}`}/api/v1/dashboard/stats`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();

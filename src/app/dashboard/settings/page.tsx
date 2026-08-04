@@ -33,7 +33,7 @@ export default function SettingsPage() {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/v1/users/updatepassword', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}`}/api/v1/users/updatepassword`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

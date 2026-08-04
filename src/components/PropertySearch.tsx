@@ -50,7 +50,7 @@ export default function PropertySearch({ initialType, title, subtitle }: Propert
         if (value) queryParams.append(key, value.toString());
       });
 
-      const res = await fetch(`http://localhost:5000/api/v1/properties?${queryParams.toString()}`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/v1/properties?${queryParams.toString()}`);
       const data = await res.json();
       
       if (data.success) {

@@ -28,7 +28,7 @@ export default function SavedPropertiesPage() {
 
     // Fetch each property
     Promise.all(
-      ids.map(id => fetch(`http://localhost:5000/api/v1/properties/${id}`).then(r => r.json()))
+      ids.map(id => fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/v1/properties/${id}`).then(r => r.json()))
     ).then(results => {
       setProperties(results.filter(r => r.success).map(r => r.data));
     }).catch(console.error).finally(() => setFetching(false));

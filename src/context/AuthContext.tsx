@@ -49,7 +49,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       // Then verify token with backend in background
       try {
-        const res = await fetch('http://localhost:5000/api/v1/users/me', {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}`}/api/v1/users/me`, {
           headers: { 'Authorization': `Bearer ${token}` },
           signal: AbortSignal.timeout(3000), // 3s timeout — don't block the page
         });

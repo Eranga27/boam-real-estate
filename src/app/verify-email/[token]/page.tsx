@@ -17,7 +17,7 @@ export default function VerifyEmail({ params }: { params: { token: string } }) {
 
     const verify = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/v1/auth/verify-email/${params.token}`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/v1/auth/verify-email/${params.token}`);
         const data = await res.json();
 
         if (data.success) {

@@ -54,7 +54,7 @@ export default function EditProperty() {
 
   const fetchPropertyDetails = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/v1/properties/${propertyId}`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/v1/properties/${propertyId}`);
       const result = await res.json();
       
       if (result.success) {
@@ -143,7 +143,7 @@ export default function EditProperty() {
       }
 
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/v1/properties/${propertyId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/v1/properties/${propertyId}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`

@@ -43,14 +43,14 @@ export default function PropertyDetails() {
     if (!id) return;
     const fetchProperty = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/v1/properties/${id}`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/v1/properties/${id}`);
         const data = await res.json();
         if (data.success) {
           setProperty(data.data);
           updateRecentlyViewed(data.data);
           // Fetch related
           const relRes = await fetch(
-            `http://localhost:5000/api/v1/properties?propertyType=${data.data.propertyType}&saleOrRent=${data.data.saleOrRent}&limit=4`
+            `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/v1/properties?propertyType=${data.data.propertyType}&saleOrRent=${data.data.saleOrRent}&limit=4`
           );
           const relData = await relRes.json();
           if (relData.success) {
@@ -78,7 +78,7 @@ export default function PropertyDetails() {
       const fetchFavorites = async () => {
         try {
           const token = localStorage.getItem('token');
-          const res = await fetch('http://localhost:5000/api/v1/favorites/ids', {
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}`}/api/v1/favorites/ids`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           const data = await res.json();
@@ -104,7 +104,7 @@ export default function PropertyDetails() {
     if (!isAuthenticated) return;
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/v1/favorites/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/v1/favorites/${id}`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
       });

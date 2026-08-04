@@ -24,7 +24,7 @@ export default function FavoritesPage() {
     const load = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch('http://localhost:5000/api/v1/favorites', {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}`}/api/v1/favorites`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
@@ -38,7 +38,7 @@ export default function FavoritesPage() {
   const removeFavorite = async (propertyId: string) => {
     try {
       const token = localStorage.getItem('token');
-      await fetch(`http://localhost:5000/api/v1/favorites/${propertyId}`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/v1/favorites/${propertyId}`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       });

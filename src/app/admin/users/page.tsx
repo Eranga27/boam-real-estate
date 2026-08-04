@@ -15,7 +15,7 @@ export default function ManageUsersPage() {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/v1/admin/users?page=${page}&limit=10&search=${search}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/v1/admin/users?page=${page}&limit=10&search=${search}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -43,7 +43,7 @@ export default function ManageUsersPage() {
   const toggleStatus = async (id: string, currentStatus: boolean, role: string) => {
     try {
       const token = localStorage.getItem('token');
-      await fetch(`http://localhost:5000/api/v1/admin/users/${id}`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/v1/admin/users/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -60,7 +60,7 @@ export default function ManageUsersPage() {
     if (!confirm(`Are you sure you want to change this user's role to ${newRole}?`)) return;
     try {
       const token = localStorage.getItem('token');
-      await fetch(`http://localhost:5000/api/v1/admin/users/${id}`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/v1/admin/users/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -76,7 +76,7 @@ export default function ManageUsersPage() {
     if (!confirm('Are you sure you want to permanently delete this user? This cannot be undone.')) return;
     try {
       const token = localStorage.getItem('token');
-      await fetch(`http://localhost:5000/api/v1/admin/users/${id}`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/v1/admin/users/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });

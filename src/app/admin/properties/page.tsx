@@ -17,7 +17,7 @@ export default function ManageListingsPage() {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/v1/admin/properties?page=${page}&limit=10&search=${search}&status=${statusFilter}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/v1/admin/properties?page=${page}&limit=10&search=${search}&status=${statusFilter}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -46,7 +46,7 @@ export default function ManageListingsPage() {
     if (status === 'REJECTED' && !confirm('Are you sure you want to reject this listing?')) return;
     try {
       const token = localStorage.getItem('token');
-      await fetch(`http://localhost:5000/api/v1/admin/properties/${id}`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/v1/admin/properties/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -62,7 +62,7 @@ export default function ManageListingsPage() {
     if (!confirm('Are you sure you want to permanently delete this listing? This cannot be undone.')) return;
     try {
       const token = localStorage.getItem('token');
-      await fetch(`http://localhost:5000/api/v1/admin/properties/${id}`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/v1/admin/properties/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });

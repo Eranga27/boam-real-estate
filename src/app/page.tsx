@@ -17,7 +17,7 @@ export default function HomePage() {
   useEffect(() => {
     const fetchFeatured = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/v1/properties?limit=3&sort=newest');
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}`}/api/v1/properties?limit=3&sort=newest`);
         const data = await res.json();
         
         if (data.success && data.data) {
@@ -34,7 +34,7 @@ export default function HomePage() {
             baths: p.bathrooms || 0,
             houseSize: p.houseSize || 0,
             landSize: p.landSize || 0,
-            images: p.images.map((img: string) => img.startsWith('http') ? img : `http://localhost:5000${img}`),
+            images: p.images.map((img: string) => img.startsWith('http') ? img : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}${img}`),
             listedDaysAgo: Math.floor((new Date().getTime() - new Date(p.createdAt).getTime()) / (1000 * 3600 * 24)) || 0,
           }));
           setFeaturedProperties(mapped);

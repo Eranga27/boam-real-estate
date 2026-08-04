@@ -38,7 +38,7 @@ export default function Profile() {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/v1/users/updatedetails', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}`}/api/v1/users/updatedetails`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -67,7 +67,7 @@ export default function Profile() {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/v1/users/updatepassword', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}`}/api/v1/users/updatepassword`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -98,7 +98,7 @@ export default function Profile() {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/v1/users/upload-profile-picture', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}`}/api/v1/users/upload-profile-picture`, {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${token}` 
@@ -124,7 +124,7 @@ export default function Profile() {
     setIsDeleting(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/v1/users/delete-account', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}`}/api/v1/users/delete-account`, {
         method: 'DELETE',
         headers: { 
           'Authorization': `Bearer ${token}` 
@@ -163,7 +163,7 @@ export default function Profile() {
           >
             <div className="relative inline-block mb-4">
               {user.profilePicture ? (
-                <img src={`http://localhost:5000${user.profilePicture}`} alt={user.fullName} className="w-32 h-32 rounded-full object-cover border-4 border-gray-50" />
+                <img src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}${user.profilePicture}`} alt={user.fullName} className="w-32 h-32 rounded-full object-cover border-4 border-gray-50" />
               ) : (
                 <div className="w-32 h-32 rounded-full bg-primary text-white flex items-center justify-center text-4xl font-bold border-4 border-gray-50">
                   {user.fullName.charAt(0).toUpperCase()}

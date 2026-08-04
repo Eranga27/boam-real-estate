@@ -85,7 +85,7 @@ export default function ContactForm({
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      const res = await fetch(`http://localhost:5000/api/v1/inquiries/${propertyId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/v1/inquiries/${propertyId}`, {
         method: 'POST',
         headers,
         body: JSON.stringify(fields),
