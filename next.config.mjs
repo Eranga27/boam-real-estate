@@ -5,7 +5,7 @@ const nextConfig = {
     remotePatterns: [
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: 'i.pravatar.cc' },
-      { protocol: 'http', hostname: 'localhost', port: '5000' },
+      { protocol: 'https', hostname: 'boam-real-estate.onrender.com' },
     ],
     formats: ['image/avif', 'image/webp'],
   },
