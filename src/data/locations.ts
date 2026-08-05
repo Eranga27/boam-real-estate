@@ -1,6 +1,6 @@
 import type { LocationTile } from '../types/property';
 
-export const heroImage = "/acfef156-01c4-4faf-ad78-7565236f91a6.jpg";
+export const heroImage = "/hero-image.jpg";
 
 
 export const locationTiles: LocationTile[] = [
