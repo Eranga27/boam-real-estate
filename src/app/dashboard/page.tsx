@@ -175,7 +175,7 @@ export default function DashboardOverview() {
                   </div>
                   <div className="text-right flex-shrink-0">
                     <Badge variant={statusVariant[p.status]}>{statusLabel[p.status]}</Badge>
-                    <p className="text-xs text-primary font-semibold mt-1">${p.price.toLocaleString()}</p>
+                    <p className="text-xs text-primary font-semibold mt-1">Rs. {p.price.toLocaleString()}</p>
                   </div>
                 </div>
               ))}

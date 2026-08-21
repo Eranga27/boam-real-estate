@@ -86,7 +86,7 @@ export default function SavedPropertiesPage() {
                 <p className="text-xs text-primary font-medium mb-1">{p.propertyType}</p>
                 <h3 className="font-bold text-gray-900 line-clamp-1 mb-1">{p.title}</h3>
                 <p className="text-xs text-gray-500 flex items-center mb-3"><MapPin className="w-3.5 h-3.5 mr-1" />{p.city}, {p.district}</p>
-                <p className="text-lg font-bold text-primary mb-4">${p.price.toLocaleString()}</p>
+                <p className="text-lg font-bold text-primary mb-4">Rs. {p.price.toLocaleString()}</p>
                 <div className="flex items-center justify-between text-xs text-gray-500 pt-3 border-t border-gray-100">
                   <div className="flex gap-3">
                     {p.bedrooms && <span className="flex items-center gap-1"><Bed className="w-3.5 h-3.5" />{p.bedrooms}</span>}

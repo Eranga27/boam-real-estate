@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Search, MapPin, Bed, Bath, Square, Grid, List as ListIcon, Filter, ChevronLeft, ChevronRight, SlidersHorizontal } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
+import { formatPrice } from '@/lib/format';
 
 interface PropertySearchProps {
   initialType: 'Sale' | 'Rent' | '';
@@ -266,8 +267,7 @@ export default function PropertySearch({ initialType, title, subtitle }: Propert
                   </div>
                   <div className="absolute bottom-4 left-4">
                     <div className="text-xl font-bold text-white drop-shadow-md">
-                      ${property.price.toLocaleString()}
-                      {property.saleOrRent === 'Rent' && <span className="text-sm font-normal"> /mo</span>}
+                      {formatPrice(property.price, property.saleOrRent === 'Rent' ? 'rent' : 'sale')}
                     </div>
                   </div>
                 </div>

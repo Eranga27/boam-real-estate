@@ -149,7 +149,7 @@ export default function AdminDashboardPage() {
                       }`}>
                         {p.status}
                       </span>
-                      <p className="text-xs font-semibold text-gray-900 mt-1">${p.price.toLocaleString()}</p>
+                      <p className="text-xs font-semibold text-gray-900 mt-1">Rs. {p.price.toLocaleString()}</p>
                     </div>
                   </div>
                 ))}

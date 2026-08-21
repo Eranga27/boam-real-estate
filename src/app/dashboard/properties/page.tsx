@@ -142,7 +142,7 @@ export default function MyProperties() {
                 </div>
                 <div className="p-5">
                   <h3 className="font-semibold text-lg text-gray-900 mb-1 line-clamp-1">{property.title}</h3>
-                  <p className="text-primary font-bold mb-4">${property.price.toLocaleString()}</p>
+                  <p className="text-primary font-bold mb-4">Rs. {property.price.toLocaleString()}</p>
                   
                   <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                     <span className="text-xs text-gray-500">

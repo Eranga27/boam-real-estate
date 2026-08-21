@@ -43,11 +43,11 @@ export default function MortgageCalculator({ propertyPrice }: MortgageCalculator
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1.5">Property Price ($)</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-1.5">Property Price (Rs.)</label>
           <Input type="number" value={price} onChange={e => setPrice(Number(e.target.value))} />
         </div>
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1.5">Down Payment ($)</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-1.5">Down Payment (Rs.)</label>
           <Input type="number" value={downPayment} onChange={e => setDownPayment(Number(e.target.value))} />
         </div>
         <div>
@@ -71,7 +71,7 @@ export default function MortgageCalculator({ propertyPrice }: MortgageCalculator
       <div className="bg-gray-50 rounded-2xl p-6 flex items-center justify-between">
         <div>
           <p className="text-sm font-medium text-gray-500 mb-1">Estimated Monthly Payment</p>
-          <p className="text-3xl font-bold text-gray-900">${monthlyPayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
+          <p className="text-3xl font-bold text-gray-900">Rs. {monthlyPayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
         </div>
         <div className="text-right">
           <p className="text-xs text-gray-500 mb-1">Principal & Interest</p>

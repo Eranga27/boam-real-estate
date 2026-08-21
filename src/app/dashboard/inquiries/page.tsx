@@ -148,7 +148,7 @@ export default function MyInquiriesPage() {
                     </div>
                     <div className="text-right">
                       <p className="text-xl font-bold text-primary">
-                        ${inquiry.property.price.toLocaleString()}
+                        Rs. {inquiry.property.price.toLocaleString()}
                       </p>
                       <p className="text-xs text-gray-400 flex items-center justify-end mt-1">
                         <Calendar className="w-3 h-3 mr-1" />

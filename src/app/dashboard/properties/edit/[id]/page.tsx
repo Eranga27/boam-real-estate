@@ -249,7 +249,7 @@ export default function EditProperty() {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Price ($) *</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Price (Rs.) *</label>
                       <Input name="price" type="number" value={formData.price} onChange={handleInputChange} placeholder="e.g. 500000" required />
                     </div>
                     <div className="flex items-center h-full pt-6">

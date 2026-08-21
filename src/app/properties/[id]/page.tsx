@@ -14,6 +14,7 @@ import {
   Video, Heart, BookMarked, Share2, Flag, ChevronLeft, ChevronRight, Car,
   LandPlot, ExternalLink, Eye, ArrowLeft
 } from 'lucide-react';
+import { formatFullPrice, formatPrice } from '@/lib/format';
 
 export default function PropertyDetails() {
   const { isAuthenticated } = useAuth();
@@ -189,7 +190,7 @@ export default function PropertyDetails() {
             </div>
             <div className="text-right">
               <div className="text-3xl font-bold text-primary">
-                ${property.price.toLocaleString()}
+                {formatFullPrice(property.price)}
                 {property.saleOrRent === 'Rent' && <span className="text-lg font-normal text-gray-500">/mo</span>}
               </div>
               {/* Action Buttons */}
@@ -432,7 +433,7 @@ export default function PropertyDetails() {
                       <div className="p-4 flex-1 min-w-0">
                         <p className="font-semibold text-sm text-gray-900 line-clamp-1 group-hover:text-primary transition-colors">{rel.title}</p>
                         <p className="text-xs text-gray-500 flex items-center mt-1"><MapPin className="w-3 h-3 mr-1" />{rel.city}</p>
-                        <p className="text-primary font-bold mt-2">${rel.price.toLocaleString()}</p>
+                        <p className="text-primary font-bold mt-2">{formatPrice(rel.price, rel.saleOrRent === 'Rent' ? 'rent' : 'sale')}</p>
                       </div>
                     </Link>
                   ))}
@@ -472,7 +473,7 @@ export default function PropertyDetails() {
                       </div>
                       <div className="min-w-0">
                         <p className="text-sm font-semibold text-gray-800 group-hover:text-primary transition-colors line-clamp-1">{rv.title}</p>
-                        <p className="text-xs text-primary font-bold">${rv.price?.toLocaleString()}</p>
+                        <p className="text-xs text-primary font-bold">{formatPrice(rv.price, rv.saleOrRent === 'Rent' ? 'rent' : 'sale')}</p>
                       </div>
                     </Link>
                   ))}
