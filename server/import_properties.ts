@@ -66,12 +66,14 @@ async function main() {
     const line = raw.trim();
     if (!line) continue;
 
-    const headerMatch = line.match(/^(\d+)\.\s*Location\s*-\s*(.*)/i);
+    const headerMatch = line.match(/(?:Adjustment Needed|Add New)?\s*[-:]?\s*(\d+)\.\s*Location\s*-\s*(.*)/i);
     if (headerMatch) {
       if (cur) properties.push(cur);
       cur = {
         num: parseInt(headerMatch[1]),
         location: headerMatch[2].trim(),
+        propertyType: '',
+        customTitle: '',
         description: '',
         priceStr: '0',
         contactPhone: '+94 777 80 1470', // default
@@ -83,14 +85,18 @@ async function main() {
 
     if (!cur) continue;
 
-    if (/^Description\s*-\s*/i.test(line)) {
-      cur.description = line.replace(/^Description\s*-\s*/i, '').trim();
-    } else if (/^Price\s*-\s*/i.test(line)) {
-      cur.priceStr = line.replace(/^Price\s*-\s*/i, '').trim();
-    } else if (/^Contact\s*-\s*/i.test(line)) {
-      cur.contactPhone = line.replace(/^Contact\s*-\s*/i, '').trim();
-    } else if (/^Pictures\s*-\s*/i.test(line)) {
-      cur.picturesLine = line.replace(/^Pictures\s*-\s*/i, '').trim();
+    if (/^PropertyType\s*[-:]\s*/i.test(line)) {
+      cur.propertyType = line.replace(/^PropertyType\s*[-:]\s*/i, '').trim();
+    } else if (/^Title\s*[-:]\s*/i.test(line)) {
+      cur.customTitle = line.replace(/^Title\s*[-:]\s*/i, '').trim();
+    } else if (/^Description\s*[-:]\s*/i.test(line)) {
+      cur.description = line.replace(/^Description\s*[-:]\s*/i, '').trim();
+    } else if (/^Price\s*[-:]\s*/i.test(line)) {
+      cur.priceStr = line.replace(/^Price\s*[-:]\s*/i, '').trim();
+    } else if (/^Contact\s*[-:]\s*/i.test(line)) {
+      cur.contactPhone = line.replace(/^Contact\s*[-:]\s*/i, '').trim();
+    } else if (/^Pictures\s*[-:]\s*/i.test(line)) {
+      cur.picturesLine = line.replace(/^Pictures\s*[-:]\s*/i, '').trim();
     } else if (/^Address\s*[-:]\s*/i.test(line)) {
       cur.addressLine = line.replace(/^Address\s*[-:]\s*/i, '').trim();
     }
@@ -122,14 +128,15 @@ async function main() {
     }
 
     // Property type
-    const descLower = p.description.toLowerCase();
-    const propertyType =
-      descLower.includes('land') ||
-      descLower.includes('perch') ||
-      descLower.includes('acre') ||
-      descLower.includes('bare')
-        ? 'Land'
-        : 'House';
+    let propertyType = p.propertyType;
+    if (!propertyType) {
+      const loc = p.location.toLowerCase();
+      if (loc.includes('upkot') || loc.includes('maskeliya') || loc.includes('ekala') || loc.includes('kadawatha')) {
+        propertyType = 'House';
+      } else {
+        propertyType = 'Land';
+      }
+    }
 
     // Images
     const imageNames = p.picturesLine
@@ -174,7 +181,7 @@ async function main() {
       }
     }
 
-    const title = `${propertyType} in ${p.location}`;
+    const title = p.customTitle || `${propertyType} in ${p.location}`;
     const address = p.addressLine || p.location;
     const negotiable = p.priceStr.toLowerCase().includes('negotiable');
 

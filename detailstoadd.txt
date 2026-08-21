@@ -17,16 +17,17 @@ Contact - +94 777 80 1470
 Pictures - None
 
 4. Location - Kandy
+PropertyType - Land
+Title - Land in Kandy
 Description - 21 perches of land for sale on Peradeniya Road, Kandy (near the new Damro; very commercial property).
-Price - Rs. 4 million per perch (negotiable).
+Price - Rs. 4 million per perch (negotiable)
 Contact - +94 777 80 1470
 Pictures - None
 
-5. Location - Mount Lavania
+5. Location - Mount Lavinia
 Description - Land area: Total 15 perches(2 blocks), Well mannered neighborhood., Special features: 3 min to Galle road, 5 min to st Thomas College, 5 min to beach
 Price - Rs. 5.5 Mn per perch
 Address - No 16, College Avenue, Mount Lavinia
-Google Maps - https://maps.app.goo.gl/AngLCcNB9nUTx2cV9
 Contact - +94 777 80 1470
 Pictures - None
 
@@ -37,10 +38,9 @@ Contact - +94 777 80 1470
 Pictures - None
 
 7. Location - Katugastota
-Description - Size: 80 perches, View: Stunning Knuckles & Hunasgiriya ranges, Ideal for: Hotel | Housing scheme | Private residence, Investment: Excellent future value
-Location - 2 km from Katugastota Police Station, 1 km from Katugastota Railway Station
+Description - Size: 80 perches, View: Stunning Knuckles & Hunasgiriya ranges, Ideal for: Hotel | Housing scheme | Private residence, Investment: Excellent future value. Location: 2 km from Katugastota Police Station, 1 km from Katugastota Railway Station
 Price - Rs. 1 million per perch
-Address: Kahalla, Katugastota
+Address - Kahalla, Katugastota
 Contact - +94 777 80 1470
 Pictures - None
 
@@ -57,38 +57,40 @@ Contact - +94 777 80 1470
 Pictures - None
 
 10. Location - Kurunegala
-Description - MILLĀWA HOUSING SCHEME, KURUNEGALA. 
-A prime 100 perches of valuable land located at the Millāwa Housing Scheme, Kurunegala, situated on **high ground in a well-developed residential area. 
-Property Details - * Total extent: 100 Perches
-* Subdivision: 6 equal blocks (sold together)
-* Location: Millāwa Housing Scheme, Kurunegala
-* Elevated land with excellent drainage
-* Surrounded by sealed roads
-* 3-phase electricity available
-* Main water supply available
-* Secure and peaceful residential environment
-* Ideal for housing development or investment
+Description - MILLĀWA HOUSING SCHEME, KURUNEGALA. A prime 100 perches of valuable land located at the Millāwa Housing Scheme, Kurunegala, situated on high ground in a well-developed residential area. Total extent: 100 Perches. Subdivision: 6 equal blocks (sold together). Elevated land with excellent drainage, surrounded by sealed roads. 3-phase electricity and main water available. Ideal for housing development or investment.
 Price - Rs. 150 Million (Negotiable)
 Contact - +94 777 80 1470
 Pictures - None
 
 11. Location - Upkot Maskeliya
+PropertyType - House
+Title - Luxury House in Upkot Maskeliya
 Description - 40 perches with 2,500 sq. ft. luxury houses for sale in a high-class residential environment. Only 20 houses remain out of 70.
 Price - Rs. 115 million for the entire property
 Contact - +94 777 80 1470
-Pictures - None
+Pictures - upkotmaskeliya1.jpeg, upkotmaskeliya2.jpeg, upkotmaskeliya3.jpeg, upkotmaskeliya4.jpeg, upkotmaskeliya5.jpeg, upkotmaskeliya6.jpeg, upkotmaskeliya7.jpeg, upkotmaskeliya8.jpeg, upkotmaskeliya9.jpeg, upkotmaskeliya10.jpeg, upkotmaskeliya11.jpeg, upkotmaskeliya12.jpeg, upkotmaskeliya13.jpeg, upkotmaskeliya14.jpeg
 
 12. Location - Kandy
+PropertyType - House
+Title - Three-Storey House in Kandy
+Address - No. 326, George E. De Silva Mawatha, Kandy
 Description - A three-storey house (80% complete – custom-finish ready) for sale at No. 326, George E. De Silva Mawatha, Kandy. Situated on 30 perches of land with a built-up area of approximately 9,589.2 sq. ft.
 Price - Rs. 210,000,000 (negotiable)
 Contact - +94 777 80 1470
 Pictures - kandy1.jpeg, kandy2.jpeg, kandy3.jpeg, kandy4.jpeg, kandy5.jpeg, kandy6.jpeg, kandy7.jpeg, kandy8.jpeg, kandy9.jpeg
 
 13. Location - Ekala
-Description - House with four bedrooms (each room has a balcony), three bathrooms, a living room, a kitchen, and a servant’s kitchen/room/toilet. Land extent: 14 perches.Swimming pool and gym facilities are included for Millennium City residents.
+PropertyType - House
+Title - House in Ekala
+Description - House with four bedrooms (each room has a balcony), three bathrooms, a living room, a kitchen, and a servant’s kitchen/room/toilet. Land extent: 14 perches. Swimming pool and gym facilities are included for Millennium City residents.
 Price - Rs. 45 million (negotiable)
 Contact - +94 777 80 1470
+Pictures - ekala1.jpeg, ekala2.jpeg
 
-
-
-
+14. Location - Kadawatha
+PropertyType - House
+Title - House in Kadawatha
+Description - 36 perch. Single-story house. With 3 bedrooms. Living and dining area with Ample space. Attached toilets. Separate Annexe and 2 shops. Araliyagas junction, Busholt, in front of the house. 48 million. 8 km from Kadawatha. On Kirindiwela Road. Araliya janction, Ambaruluwa, 3500 sqft completely new house. Separate the old house. And 2 separate boutiques besides the road. Near the bus stop.
+Price - Rs. 48 Million (Non-negotiable)
+Contact - +94 777 80 1470
+Pictures - kadawatha1.jpeg, kadawatha2.jpeg, kadawatha3.jpeg, kadawatha4.jpeg, kadawatha5.jpeg, kadawatha6.jpeg, kadawatha7.jpeg, kadawatha8.jpeg, kadawatha9.jpeg, kadawatha10.jpeg, kadawatha11.jpeg, kadawatha12.jpeg
