@@ -17,7 +17,7 @@ const USE_CLOUDINARY =
   process.env.CLOUDINARY_CLOUD_NAME &&
   process.env.CLOUDINARY_CLOUD_NAME !== 'your-cloud-name';
 
-const BACKEND_URL = process.env.BACKEND_URL || 'https://boam-backend.onrender.com';
+const BACKEND_URL = process.env.BACKEND_URL || 'https://boam-real-estate.onrender.com';
 
 const prisma = new PrismaClient();
 
@@ -33,9 +33,9 @@ async function uploadImage(localPath: string): Promise<string | null> {
       console.error('Cloudinary upload failed, falling back to local URL', e);
     }
   }
-  // Fallback: store as a URL pointing to the Render backend /uploads endpoint
+  // Fallback: store as relative path /uploads/filename
   const filename = path.basename(localPath);
-  return `${BACKEND_URL}/uploads/${filename}`;
+  return `/uploads/${filename}`;
 }
 
 async function main() {

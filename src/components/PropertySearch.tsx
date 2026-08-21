@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Search, MapPin, Bed, Bath, Square, Grid, List as ListIcon, Filter, ChevronLeft, ChevronRight, SlidersHorizontal } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
-import { formatPrice } from '@/lib/format';
+import { formatPrice, getImageUrl } from '@/lib/format';
 
 interface PropertySearchProps {
   initialType: 'Sale' | 'Rent' | '';
@@ -256,7 +256,7 @@ export default function PropertySearch({ initialType, title, subtitle }: Propert
               >
                 <div className={`relative ${viewMode === 'list' ? 'w-full sm:w-2/5 aspect-[4/3] sm:aspect-auto sm:h-full' : 'aspect-[4/3] w-full'} bg-gray-100 overflow-hidden`}>
                   {property.images && property.images.length > 0 ? (
-                    <img src={property.images[0]} alt={property.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <img src={getImageUrl(property.images[0])} alt={property.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   ) : (
                     <div className="flex items-center justify-center h-full text-gray-400 bg-gray-100">No Image</div>
                   )}

@@ -12,7 +12,7 @@ import {
   RulerIcon } from
 'lucide-react';
 import type { Property } from '@/types/property';
-import { formatDaysAgo, formatNumber, formatPrice } from '@/lib/format';
+import { formatDaysAgo, formatNumber, formatPrice, getImageUrl } from '@/lib/format';
 
 interface PropertyCardProps {
   property: Property;
@@ -93,7 +93,7 @@ export function PropertyCard({ property, view = 'grid' }: PropertyCardProps) {
         
         <Link href={`/properties/${property.id}`} aria-label={property.title}>
           <img
-            src={property.images[imageIndex]}
+            src={getImageUrl(property.images[imageIndex])}
             alt={property.title}
             loading="lazy"
             className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />

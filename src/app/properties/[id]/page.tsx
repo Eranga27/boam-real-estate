@@ -8,13 +8,12 @@ import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import ContactForm from '@/components/ContactForm';
-import MortgageCalculator from '@/components/MortgageCalculator';
 import {
   MapPin, Bed, Bath, Square, Calendar, CheckCircle2,
   Video, Heart, BookMarked, Share2, Flag, ChevronLeft, ChevronRight, Car,
   LandPlot, ExternalLink, Eye, ArrowLeft
 } from 'lucide-react';
-import { formatFullPrice, formatPrice } from '@/lib/format';
+import { formatFullPrice, formatPrice, getImageUrl } from '@/lib/format';
 
 export default function PropertyDetails() {
   const { isAuthenticated } = useAuth();
@@ -236,12 +235,6 @@ export default function PropertyDetails() {
                 )}
               </div>
             </div>
-
-            {/* Mortgage Calculator */}
-            {property.saleOrRent === 'Sale' && (
-              <MortgageCalculator propertyPrice={property.price} />
-            )}
-          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -256,7 +249,7 @@ export default function PropertyDetails() {
                   <div className="relative aspect-[16/9] bg-gray-100">
                     <motion.img
                       key={activeImage}
-                      src={property.images[activeImage]}
+                      src={getImageUrl(property.images[activeImage])}
                       alt="Property"
                       className="w-full h-full object-cover"
                       initial={{ opacity: 0 }}
@@ -281,7 +274,7 @@ export default function PropertyDetails() {
                         <button key={idx} onClick={() => setActiveImage(idx)}
                           className={`flex-shrink-0 w-20 h-16 rounded-xl overflow-hidden border-2 transition-all ${activeImage === idx ? 'border-primary' : 'border-transparent opacity-60 hover:opacity-100'}`}
                         >
-                          <img src={img} alt="" className="w-full h-full object-cover" />
+                          <img src={getImageUrl(img)} alt="" className="w-full h-full object-cover" />
                         </button>
                       ))}
                     </div>
@@ -427,7 +420,7 @@ export default function PropertyDetails() {
                     <Link key={rel.id} href={`/properties/${rel.id}`} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-all group flex">
                       <div className="w-28 h-28 flex-shrink-0 bg-gray-100 overflow-hidden">
                         {rel.images?.[0] ? (
-                          <img src={rel.images[0]} alt={rel.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                          <img src={getImageUrl(rel.images[0])} alt={rel.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                         ) : <div className="w-full h-full bg-gray-100" />}
                       </div>
                       <div className="p-4 flex-1 min-w-0">
@@ -468,7 +461,7 @@ export default function PropertyDetails() {
                     <Link key={rv.id} href={`/properties/${rv.id}`} className="flex items-center gap-3 group">
                       <div className="w-14 h-14 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0">
                         {rv.images?.[0] ? (
-                          <img src={rv.images[0]} alt={rv.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                          <img src={getImageUrl(rv.images[0])} alt={rv.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                         ) : <div className="w-full h-full bg-gray-100" />}
                       </div>
                       <div className="min-w-0">
