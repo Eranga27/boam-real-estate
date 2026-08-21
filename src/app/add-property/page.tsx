@@ -106,7 +106,7 @@ export default function AddProperty() {
   };
 
   return (
-    <main className="flex-1 py-12 bg-light-gray min-h-screen">
+    <main className="flex-1 py-12 bg-gradient-to-br from-light-gray to-gray-100 min-h-screen">
       <div className="max-w-4xl mx-auto px-4">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-primary">Add New Property</h1>
@@ -114,19 +114,27 @@ export default function AddProperty() {
         </div>
 
         {/* Stepper */}
-        <div className="flex justify-between mb-8 overflow-x-auto pb-4">
-          {steps.map((step) => (
-            <div key={step.id} className="flex flex-col items-center min-w-[80px]">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-colors ${
-                currentStep >= step.id ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500'
-              }`}>
-                {currentStep > step.id ? <CheckCircle className="w-6 h-6" /> : step.icon}
+        <div className="relative mb-12 px-4">
+          <div className="absolute top-5 left-0 w-full h-0.5 bg-gray-200 -z-10 px-8">
+            <div 
+              className="h-full bg-primary transition-all duration-500 ease-in-out"
+              style={{ width: `${((currentStep - 1) / (steps.length - 1)) * 100}%` }}
+            />
+          </div>
+          <div className="flex justify-between overflow-x-auto pb-4 relative z-10">
+            {steps.map((step) => (
+              <div key={step.id} className="flex flex-col items-center min-w-[80px]">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-all duration-300 shadow-sm ${
+                  currentStep >= step.id ? 'bg-primary text-white scale-110 shadow-md' : 'bg-white border-2 border-gray-200 text-gray-400'
+                }`}>
+                  {currentStep > step.id ? <CheckCircle className="w-6 h-6" /> : step.icon}
+                </div>
+                <span className={`text-xs font-semibold tracking-wide transition-colors duration-300 ${currentStep >= step.id ? 'text-primary' : 'text-gray-400'}`}>
+                  {step.name}
+                </span>
               </div>
-              <span className={`text-xs font-medium ${currentStep >= step.id ? 'text-primary' : 'text-gray-500'}`}>
-                {step.name}
-              </span>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
         {message.text && (
@@ -136,7 +144,7 @@ export default function AddProperty() {
         )}
 
         {/* Form Content */}
-        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 min-h-[400px]">
+        <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-gray-100 p-8 min-h-[400px]">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentStep}
