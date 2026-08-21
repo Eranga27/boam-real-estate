@@ -8,6 +8,7 @@ import { motion } from 'framer-motion';
 import { BookMarked, MapPin, Bed, Bath, Square, X, ExternalLink } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { getImageUrl } from '@/lib/format';
 
 export default function SavedPropertiesPage() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -73,7 +74,7 @@ export default function SavedPropertiesPage() {
             >
               <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
                 {p.images?.[0] ? (
-                  <img src={p.images[0]} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <img src={getImageUrl(p.images[0])} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 ) : <div className="w-full h-full bg-gray-100" />}
                 <div className="absolute top-3 left-3">
                   <Badge variant={p.saleOrRent === 'Sale' ? 'accent' : 'secondary'}>For {p.saleOrRent}</Badge>

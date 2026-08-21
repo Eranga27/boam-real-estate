@@ -146,11 +146,15 @@ async function main() {
         continue;
       }
 
-      // Compress to temp file
+      // Compress to uploads directories
       const uploadDir = path.join(__dirname, 'uploads');
+      const publicUploadDir = path.join(__dirname, '../public/uploads');
       if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+      if (!fs.existsSync(publicUploadDir)) fs.mkdirSync(publicUploadDir, { recursive: true });
+      
       const compressed = `property-${Date.now()}-${imgName}`;
       const dest = path.join(uploadDir, compressed);
+      const publicDest = path.join(publicUploadDir, compressed);
 
       try {
         await sharp(sourceImg)
@@ -158,10 +162,12 @@ async function main() {
           .jpeg({ quality: 80 })
           .toFile(dest);
 
+        fs.copyFileSync(dest, publicDest);
+
         const url = await uploadImage(dest);
         if (url) {
           finalImages.push(url);
-          console.log(`  ✓ ${imgName} → ${USE_CLOUDINARY ? 'Cloudinary' : 'local URL'}`);
+          console.log(`  ✓ ${imgName} → ${USE_CLOUDINARY ? 'Cloudinary' : 'local/public URL'}`);
         }
       } catch (e) {
         console.error(`  Failed to process ${imgName}:`, e);

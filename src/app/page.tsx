@@ -8,6 +8,7 @@ import { HowItWorks } from '@/components/home/HowItWorks';
 import { PopularLocations } from '@/components/home/PopularLocations';
 import { CtaBanner } from '@/components/home/CtaBanner';
 import { useAuth } from '@/context/AuthContext';
+import { getImageUrl } from '@/lib/format';
 
 export default function HomePage() {
   const { user } = useAuth();
@@ -34,7 +35,7 @@ export default function HomePage() {
             baths: p.bathrooms || 0,
             houseSize: p.houseSize || 0,
             landSize: p.landSize || 0,
-            images: p.images.map((img: string) => img.startsWith('http') ? img : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}${img}`),
+            images: p.images.map((img: string) => getImageUrl(img)),
             listedDaysAgo: Math.floor((new Date().getTime() - new Date(p.createdAt).getTime()) / (1000 * 3600 * 24)) || 0,
           }));
           setFeaturedProperties(mapped);

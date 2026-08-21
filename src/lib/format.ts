@@ -36,9 +36,8 @@ export function getImageUrl(imagePath?: string): string {
   if (imagePath.startsWith('http://') || imagePath.startsWith('https://') || imagePath.startsWith('data:')) {
     return imagePath;
   }
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
   if (imagePath.startsWith('/')) {
-    return `${baseUrl}${imagePath}`;
+    return imagePath;
   }
-  return `${baseUrl}/uploads/${imagePath}`;
+  return `/uploads/${imagePath}`;
 }

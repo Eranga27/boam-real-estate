@@ -139,23 +139,34 @@ export default function PropertyDetails() {
   const prevImage = () => setActiveImage(i => (i - 1 + (property?.images?.length || 1)) % (property?.images?.length || 1));
   const nextImage = () => setActiveImage(i => (i + 1) % (property?.images?.length || 1));
 
-  if (loading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-    </div>
-  );
-  if (!property) return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-      <h2 className="text-2xl font-bold text-gray-700">Property not found</h2>
-      <Link href="/buy"><Button variant="outline"><ArrowLeft className="w-4 h-4 mr-2" />Browse Properties</Button></Link>
-    </div>
-  );
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
+  if (!property) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+        <h2 className="text-2xl font-bold text-gray-700">Property not found</h2>
+        <Link href="/buy">
+          <Button variant="outline">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Browse Properties
+          </Button>
+        </Link>
+      </div>
+    );
+  }
+
+  const locationQuery = `${property.address || ''}, ${property.city || ''}, ${property.district || ''}`;
   const mapsUrl = (property.latitude && property.longitude)
     ? `https://www.google.com/maps/embed/v1/place?key=YOUR_GOOGLE_MAPS_KEY&q=${property.latitude},${property.longitude}&zoom=15`
-    : `https://www.google.com/maps/embed/v1/search?key=YOUR_GOOGLE_MAPS_KEY&q=${encodeURIComponent(`${property.address}, ${property.city}, ${property.district}`)}`;
+    : `https://www.google.com/maps/embed/v1/search?key=YOUR_GOOGLE_MAPS_KEY&q=${encodeURIComponent(locationQuery)}`;
 
-  const staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(`${property.address}, ${property.city}`)}&zoom=14&size=600x300&markers=color:red|${encodeURIComponent(`${property.address}, ${property.city}`)}&key=YOUR_GOOGLE_MAPS_KEY`;
+  const staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(locationQuery)}&zoom=14&size=600x300&markers=color:red%7C${encodeURIComponent(locationQuery)}&key=YOUR_GOOGLE_MAPS_KEY`;
 
   return (
     <main className="min-h-screen bg-light-gray py-10">
@@ -235,6 +246,7 @@ export default function PropertyDetails() {
                 )}
               </div>
             </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
