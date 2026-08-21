@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, ArrowRight, X, Home, Trees, Building2, ChevronRight } from 'lucide-react';
+import { MapPin, ArrowRight, X, Home, Trees, Building2, Layers, Map as MapIcon, Globe } from 'lucide-react';
 import { formatFullPrice, formatPrice, getImageUrl } from '@/lib/format';
 
 export interface PropertyMapItem {
@@ -25,12 +25,23 @@ interface SriLankaMapProps {
   onSelectProperty?: (id: string) => void;
 }
 
+type GoogleMapMode = 'roadmap' | 'satellite' | 'hybrid' | 'terrain';
+
+const GOOGLE_TILE_URLS: Record<GoogleMapMode, string> = {
+  roadmap: 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',
+  satellite: 'https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',
+  hybrid: 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
+  terrain: 'https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}',
+};
+
 export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLankaMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
+  const tileLayerRef = useRef<any>(null);
   const markersRef = useRef<Record<string, any>>({});
   
   const [activeProperty, setActiveProperty] = useState<PropertyMapItem | null>(null);
+  const [mapMode, setMapMode] = useState<GoogleMapMode>('roadmap');
 
   // Synchronize internal active state with external selectedId
   useEffect(() => {
@@ -39,12 +50,13 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
       if (found) {
         setActiveProperty(found);
         if (mapInstanceRef.current) {
-          mapInstanceRef.current.flyTo([found.lat, found.lng], 11, { duration: 1.2 });
+          mapInstanceRef.current.flyTo([found.lat, found.lng], 12, { duration: 1.2 });
         }
       }
     }
   }, [selectedId, properties]);
 
+  // Handle map initialization and marker updates
   useEffect(() => {
     if (typeof window === 'undefined' || !mapContainerRef.current) return;
     if (mapInstanceRef.current) return;
@@ -65,48 +77,46 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
         center: [7.8731, 80.7718],
         zoom: 8,
         minZoom: 7,
-        maxZoom: 15,
+        maxZoom: 18,
         zoomControl: true,
         scrollWheelZoom: false,
       });
 
       mapInstanceRef.current = map;
 
-      // CartoDB Voyager tiles for modern aesthetics
-      Leaflet.tileLayer(
-        'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-        {
-          attribution:
-            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-          subdomains: 'abcd',
-          maxZoom: 19,
-        }
-      ).addTo(map);
+      // Add Google Maps Tile Layer
+      const googleTileLayer = Leaflet.tileLayer(GOOGLE_TILE_URLS.roadmap, {
+        attribution: '&copy; Google Maps &bull; Boam Real Estate',
+        maxZoom: 20,
+        subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+      }).addTo(map);
 
-      // Plot all property pins
+      tileLayerRef.current = googleTileLayer;
+
+      // Plot all property pins on Google Maps layer
       properties.forEach((prop) => {
         const isHouse = prop.propertyType.toLowerCase() === 'house';
         const isSelected = activeProperty?.id === prop.id;
 
         const customHtml = `
           <div class="relative group cursor-pointer">
-            <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full shadow-lg border-2 border-white transition-all duration-300 transform group-hover:scale-110 ${
-              isHouse ? 'bg-amber-500 text-navy-950 font-bold' : 'bg-navy-800 text-white font-semibold'
+            <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full shadow-xl border-2 border-white transition-all duration-300 transform group-hover:scale-110 ${
+              isHouse ? 'bg-amber-500 text-navy-950 font-black' : 'bg-navy-900 text-white font-bold'
             } ${isSelected ? 'ring-4 ring-amber-400 scale-110 z-50' : ''}">
-              <span class="w-2 h-2 rounded-full ${isHouse ? 'bg-navy-900' : 'bg-emerald-400'} animate-pulse"></span>
+              <span class="w-2.5 h-2.5 rounded-full ${isHouse ? 'bg-navy-900' : 'bg-emerald-400'} animate-pulse"></span>
               <span class="text-xs whitespace-nowrap">${prop.city}</span>
             </div>
-            <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 ${
-              isHouse ? 'bg-amber-500' : 'bg-navy-800'
+            <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2.5 h-2.5 ${
+              isHouse ? 'bg-amber-500' : 'bg-navy-900'
             } rotate-45 border-r border-b border-white"></div>
           </div>
         `;
 
         const icon = Leaflet.divIcon({
-          className: 'sri-lanka-custom-marker',
+          className: 'google-maps-custom-marker',
           html: customHtml,
-          iconSize: [80, 32],
-          iconAnchor: [40, 32],
+          iconSize: [90, 36],
+          iconAnchor: [45, 36],
         });
 
         const marker = Leaflet.marker([prop.lat, prop.lng], { icon }).addTo(map);
@@ -114,7 +124,7 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
         marker.on('click', () => {
           setActiveProperty(prop);
           if (onSelectProperty) onSelectProperty(prop.id);
-          map.flyTo([prop.lat, prop.lng], 11, { duration: 1 });
+          map.flyTo([prop.lat, prop.lng], 12, { duration: 1 });
         });
 
         markersRef.current[prop.id] = marker;
@@ -130,20 +140,59 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [properties]);
 
-  const handleSelect = (prop: PropertyMapItem) => {
-    setActiveProperty(prop);
-    if (onSelectProperty) onSelectProperty(prop.id);
-    if (mapInstanceRef.current) {
-      mapInstanceRef.current.flyTo([prop.lat, prop.lng], 11, { duration: 1 });
+  // Handle map mode / layer changes (Roadmap vs Satellite vs Hybrid vs Terrain)
+  const handleMapModeChange = (mode: GoogleMapMode) => {
+    setMapMode(mode);
+    if (tileLayerRef.current && mapInstanceRef.current) {
+      tileLayerRef.current.setUrl(GOOGLE_TILE_URLS[mode]);
     }
   };
 
   return (
     <div className="relative w-full overflow-hidden rounded-3xl bg-navy-900 shadow-2xl ring-1 ring-navy-100/10">
-      {/* Leaflet Map Canvas */}
+      {/* Map Layer Mode Switcher Controls */}
+      <div className="absolute top-4 left-4 z-20 flex flex-wrap items-center gap-1.5 rounded-2xl bg-white/90 p-1.5 shadow-lg backdrop-blur-md ring-1 ring-navy-900/10">
+        <button
+          onClick={() => handleMapModeChange('roadmap')}
+          className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
+            mapMode === 'roadmap'
+              ? 'bg-navy-900 text-white shadow-sm'
+              : 'text-navy-700 hover:bg-navy-100/60'
+          }`}
+        >
+          <MapIcon className="h-3.5 w-3.5" />
+          <span>Google Map</span>
+        </button>
+
+        <button
+          onClick={() => handleMapModeChange('satellite')}
+          className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
+            mapMode === 'satellite'
+              ? 'bg-amber-500 text-navy-950 shadow-sm'
+              : 'text-navy-700 hover:bg-navy-100/60'
+          }`}
+        >
+          <Globe className="h-3.5 w-3.5" />
+          <span>Satellite</span>
+        </button>
+
+        <button
+          onClick={() => handleMapModeChange('hybrid')}
+          className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
+            mapMode === 'hybrid'
+              ? 'bg-emerald-600 text-white shadow-sm'
+              : 'text-navy-700 hover:bg-navy-100/60'
+          }`}
+        >
+          <Layers className="h-3.5 w-3.5" />
+          <span>Hybrid</span>
+        </button>
+      </div>
+
+      {/* Map Canvas Container */}
       <div ref={mapContainerRef} className="h-[580px] w-full z-0" />
 
-      {/* Floating Active Mini Card */}
+      {/* Floating Active Mini Card Popup */}
       <AnimatePresence>
         {activeProperty && (
           <motion.div
@@ -222,19 +271,6 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Map Legend Overlay */}
-      <div className="absolute top-4 left-4 z-10 hidden sm:flex items-center gap-3 rounded-xl bg-white/90 px-3.5 py-2 shadow-md backdrop-blur-md ring-1 ring-navy-900/10 text-xs font-bold text-navy-900">
-        <span className="flex items-center gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-full bg-amber-500"></span>
-          <span>House</span>
-        </span>
-        <span className="h-3 w-px bg-navy-200"></span>
-        <span className="flex items-center gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-full bg-navy-800"></span>
-          <span>Land</span>
-        </span>
-      </div>
     </div>
   );
 }
