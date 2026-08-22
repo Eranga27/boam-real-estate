@@ -163,12 +163,23 @@ const INITIAL_PROPERTIES: PropertyMapItem[] = [
     lng: 80.3647,
     images: [],
   },
+  {
+    id: 'udathalawinna-thungadhura-land',
+    title: '140 Perches Land in Udathalawinna, Thungadhura',
+    propertyType: 'Land',
+    price: 35000000,
+    city: 'Udathalawinna',
+    lat: 7.3385,
+    lng: 80.6480,
+    images: ['thungadhura1.jpeg'],
+  },
 ];
 
 function assignCoords(city: string, title: string) {
   const t = title.toLowerCase();
   const c = city.toLowerCase();
 
+  if (t.includes('udathalawinna') || c.includes('udathalawinna') || t.includes('thungadhura') || c.includes('thungadhura')) return { lat: 7.3385, lng: 80.6480 };
   if (t.includes('upkot') || c.includes('maskeliya')) return { lat: 6.8347, lng: 80.5732 };
   if (t.includes('three-storey') || t.includes('george e')) return { lat: 7.2783, lng: 80.6321 };
   if (c.includes('kandy')) return { lat: 7.2950, lng: 80.6380 };
