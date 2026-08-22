@@ -77,13 +77,13 @@ export function Navbar() {
 
         <div className="hidden items-center gap-3 lg:flex">
           <a
-            href="tel:+94112345678"
+            href="tel:+94777801470"
             className={`flex items-center gap-2 text-sm font-semibold transition-colors ${
               solid ? 'text-navy-800 hover:text-navy-600' : 'text-white hover:text-amber-300'
             }`}
           >
             <PhoneIcon className="h-4 w-4" aria-hidden="true" />
-            +94 11 234 5678
+            +94 777 80 1470
           </a>
           
           {!isAuthenticated ? (

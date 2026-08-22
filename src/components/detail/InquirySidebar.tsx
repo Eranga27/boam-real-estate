@@ -29,14 +29,14 @@ export function InquirySidebar({ property }: {property: Property;}) {
         </p>
         <div className="mt-5 flex flex-col gap-2 sm:flex-row">
           <a
-            href="tel:+94112345678"
+            href="tel:+94777801470"
             className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-white/10 px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-white/20">
             
             <PhoneIcon className="h-4 w-4" aria-hidden="true" />
             Call
           </a>
           <a
-            href="https://wa.me/94112345678"
+            href="https://wa.me/94777801470"
             className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-sea-500 px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-sea-600">
             
             <MessageCircleIcon className="h-4 w-4" aria-hidden="true" />
@@ -73,8 +73,8 @@ export function InquirySidebar({ property }: {property: Property;}) {
             </div>
             {[
           { id: 'inq-name', label: 'Full name', type: 'text', placeholder: 'Amara Fernando' },
-          { id: 'inq-email', label: 'Email', type: 'email', placeholder: 'you@email.com' },
-          { id: 'inq-phone', label: 'Phone', type: 'tel', placeholder: '+94 77 123 4567' }].
+          { id: 'inq-email', label: 'Email', type: 'email', placeholder: 'anilbwt26@yahoo.com' },
+          { id: 'inq-phone', label: 'Phone', type: 'tel', placeholder: '+94 777 80 1470' }].
           map((field) =>
           <div key={field.id}>
                 <label

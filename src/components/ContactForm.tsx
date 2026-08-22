@@ -233,7 +233,7 @@ export default function ContactForm({
                   type="email"
                   value={fields.senderEmail}
                   onChange={handleChange}
-                  placeholder="you@example.com"
+                  placeholder="anilbwt26@yahoo.com"
                   className={errors.senderEmail ? 'border-red-400 focus:ring-red-300' : ''}
                 />
                 {errors.senderEmail && <p className="text-red-500 text-xs mt-1">{errors.senderEmail}</p>}
@@ -248,7 +248,7 @@ export default function ContactForm({
                   type="tel"
                   value={fields.senderPhone}
                   onChange={handleChange}
-                  placeholder="+94 77 123 4567"
+                  placeholder="+94 777 80 1470"
                 />
               </div>
 

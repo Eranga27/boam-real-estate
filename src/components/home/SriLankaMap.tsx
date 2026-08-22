@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, ArrowRight, X, Home, Trees, Building2, Layers, Map as MapIcon, Globe } from 'lucide-react';
-import { formatFullPrice, formatPrice, getImageUrl } from '@/lib/format';
+import { formatFullPrice, getImageUrl } from '@/lib/format';
 
 export interface PropertyMapItem {
   id: string;
@@ -25,13 +25,13 @@ interface SriLankaMapProps {
   onSelectProperty?: (id: string) => void;
 }
 
-type GoogleMapMode = 'roadmap' | 'satellite' | 'hybrid' | 'terrain';
+type GoogleMapMode = 'roadmap' | 'satellite' | 'hybrid' | 'osm';
 
-const GOOGLE_TILE_URLS: Record<GoogleMapMode, string> = {
+const TILE_URLS: Record<GoogleMapMode, string> = {
   roadmap: 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',
   satellite: 'https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',
   hybrid: 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
-  terrain: 'https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}',
+  osm: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
 };
 
 export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLankaMapProps) {
@@ -84,8 +84,19 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
 
       mapInstanceRef.current = map;
 
+      // Invalidate size on mount to eliminate small-box rendering
+      const invalidate = () => {
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.invalidateSize();
+        }
+      };
+      setTimeout(invalidate, 100);
+      setTimeout(invalidate, 300);
+      setTimeout(invalidate, 800);
+      window.addEventListener('resize', invalidate);
+
       // Add Google Maps Tile Layer
-      const googleTileLayer = Leaflet.tileLayer(GOOGLE_TILE_URLS.roadmap, {
+      const googleTileLayer = Leaflet.tileLayer(TILE_URLS.roadmap, {
         attribution: '&copy; Google Maps &bull; Boam Real Estate',
         maxZoom: 20,
         subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
@@ -140,11 +151,11 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [properties]);
 
-  // Handle map mode / layer changes (Roadmap vs Satellite vs Hybrid vs Terrain)
+  // Handle map mode / layer changes (Roadmap vs Satellite vs Hybrid vs OSM)
   const handleMapModeChange = (mode: GoogleMapMode) => {
     setMapMode(mode);
     if (tileLayerRef.current && mapInstanceRef.current) {
-      tileLayerRef.current.setUrl(GOOGLE_TILE_URLS[mode]);
+      tileLayerRef.current.setUrl(TILE_URLS[mode]);
     }
   };
 
@@ -187,10 +198,22 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
           <Layers className="h-3.5 w-3.5" />
           <span>Hybrid</span>
         </button>
+
+        <button
+          onClick={() => handleMapModeChange('osm')}
+          className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
+            mapMode === 'osm'
+              ? 'bg-blue-600 text-white shadow-sm'
+              : 'text-navy-700 hover:bg-navy-100/60'
+          }`}
+        >
+          <MapPin className="h-3.5 w-3.5" />
+          <span>OpenStreet</span>
+        </button>
       </div>
 
       {/* Map Canvas Container */}
-      <div ref={mapContainerRef} className="h-[580px] w-full z-0" />
+      <div ref={mapContainerRef} className="h-[580px] w-full z-0 min-h-[580px]" />
 
       {/* Floating Active Mini Card Popup */}
       <AnimatePresence>

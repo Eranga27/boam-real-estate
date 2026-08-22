@@ -36,7 +36,7 @@ export function CtaBanner() {
               
             </Link>
             <a
-              href="tel:+94112345678"
+              href="tel:+94777801470"
               className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/25 px-7 py-3.5 text-sm font-bold text-white transition-all hover:border-white hover:bg-white/10 sm:w-auto">
               
               <PhoneIcon className="h-4 w-4" aria-hidden="true" />
