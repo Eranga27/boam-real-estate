@@ -9,25 +9,51 @@ import { PopularLocations } from '@/components/home/PopularLocations';
 import { CtaBanner } from '@/components/home/CtaBanner';
 import { useAuth } from '@/context/AuthContext';
 import { getImageUrl } from '@/lib/format';
+import { properties as staticProperties } from '@/data/properties';
+
+/** Shape properties.ts data into what PropertyCard expects */
+function toCardShape(p: typeof staticProperties[0]): any {
+  return {
+    id: p.id,
+    title: p.title,
+    price: p.price,
+    listingType: p.listingType,
+    type: p.type,
+    city: p.city,
+    district: p.district,
+    beds: p.beds,
+    baths: p.baths,
+    houseSize: p.houseSize,
+    landSize: p.landSize,
+    images: p.images,
+    listedDaysAgo: p.listedDaysAgo,
+    negotiable: p.negotiable,
+  };
+}
 
 export default function HomePage() {
   const { user } = useAuth();
-  const [featuredProperties, setFeaturedProperties] = useState<any[]>([]);
-  const [loadingProperties, setLoadingProperties] = useState(true);
+  // Pre-fill with 3 featured static listings — visible immediately, no backend needed
+  const [featuredProperties, setFeaturedProperties] = useState<any[]>(
+    staticProperties.filter((p) => p.featured).slice(0, 3).map(toCardShape)
+  );
+  const [loadingProperties] = useState(false);
 
   useEffect(() => {
+    // Try enhancing with live API data in the background (silently ignored if offline)
     const fetchFeatured = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}`}/api/v1/properties?limit=3&sort=newest`);
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/properties?limit=3&sort=newest`,
+          { signal: AbortSignal.timeout(4000) }
+        );
         const data = await res.json();
-        
-        if (data.success && data.data) {
-          // Map backend model to UI model expected by PropertyCard
+        if (data.success && data.data && data.data.length > 0) {
           const mapped = data.data.map((p: any) => ({
             id: p.id,
             title: p.title,
             price: p.price,
-            listingType: p.saleOrRent.toLowerCase() === 'sale' ? 'sale' : 'rent',
+            listingType: p.saleOrRent?.toLowerCase() === 'sale' ? 'sale' : 'rent',
             type: p.propertyType,
             city: p.city,
             district: p.district,
@@ -35,15 +61,14 @@ export default function HomePage() {
             baths: p.bathrooms || 0,
             houseSize: p.houseSize || 0,
             landSize: p.landSize || 0,
-            images: p.images.map((img: string) => getImageUrl(img)),
-            listedDaysAgo: Math.floor((new Date().getTime() - new Date(p.createdAt).getTime()) / (1000 * 3600 * 24)) || 0,
+            images: (p.images || []).map((img: string) => getImageUrl(img)),
+            listedDaysAgo:
+              Math.floor((Date.now() - new Date(p.createdAt).getTime()) / (1000 * 3600 * 24)) || 0,
           }));
           setFeaturedProperties(mapped);
         }
       } catch {
-        // fail silently
-      } finally {
-        setLoadingProperties(false);
+        // Backend offline — static featured data already showing
       }
     };
     fetchFeatured();

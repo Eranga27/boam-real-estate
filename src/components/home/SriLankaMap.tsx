@@ -142,10 +142,14 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
         `;
 
         const icon = Leaflet.divIcon({
-          className: 'lanka-climate-custom-marker',
-          html: customHtml,
-          iconSize: [90, 36],
-          iconAnchor: [45, 36],
+          className: 'bg-transparent border-none',
+          html: `
+            <div style="transform: translate(-50%, -100%); width: max-content; padding-bottom: 4px; position: relative;">
+              ${customHtml}
+            </div>
+          `,
+          iconSize: [0, 0],
+          iconAnchor: [0, 0],
         });
 
         const marker = Leaflet.marker([prop.lat, prop.lng], { icon }).addTo(map);

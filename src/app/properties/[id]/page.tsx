@@ -14,6 +14,41 @@ import {
   LandPlot, ExternalLink, Eye, ArrowLeft
 } from 'lucide-react';
 import { formatFullPrice, formatPrice, getImageUrl } from '@/lib/format';
+import { properties as staticProperties, getSimilarProperties } from '@/data/properties';
+import type { Property } from '@/types/property';
+
+/** Normalise a static Property into the shape the API returns */
+function staticToApi(p: Property): any {
+  return {
+    id: p.id,
+    title: p.title,
+    propertyType: p.type,
+    saleOrRent: p.listingType === 'sale' ? 'Sale' : 'Rent',
+    price: p.price,
+    negotiable: p.negotiable,
+    city: p.city,
+    district: p.district,
+    address: p.address,
+    latitude: p.lat,
+    longitude: p.lng,
+    bedrooms: p.beds || null,
+    bathrooms: p.baths || null,
+    parking: p.parking || null,
+    landSize: p.landSize || null,
+    houseSize: p.houseSize || null,
+    yearBuilt: p.yearBuilt || null,
+    description: p.description,
+    amenities: p.amenities,
+    nearbyFacilities: p.nearby,
+    images: p.images,
+    listedDaysAgo: p.listedDaysAgo,
+    featured: p.featured,
+    contactPhone: '+94 777 80 1470',
+    contactEmail: 'anilbwt26@yahoo.com',
+    whatsappNumber: '94777801470',
+    user: { fullName: 'Boam Real Estates' },
+  };
+}
 
 export default function PropertyDetails() {
   const { isAuthenticated } = useAuth();
@@ -42,20 +77,41 @@ export default function PropertyDetails() {
   useEffect(() => {
     if (!id) return;
     const fetchProperty = async () => {
+      // First: try local static data (always works, no backend needed)
+      const localMatch = staticProperties.find((p) => p.id === id);
+      if (localMatch) {
+        const apiShape = staticToApi(localMatch);
+        setProperty(apiShape);
+        updateRecentlyViewed(apiShape);
+        const similar = getSimilarProperties(localMatch, 4);
+        setRelatedProperties(similar.map(staticToApi));
+        setLoading(false);
+        // Optionally also try API in background for richer data
+        try {
+          const res = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/properties/${id}`,
+            { signal: AbortSignal.timeout(4000) }
+          );
+          const data = await res.json();
+          if (data.success && data.data) {
+            setProperty(data.data);
+            updateRecentlyViewed(data.data);
+          }
+        } catch { /* backend offline — static data is fine */ }
+        return;
+      }
+      // Fallback: API-only (for DB-only listings)
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/v1/properties/${id}`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/properties/${id}`);
         const data = await res.json();
         if (data.success) {
           setProperty(data.data);
           updateRecentlyViewed(data.data);
-          // Fetch related
           const relRes = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/v1/properties?propertyType=${data.data.propertyType}&saleOrRent=${data.data.saleOrRent}&limit=4`
+            `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/properties?propertyType=${data.data.propertyType}&saleOrRent=${data.data.saleOrRent}&limit=4`
           );
           const relData = await relRes.json();
-          if (relData.success) {
-            setRelatedProperties(relData.data.filter((p: any) => p.id !== id));
-          }
+          if (relData.success) setRelatedProperties(relData.data.filter((p: any) => p.id !== id));
         }
       } catch (err) {
         console.error(err);
@@ -161,12 +217,7 @@ export default function PropertyDetails() {
     );
   }
 
-  const locationQuery = `${property.address || ''}, ${property.city || ''}, ${property.district || ''}`;
-  const mapsUrl = (property.latitude && property.longitude)
-    ? `https://www.google.com/maps/embed/v1/place?key=YOUR_GOOGLE_MAPS_KEY&q=${property.latitude},${property.longitude}&zoom=15`
-    : `https://www.google.com/maps/embed/v1/search?key=YOUR_GOOGLE_MAPS_KEY&q=${encodeURIComponent(locationQuery)}`;
-
-  const staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(locationQuery)}&zoom=14&size=600x300&markers=color:red%7C${encodeURIComponent(locationQuery)}&key=YOUR_GOOGLE_MAPS_KEY`;
+  const locationQuery = `${property.address || ''}, ${property.city || ''}, Sri Lanka`;
 
   return (
     <main className="min-h-screen bg-light-gray py-10">
@@ -401,20 +452,19 @@ export default function PropertyDetails() {
                 <MapPin className="w-5 h-5 text-primary" /> Location
               </h3>
               <div className="rounded-2xl overflow-hidden aspect-[16/9] bg-gray-100 relative">
-                {/* Google Maps embed - will show a map or fallback message */}
                 <iframe
                   title="Property Location"
                   width="100%"
                   height="100%"
                   loading="lazy"
-                  className="absolute inset-0"
-                  src={`https://maps.google.com/maps?q=${encodeURIComponent(`${property.address}, ${property.city}, ${property.district}`)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                  className="absolute inset-0 w-full h-full"
+                  src={`https://maps.google.com/maps?q=${encodeURIComponent(locationQuery)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
                   style={{ border: 0 }}
                   allowFullScreen
                 />
               </div>
               <a
-                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${property.address}, ${property.city}, ${property.district}`)}`}
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationQuery)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 text-sm text-primary mt-3 hover:underline"
