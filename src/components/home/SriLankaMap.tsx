@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, ArrowRight, X, Home, Trees, Building2, Layers, Map as MapIcon, Globe } from 'lucide-react';
+import { MapPin, ArrowRight, X, Home, Trees, Building2, Layers, Map as MapIcon, Globe, Moon } from 'lucide-react';
 import { formatFullPrice, getImageUrl } from '@/lib/format';
 
 export interface PropertyMapItem {
@@ -25,14 +25,31 @@ interface SriLankaMapProps {
   onSelectProperty?: (id: string) => void;
 }
 
-type GoogleMapMode = 'roadmap' | 'satellite' | 'hybrid' | 'osm';
-
-const TILE_URLS: Record<GoogleMapMode, string> = {
-  roadmap: 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',
-  satellite: 'https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',
-  hybrid: 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
-  osm: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+// Map Tile Layers adopted from Lanka-Climate-Hub
+const BASE_MAPS = {
+  road: {
+    name: 'Roadmap',
+    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+    attribution: '&copy; <a href="https://carto.com/">CARTO</a> &bull; Boam Real Estate',
+  },
+  satellite: {
+    name: 'Satellite',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    attribution: '&copy; Esri World Imagery &bull; Boam Real Estate',
+  },
+  dark: {
+    name: 'Dark Mode',
+    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    attribution: '&copy; CARTO Dark &bull; Boam Real Estate',
+  },
+  terrain: {
+    name: 'Terrain',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Terrain_Base/MapServer/tile/{z}/{y}/{x}',
+    attribution: '&copy; Esri Terrain &bull; Boam Real Estate',
+  },
 };
+
+type MapStyle = keyof typeof BASE_MAPS;
 
 export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLankaMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -41,7 +58,7 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
   const markersRef = useRef<Record<string, any>>({});
   
   const [activeProperty, setActiveProperty] = useState<PropertyMapItem | null>(null);
-  const [mapMode, setMapMode] = useState<GoogleMapMode>('roadmap');
+  const [mapStyle, setMapStyle] = useState<MapStyle>('road');
 
   // Synchronize internal active state with external selectedId
   useEffect(() => {
@@ -50,13 +67,13 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
       if (found) {
         setActiveProperty(found);
         if (mapInstanceRef.current) {
-          mapInstanceRef.current.flyTo([found.lat, found.lng], 12, { duration: 1.2 });
+          mapInstanceRef.current.flyTo([found.lat, found.lng], 12, { animate: true, duration: 1.2 });
         }
       }
     }
   }, [selectedId, properties]);
 
-  // Handle map initialization and marker updates
+  // Handle map initialization (using Lanka-Climate-Hub Leaflet setup pattern)
   useEffect(() => {
     if (typeof window === 'undefined' || !mapContainerRef.current) return;
     if (mapInstanceRef.current) return;
@@ -64,12 +81,12 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
     import('leaflet').then((L) => {
       const Leaflet = L.default || L;
 
-      // Fix icon URL default issues
+      // Fix icon URL default issues in Next.js
       delete (Leaflet.Icon.Default.prototype as any)._getIconUrl;
       Leaflet.Icon.Default.mergeOptions({
-        iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-        iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+        iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+        iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
       });
 
       // Center map on Sri Lanka
@@ -84,36 +101,36 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
 
       mapInstanceRef.current = map;
 
-      // Invalidate size on mount to eliminate small-box rendering
+      // Force Leaflet to recalculate container size immediately and after layout paint
       const invalidate = () => {
         if (mapInstanceRef.current) {
           mapInstanceRef.current.invalidateSize();
         }
       };
+      invalidate();
       setTimeout(invalidate, 100);
       setTimeout(invalidate, 300);
       setTimeout(invalidate, 800);
       window.addEventListener('resize', invalidate);
 
-      // Add Google Maps Tile Layer
-      const googleTileLayer = Leaflet.tileLayer(TILE_URLS.roadmap, {
-        attribution: '&copy; Google Maps &bull; Boam Real Estate',
-        maxZoom: 20,
-        subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+      // Add Tile Layer from Lanka-Climate-Hub BASE_MAPS
+      const tileLayer = Leaflet.tileLayer(BASE_MAPS.road.url, {
+        attribution: BASE_MAPS.road.attribution,
+        maxZoom: 19,
+        subdomains: 'abcd',
       }).addTo(map);
 
-      tileLayerRef.current = googleTileLayer;
+      tileLayerRef.current = tileLayer;
 
-      // Plot all property pins on Google Maps layer
+      // Plot property pins
       properties.forEach((prop) => {
         const isHouse = prop.propertyType.toLowerCase() === 'house';
-        const isSelected = activeProperty?.id === prop.id;
 
         const customHtml = `
           <div class="relative group cursor-pointer">
             <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full shadow-xl border-2 border-white transition-all duration-300 transform group-hover:scale-110 ${
               isHouse ? 'bg-amber-500 text-navy-950 font-black' : 'bg-navy-900 text-white font-bold'
-            } ${isSelected ? 'ring-4 ring-amber-400 scale-110 z-50' : ''}">
+            }">
               <span class="w-2.5 h-2.5 rounded-full ${isHouse ? 'bg-navy-900' : 'bg-emerald-400'} animate-pulse"></span>
               <span class="text-xs whitespace-nowrap">${prop.city}</span>
             </div>
@@ -124,7 +141,7 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
         `;
 
         const icon = Leaflet.divIcon({
-          className: 'google-maps-custom-marker',
+          className: 'lanka-climate-custom-marker',
           html: customHtml,
           iconSize: [90, 36],
           iconAnchor: [45, 36],
@@ -135,7 +152,7 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
         marker.on('click', () => {
           setActiveProperty(prop);
           if (onSelectProperty) onSelectProperty(prop.id);
-          map.flyTo([prop.lat, prop.lng], 12, { duration: 1 });
+          map.flyTo([prop.lat, prop.lng], 12, { animate: true, duration: 1 });
         });
 
         markersRef.current[prop.id] = marker;
@@ -151,34 +168,34 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [properties]);
 
-  // Handle map mode / layer changes (Roadmap vs Satellite vs Hybrid vs OSM)
-  const handleMapModeChange = (mode: GoogleMapMode) => {
-    setMapMode(mode);
+  // Handle map style / layer changes
+  const handleMapStyleChange = (style: MapStyle) => {
+    setMapStyle(style);
     if (tileLayerRef.current && mapInstanceRef.current) {
-      tileLayerRef.current.setUrl(TILE_URLS[mode]);
+      tileLayerRef.current.setUrl(BASE_MAPS[style].url);
     }
   };
 
   return (
     <div className="relative w-full overflow-hidden rounded-3xl bg-navy-900 shadow-2xl ring-1 ring-navy-100/10">
-      {/* Map Layer Mode Switcher Controls */}
+      {/* Map Layer Mode Controls (Lanka-Climate-Hub style) */}
       <div className="absolute top-4 left-4 z-20 flex flex-wrap items-center gap-1.5 rounded-2xl bg-white/90 p-1.5 shadow-lg backdrop-blur-md ring-1 ring-navy-900/10">
         <button
-          onClick={() => handleMapModeChange('roadmap')}
+          onClick={() => handleMapStyleChange('road')}
           className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
-            mapMode === 'roadmap'
+            mapStyle === 'road'
               ? 'bg-navy-900 text-white shadow-sm'
               : 'text-navy-700 hover:bg-navy-100/60'
           }`}
         >
           <MapIcon className="h-3.5 w-3.5" />
-          <span>Google Map</span>
+          <span>Roadmap</span>
         </button>
 
         <button
-          onClick={() => handleMapModeChange('satellite')}
+          onClick={() => handleMapStyleChange('satellite')}
           className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
-            mapMode === 'satellite'
+            mapStyle === 'satellite'
               ? 'bg-amber-500 text-navy-950 shadow-sm'
               : 'text-navy-700 hover:bg-navy-100/60'
           }`}
@@ -188,27 +205,27 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
         </button>
 
         <button
-          onClick={() => handleMapModeChange('hybrid')}
+          onClick={() => handleMapStyleChange('dark')}
           className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
-            mapMode === 'hybrid'
+            mapStyle === 'dark'
+              ? 'bg-slate-900 text-white shadow-sm'
+              : 'text-navy-700 hover:bg-navy-100/60'
+          }`}
+        >
+          <Moon className="h-3.5 w-3.5" />
+          <span>Dark</span>
+        </button>
+
+        <button
+          onClick={() => handleMapStyleChange('terrain')}
+          className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
+            mapStyle === 'terrain'
               ? 'bg-emerald-600 text-white shadow-sm'
               : 'text-navy-700 hover:bg-navy-100/60'
           }`}
         >
           <Layers className="h-3.5 w-3.5" />
-          <span>Hybrid</span>
-        </button>
-
-        <button
-          onClick={() => handleMapModeChange('osm')}
-          className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
-            mapMode === 'osm'
-              ? 'bg-blue-600 text-white shadow-sm'
-              : 'text-navy-700 hover:bg-navy-100/60'
-          }`}
-        >
-          <MapPin className="h-3.5 w-3.5" />
-          <span>OpenStreet</span>
+          <span>Terrain</span>
         </button>
       </div>
 
