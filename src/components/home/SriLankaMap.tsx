@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import 'leaflet/dist/leaflet.css';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, ArrowRight, X, Home, Trees, Building2, Layers, Map as MapIcon, Globe, Moon } from 'lucide-react';
