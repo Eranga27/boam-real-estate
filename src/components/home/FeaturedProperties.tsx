@@ -23,8 +23,7 @@ export function FeaturedProperties({ properties = [], loading = false }: { prope
             Featured Properties
           </h2>
           <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-navy-800/60">
-            A short list from our exclusive portfolio — each one visited, measured and
-            title-checked by a Boam agent.
+            A curated selection of homes and land across Sri Lanka.
           </p>
         </div>
         <Link

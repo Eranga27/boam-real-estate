@@ -6,8 +6,8 @@ import { stats } from '@/data/locations';
 export function StatsStrip() {
   return (
     <div className="relative z-10">
-      {/* Hero → Stats dissolve: soft upward fade from navy into white */}
-      <div className="pointer-events-none absolute inset-x-0 -top-10 h-20 bg-gradient-to-b from-navy-950/70 via-white/60 to-transparent" />
+      {/* Hero → Stats: very subtle dissolve, no visible band */}
+      <div className="pointer-events-none absolute inset-x-0 -top-8 h-16 bg-gradient-to-b from-white/0 via-white/30 to-white/0" />
 
       <section aria-label="Company track record" className="relative -mt-14 px-4 sm:px-6 lg:px-8 pb-2">
         <div className="mx-auto grid max-w-6xl grid-cols-2 gap-px overflow-hidden rounded-3xl bg-navy-100 shadow-float lg:grid-cols-4">

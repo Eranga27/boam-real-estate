@@ -11,6 +11,14 @@ interface LogoProps {
   size?: 'sm' | 'md' | 'lg' | 'responsive';
 }
 
+/** Height values in px for each size preset */
+const SIZE_H: Record<NonNullable<LogoProps['size']>, number> = {
+  sm: 30,
+  md: 34,
+  lg: 42,
+  responsive: 36,
+};
+
 export function Logo({
   variant = 'dark',
   type = 'horizontal',
@@ -18,37 +26,84 @@ export function Logo({
   className = '',
   size = 'responsive',
 }: LogoProps) {
-  // Select appropriate PNG logo asset from /images/
-  let logoSrc = '/images/boamhorizontallogo.png';
-  if (type === 'compact' || !showWordmark) {
-    logoSrc = '/images/boamcompactmonogram.png';
-  } else if (type === 'normal') {
-    logoSrc = '/images/boamnormallogo.png';
-  }
+  const isLight = variant === 'light';
+  const isCompact = type === 'compact' || !showWordmark;
+  const h = SIZE_H[size];
 
-  // Responsive sizing presets to maintain header balance without layout shift
-  const sizeClasses = {
-    sm: 'h-8 sm:h-9',
-    md: 'h-9 sm:h-10 lg:h-11',
-    lg: 'h-10 sm:h-12 lg:h-14',
-    responsive: 'h-9 sm:h-[42px] lg:h-[46px]',
+  // Colour tokens
+  const markBg   = isLight ? '#FFFFFF' : '#12355B';
+  const markText = isLight ? '#12355B' : '#FFFFFF';
+  const wordFill = isLight ? '#FFFFFF' : '#12355B';
+  const goldFill = '#F4A300';
+  const subFill  = isLight ? 'rgba(255,255,255,0.55)' : 'rgba(18,53,91,0.45)';
+
+  const baseFont: React.CSSProperties = {
+    fontFamily: 'Inter, system-ui, sans-serif',
+    fontWeight: 800,
+    letterSpacing: '-0.02em',
   };
 
-  // Contrast filter: On dark hero backgrounds, invert navy text to crisp white with subtle drop-shadow
-  const contrastClass =
-    variant === 'light'
-      ? 'brightness-0 invert drop-shadow-[0_1px_3px_rgba(0,0,0,0.4)] opacity-95 hover:opacity-100'
-      : 'brightness-100 drop-shadow-none opacity-100';
+  // ── Compact monogram ─────────────────────────────────────────────
+  if (isCompact) {
+    return (
+      <span className={`inline-flex items-center shrink-0 ${className}`}>
+        <svg
+          width={h}
+          height={h}
+          viewBox="0 0 40 40"
+          fill="none"
+          aria-label="BOAM"
+          role="img"
+        >
+          <rect x="0" y="0" width="40" height="40" rx="9" fill={markBg} />
+          <rect x="0" y="33" width="40" height="7" rx="4" fill={goldFill} />
+          <text x="9" y="29" fontSize="23" style={{ ...baseFont, fill: markText }}>
+            B
+          </text>
+        </svg>
+      </span>
+    );
+  }
 
+  // ── Horizontal wordmark ───────────────────────────────────────────
+  const logoW = Math.round(h * 3.8);
   return (
     <span className={`inline-flex items-center shrink-0 ${className}`}>
-      <img
-        src={logoSrc}
-        alt="BOAM Real-Estates"
-        loading="eager"
-        decoding="async"
-        className={`w-auto object-contain transition-all duration-300 ${sizeClasses[size]} ${contrastClass}`}
-      />
+      <svg
+        width={logoW}
+        height={h}
+        viewBox="0 0 144 38"
+        fill="none"
+        aria-label="BOAM Real-Estates"
+        role="img"
+      >
+        {/* Square mark */}
+        <rect x="0" y="0" width="36" height="36" rx="8" fill={markBg} />
+        <rect x="0" y="29" width="36" height="7" rx="3.5" fill={goldFill} />
+        <text x="7" y="27" fontSize="21" style={{ ...baseFont, fill: markText }}>
+          B
+        </text>
+
+        {/* Wordmark */}
+        <text x="44" y="27" fontSize="22" style={{ ...baseFont, fill: wordFill }}>
+          BOAM
+        </text>
+
+        {/* Sub-label */}
+        <text
+          x="45"
+          y="37"
+          fontSize="7.5"
+          style={{
+            fontFamily: 'Inter, system-ui, sans-serif',
+            fontWeight: 600,
+            letterSpacing: '0.14em',
+            fill: subFill,
+          }}
+        >
+          REAL ESTATE
+        </text>
+      </svg>
     </span>
   );
 }

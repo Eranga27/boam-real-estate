@@ -10,12 +10,13 @@ import { propertyTypes } from '@/data/properties';
 const CITIES = ['Colombo', 'Kandy', 'Galle', 'Negombo', 'Jaffna', 'Nugegoda', 'Mount Lavinia', 'Matara'];
 
 // Project photography for subtle background slideshow
+// Only use images that exist in public/ or public/uploads/
 const SLIDESHOW_IMAGES = [
-  heroImage, // "/hero-image.jpg" — loads immediately
-  "/89df7b2b-17bd-4a69-8c48-7507b0317f39.jpg", // Colombo coastal skyline
-  "/8b83135d-2794-4945-82c2-c3c00df05c19.jpg", // Kandy hillside bungalow
-  "/8fed2cb7-c9d1-4348-90d2-9c4e2232d65e.jpg", // Galle heritage villa
-  "/f3ce110d-34d0-4264-a97d-6864d251b5e2.jpg", // Negombo beachfront estate
+  heroImage, // "/hero-image.jpg" — loads immediately, always first
+  "/uploads/property-1787331336449-kandy1.jpeg",          // Kandy hillside house
+  "/uploads/property-1787331334740-upkotmaskeliya1.jpeg", // Upkot mountain villa
+  "/uploads/property-1787331343370-kadawatha1.jpeg",      // Kadawatha home
+  "/uploads/thungadhura1.jpeg",                           // Thungadhura land estate
 ];
 
 export function Hero() {
@@ -76,8 +77,17 @@ export function Hero() {
   }, []);
 
   return (
-    <section className="relative flex min-h-[100svh] items-center overflow-hidden bg-navy-950 pt-24 pb-16 lg:py-32">
-      {/* Background Slideshow Images */}
+    // CSS background-image on the section itself = instant first-paint, no JS needed
+    <section
+      className="relative flex min-h-[100svh] items-center overflow-hidden pt-24 pb-16 lg:py-32"
+      style={{
+        backgroundColor: '#0E2A49',
+        backgroundImage: `url(${heroImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
+      {/* JS Slideshow Images — layer on top once React hydrates */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {SLIDESHOW_IMAGES.map((imgSrc, idx) => {
           const isVisible = idx === currentIndex;
@@ -87,13 +97,14 @@ export function Hero() {
           return (
             <div
               key={imgSrc}
-              className={`absolute inset-0 h-full w-full transition-opacity duration-1000 ease-in-out ${
-                isVisible ? 'opacity-100 z-0' : 'opacity-0 -z-10'
+              className={`absolute inset-0 h-full w-full transition-opacity duration-[1200ms] ease-in-out ${
+                isVisible ? 'opacity-100' : 'opacity-0'
               }`}
             >
               <img
                 src={imgSrc}
-                alt="Exclusive Sri Lanka property"
+                alt=""
+                aria-hidden="true"
                 className="h-full w-full object-cover object-center"
                 {...(idx === 0 ? { fetchPriority: 'high' as any } : { loading: 'lazy' })}
               />
@@ -102,10 +113,10 @@ export function Hero() {
         })}
       </div>
 
-      {/* Editorial Navy Vignette Overlays for Contrast & Readability */}
-      <div className="absolute inset-0 bg-navy-950/55 pointer-events-none" />
-      <div className="absolute inset-0 bg-gradient-to-r from-navy-950 via-navy-950/80 to-navy-950/20 pointer-events-none" />
-      <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-transparent to-navy-950/40 pointer-events-none" />
+      {/* Atmospheric vignette — enough for text contrast, not enough to hide photography */}
+      <div className="absolute inset-0 bg-navy-950/35 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-r from-navy-950/85 via-navy-950/50 to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-t from-navy-950/70 via-transparent to-navy-950/30 pointer-events-none" />
 
       {/* Left-Aligned Editorial Composition Column */}
       <div className="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
