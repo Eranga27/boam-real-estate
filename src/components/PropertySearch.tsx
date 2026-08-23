@@ -245,6 +245,11 @@ export default function PropertySearch({ initialType, title, subtitle }: Propert
                         <Bath className="w-4 h-4" /> <span>{property.bathrooms} Baths</span>
                       </div>
                     )}
+                    {property.landSize && (
+                      <div className="flex items-center gap-1">
+                        <Square className="w-4 h-4 text-primary" /> <span>{property.landSize} {property.id === 'ratnapura-land' ? 'Acres' : 'Perches'}</span>
+                      </div>
+                    )}
                     {property.houseSize && (
                       <div className="flex items-center gap-1">
                         <Square className="w-4 h-4" /> <span>{property.houseSize} sqft</span>

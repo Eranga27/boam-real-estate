@@ -25,6 +25,7 @@ function staticToApi(p: Property): any {
     propertyType: p.type,
     saleOrRent: p.listingType === 'sale' ? 'Sale' : 'Rent',
     price: p.price,
+    pricePerPerch: p.pricePerPerch,
     negotiable: p.negotiable,
     city: p.city,
     district: p.district,
@@ -372,18 +373,27 @@ export default function PropertyDetails() {
                     <span className="text-xs text-gray-500 uppercase tracking-wider">Parking</span>
                   </div>
                 )}
-                {property.houseSize && (
+                {property.pricePerPerch && (
                   <div className="flex flex-col items-center gap-1">
-                    <Square className="w-6 h-6 text-primary" />
-                    <span className="text-2xl font-bold text-gray-900">{property.houseSize.toLocaleString()}</span>
-                    <span className="text-xs text-gray-500 uppercase tracking-wider">House sqft</span>
+                    <LandPlot className="w-6 h-6 text-primary" />
+                    <span className="text-xl font-bold text-gray-900">{property.pricePerPerch}</span>
+                    <span className="text-xs text-gray-500 uppercase tracking-wider">Rate / Unit</span>
                   </div>
                 )}
                 {property.landSize && (
                   <div className="flex flex-col items-center gap-1">
                     <LandPlot className="w-6 h-6 text-primary" />
                     <span className="text-2xl font-bold text-gray-900">{property.landSize.toLocaleString()}</span>
-                    <span className="text-xs text-gray-500 uppercase tracking-wider">Land sqft</span>
+                    <span className="text-xs text-gray-500 uppercase tracking-wider">
+                      {property.id === 'ratnapura-land' ? 'Acres' : 'Perches'}
+                    </span>
+                  </div>
+                )}
+                {property.houseSize && (
+                  <div className="flex flex-col items-center gap-1">
+                    <Square className="w-6 h-6 text-primary" />
+                    <span className="text-2xl font-bold text-gray-900">{property.houseSize.toLocaleString()}</span>
+                    <span className="text-xs text-gray-500 uppercase tracking-wider">House sqft</span>
                   </div>
                 )}
                 {property.yearBuilt && (

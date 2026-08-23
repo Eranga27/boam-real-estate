@@ -29,6 +29,8 @@ export interface Property {
   images: string[];
   listedDaysAgo: number;
   featured: boolean;
+  /** Price per perch or per unit text e.g. "Rs. 2.5 Mn per perch" */
+  pricePerPerch?: string;
 }
 
 export interface LocationTile {
