@@ -36,6 +36,7 @@ export const properties: Property[] = [
       '/uploads/upkotmaskeliya11.jpeg',
       '/uploads/upkotmaskeliya12.jpeg',
       '/uploads/upkotmaskeliya13.jpeg',
+      '/uploads/upkotmaskeliya14.jpeg',
     ],
     listedDaysAgo: 1,
     featured: true,
@@ -472,7 +473,7 @@ Estate Highlights
 * Total Extents Approx 14.5 Acres
 * 8.5 Acres of Tea Plantation
 * 2.5 Acres of Young Rubber Plantation
-* 100 Well Grown Coconut Trees
+* 100 + Well Grown Coconut Trees
 * Acres of Newly Planted Durian Plantation
 * Various Fruit Trees with Excellents
 
