@@ -1,13 +1,22 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useRouter as useNavigate } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ChevronDownIcon, MapPinIcon, SearchIcon, ShieldCheckIcon } from 'lucide-react';
+import { ChevronDownIcon, MapPinIcon, SearchIcon } from 'lucide-react';
 import { heroImage } from '@/data/locations';
 import { propertyTypes } from '@/data/properties';
 
-const cities = ['Colombo', 'Kandy', 'Galle', 'Negombo', 'Jaffna', 'Nugegoda', 'Mount Lavinia', 'Matara'];
+const CITIES = ['Colombo', 'Kandy', 'Galle', 'Negombo', 'Jaffna', 'Nugegoda', 'Mount Lavinia', 'Matara'];
+
+// Project photography for subtle background slideshow
+const SLIDESHOW_IMAGES = [
+  heroImage, // "/hero-image.jpg" — loads immediately
+  "/89df7b2b-17bd-4a69-8c48-7507b0317f39.jpg", // Colombo coastal skyline
+  "/8b83135d-2794-4945-82c2-c3c00df05c19.jpg", // Kandy hillside bungalow
+  "/8fed2cb7-c9d1-4348-90d2-9c4e2232d65e.jpg", // Galle heritage villa
+  "/f3ce110d-34d0-4264-a97d-6864d251b5e2.jpg", // Negombo beachfront estate
+];
 
 export function Hero() {
   const navigate = useNavigate();
@@ -15,9 +24,13 @@ export function Hero() {
   const [type, setType] = useState('');
   const [focused, setFocused] = useState(false);
 
+  // Background slideshow progressive loading state
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [loadedImages, setLoadedImages] = useState<string[]>([SLIDESHOW_IMAGES[0]]);
+
   const suggestions = useMemo(() => {
-    if (!location.trim()) return cities.slice(0, 5);
-    return cities.filter((c) => c.toLowerCase().includes(location.trim().toLowerCase())).slice(0, 5);
+    if (!location.trim()) return CITIES.slice(0, 5);
+    return CITIES.filter((c) => c.toLowerCase().includes(location.trim().toLowerCase())).slice(0, 5);
   }, [location]);
 
   const submit = (e: React.FormEvent) => {
@@ -28,146 +41,195 @@ export function Hero() {
     navigate.push(`/search${params.toString() ? `?${params.toString()}` : ''}`);
   };
 
+  // Progressive background preloading & smooth image slideshow cycling
+  useEffect(() => {
+    // Respect reduced motion preference
+    if (typeof window !== 'undefined') {
+      const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+      if (mediaQuery.matches) return;
+    }
+
+    // Preload remaining images asynchronously after interactive
+    let isMounted = true;
+    const preloadTimeout = setTimeout(() => {
+      SLIDESHOW_IMAGES.slice(1).forEach((src) => {
+        const img = new Image();
+        img.src = src;
+        img.onload = () => {
+          if (isMounted) {
+            setLoadedImages((prev) => (prev.includes(src) ? prev : [...prev, src]));
+          }
+        };
+      });
+    }, 1200);
+
+    // 7-second subtle crossfade timer
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % SLIDESHOW_IMAGES.length);
+    }, 7000);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(preloadTimeout);
+      clearInterval(interval);
+    };
+  }, []);
+
   return (
-    <section className="relative flex min-h-[100svh] items-center justify-center overflow-hidden bg-navy-950">
-      {/* Background Villa Photography with Cinematic Entrance */}
-      <motion.img
-        src={heroImage}
-        alt="Exclusive ocean-facing villa in Sri Lanka"
-        initial={{ scale: 1.06, opacity: 0.7 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
-        className="absolute inset-0 h-full w-full object-cover object-center"
-      />
+    <section className="relative flex min-h-[100svh] items-center overflow-hidden bg-navy-950 pt-24 pb-16 lg:py-32">
+      {/* Background Slideshow Images */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {SLIDESHOW_IMAGES.map((imgSrc, idx) => {
+          const isVisible = idx === currentIndex;
+          const isAvailable = idx === 0 || loadedImages.includes(imgSrc);
+          if (!isAvailable) return null;
 
-      {/* Editorial Sophisticated Dark Vignette Overlays */}
-      <div className="absolute inset-0 bg-navy-950/55" />
-      <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-navy-950/30 to-navy-950/60" />
+          return (
+            <div
+              key={imgSrc}
+              className={`absolute inset-0 h-full w-full transition-opacity duration-1000 ease-in-out ${
+                isVisible ? 'opacity-100 z-0' : 'opacity-0 -z-10'
+              }`}
+            >
+              <img
+                src={imgSrc}
+                alt="Exclusive Sri Lanka property"
+                className="h-full w-full object-cover object-center"
+                {...(idx === 0 ? { fetchPriority: 'high' as any } : { loading: 'lazy' })}
+              />
+            </div>
+          );
+        })}
+      </div>
 
-      {/* Main Content Area */}
-      <div className="relative z-10 mx-auto w-full max-w-4xl px-4 pb-16 pt-32 text-center sm:px-6 lg:pb-24 lg:pt-36">
-        {/* Subtle Broker Verification Pill */}
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: 'easeOut' }}
-          className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 backdrop-blur-md shadow-sm"
-        >
-          <ShieldCheckIcon className="h-4 w-4 text-amber-400" aria-hidden="true" />
-          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-white/90">
-            Exclusive broker-verified portfolio
-          </span>
-        </motion.div>
+      {/* Editorial Navy Vignette Overlays for Contrast & Readability */}
+      <div className="absolute inset-0 bg-navy-950/55 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-r from-navy-950 via-navy-950/80 to-navy-950/20 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-transparent to-navy-950/40 pointer-events-none" />
 
-        {/* Editorial Headline */}
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-6 text-4xl font-extrabold tracking-tight text-white sm:text-6xl lg:text-7xl leading-[1.06]"
-        >
-          Property, with{' '}
-          <span className="relative inline-block text-amber-400">
-            confidence.
-          </span>
-        </motion.h1>
+      {/* Left-Aligned Editorial Composition Column */}
+      <div className="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="max-w-xl lg:max-w-2xl text-left">
+          {/* Subtle Supporting Eyebrow */}
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
+            className="text-xs font-bold uppercase tracking-[0.2em] text-amber-400"
+          >
+            Sri Lanka’s Premier Real Estate
+          </motion.p>
 
-        {/* Supporting Copy */}
-        <motion.p
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.25, ease: 'easeOut' }}
-          className="mx-auto mt-5 max-w-2xl text-base font-normal leading-relaxed text-white/80 sm:text-xl"
-        >
-          Broker-verified homes, land and developments across Sri Lanka.
-        </motion.p>
+          {/* Editorial Headline */}
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+            className="mt-4 text-4xl font-extrabold tracking-tight text-white sm:text-6xl lg:text-7xl leading-[1.05]"
+          >
+            Property, with{' '}
+            <span className="text-amber-400">
+              confidence.
+            </span>
+          </motion.h1>
 
-        {/* Premium Floating Search Panel */}
-        <motion.form
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.38, ease: [0.16, 1, 0.3, 1] }}
-          onSubmit={submit}
-          className="mx-auto mt-10 w-full max-w-3xl"
-          role="search"
-        >
-          <div className="flex flex-col gap-2 rounded-3xl bg-white/95 p-3 shadow-float backdrop-blur-md border border-white/20 sm:flex-row sm:items-center sm:rounded-full">
-            {/* Location Autocomplete Field */}
-            <div className="relative flex-1">
-              <label htmlFor="hero-location" className="sr-only">
-                Location
-              </label>
-              <div className="flex items-center gap-3 rounded-2xl px-4 py-3 sm:rounded-full">
-                <MapPinIcon className="h-5 w-5 shrink-0 text-amber-500" aria-hidden="true" />
-                <input
-                  id="hero-location"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  onFocus={() => setFocused(true)}
-                  onBlur={() => window.setTimeout(() => setFocused(false), 140)}
-                  placeholder="City, district or neighbourhood"
-                  autoComplete="off"
-                  className="w-full bg-transparent text-sm sm:text-base font-medium text-navy-900 placeholder:text-navy-800/40 focus:outline-none"
+          {/* Concise Supporting Copy */}
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.22, ease: 'easeOut' }}
+            className="mt-5 text-base font-normal leading-relaxed text-white/80 sm:text-lg lg:text-xl max-w-lg"
+          >
+            Broker-verified homes, land and developments across Sri Lanka.
+          </motion.p>
+
+          {/* Refined Left-Aligned Floating Search Panel */}
+          <motion.form
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            onSubmit={submit}
+            className="mt-8 w-full max-w-2xl"
+            role="search"
+          >
+            <div className="flex flex-col gap-2.5 rounded-3xl bg-white/95 p-3 shadow-float backdrop-blur-md border border-white/20 sm:flex-row sm:items-center sm:rounded-full sm:p-2 sm:pr-2.5">
+              {/* Location Autocomplete Input */}
+              <div className="relative flex-1">
+                <label htmlFor="hero-location" className="sr-only">
+                  Location
+                </label>
+                <div className="flex items-center gap-3 px-4 py-3 sm:py-2.5">
+                  <MapPinIcon className="h-5 w-5 shrink-0 text-amber-500" aria-hidden="true" />
+                  <input
+                    id="hero-location"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    onFocus={() => setFocused(true)}
+                    onBlur={() => window.setTimeout(() => setFocused(false), 150)}
+                    placeholder="City, district or neighbourhood"
+                    autoComplete="off"
+                    className="w-full bg-transparent text-sm sm:text-base font-medium text-navy-900 placeholder:text-navy-800/40 focus:outline-none"
+                  />
+                </div>
+
+                {/* Autocomplete Suggestions Popover */}
+                {focused && suggestions.length > 0 && (
+                  <ul className="absolute left-0 top-full z-30 mt-2.5 w-full overflow-hidden rounded-2xl bg-white py-2 text-left shadow-float border border-navy-100/90">
+                    {suggestions.map((city) => (
+                      <li key={city}>
+                        <button
+                          type="button"
+                          onClick={() => setLocation(city)}
+                          className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm font-semibold text-navy-800 transition-colors hover:bg-navy-50"
+                        >
+                          <MapPinIcon className="h-4 w-4 text-navy-400" aria-hidden="true" />
+                          {city}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              {/* Vertical Separator */}
+              <div className="hidden h-7 w-px bg-navy-100 sm:block" />
+
+              {/* Property Type Dropdown */}
+              <div className="relative sm:w-48">
+                <label htmlFor="hero-type" className="sr-only">
+                  Property type
+                </label>
+                <select
+                  id="hero-type"
+                  value={type}
+                  onChange={(e) => setType(e.target.value)}
+                  className="w-full appearance-none rounded-2xl bg-transparent px-4 py-3 pr-10 text-sm sm:text-base font-medium text-navy-900 focus:outline-none sm:py-2.5 cursor-pointer"
+                >
+                  <option value="">Any property type</option>
+                  {propertyTypes.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDownIcon
+                  className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-navy-400"
+                  aria-hidden="true"
                 />
               </div>
 
-              {/* Suggestions Dropdown Popover */}
-              {focused && suggestions.length > 0 && (
-                <ul className="absolute left-0 top-full z-30 mt-2.5 w-full overflow-hidden rounded-2xl bg-white py-2 text-left shadow-float border border-navy-100/90">
-                  {suggestions.map((city) => (
-                    <li key={city}>
-                      <button
-                        type="button"
-                        onClick={() => setLocation(city)}
-                        className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm font-semibold text-navy-800 transition-colors hover:bg-navy-50"
-                      >
-                        <MapPinIcon className="h-4 w-4 text-navy-400" aria-hidden="true" />
-                        {city}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-
-            {/* Vertical Separator */}
-            <div className="hidden h-8 w-px bg-navy-100 sm:block" />
-
-            {/* Property Type Field */}
-            <div className="relative sm:w-56">
-              <label htmlFor="hero-type" className="sr-only">
-                Property type
-              </label>
-              <select
-                id="hero-type"
-                value={type}
-                onChange={(e) => setType(e.target.value)}
-                className="w-full appearance-none rounded-2xl bg-transparent px-4 py-3 pr-10 text-sm sm:text-base font-medium text-navy-900 focus:outline-none sm:rounded-full cursor-pointer"
+              {/* Search Submit Action Button */}
+              <button
+                type="submit"
+                className="flex items-center justify-center gap-2 rounded-2xl bg-amber-500 px-7 py-3 text-sm font-bold text-navy-950 transition-all duration-200 hover:bg-amber-400 hover:shadow-[0_8px_24px_-6px_rgba(244,163,0,0.6)] active:scale-[0.99] sm:rounded-full shrink-0"
               >
-                <option value="">Any property type</option>
-                {propertyTypes.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-              </select>
-              <ChevronDownIcon
-                className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-navy-400"
-                aria-hidden="true"
-              />
+                <SearchIcon className="h-4 w-4" aria-hidden="true" />
+                <span>Search</span>
+              </button>
             </div>
-
-            {/* Search Submit Action Button */}
-            <button
-              type="submit"
-              className="flex items-center justify-center gap-2.5 rounded-2xl bg-amber-500 px-8 py-3.5 text-sm font-bold text-navy-950 transition-all duration-200 hover:bg-amber-400 hover:shadow-[0_8px_24px_-6px_rgba(244,163,0,0.6)] active:scale-[0.99] sm:rounded-full shrink-0"
-            >
-              <SearchIcon className="h-4 w-4" aria-hidden="true" />
-              <span>Search</span>
-            </button>
-          </div>
-        </motion.form>
+          </motion.form>
+        </div>
       </div>
     </section>
   );
-}
+}

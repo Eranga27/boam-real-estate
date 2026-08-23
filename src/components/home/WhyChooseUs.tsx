@@ -29,7 +29,12 @@ const reasons = [
 
 export function WhyChooseUs() {
   return (
-    <section className="bg-navy-800 py-20 lg:py-28">
+    <section className="relative bg-navy-800 py-20 lg:py-28">
+      {/* Popular → WhyChooseUs dissolve */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-navy-50/80 to-transparent" />
+      {/* WhyChooseUs → HowItWorks dissolve */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-white/15 to-transparent" />
+
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl">
           <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-amber-500">

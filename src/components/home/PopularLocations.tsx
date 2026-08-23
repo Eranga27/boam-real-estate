@@ -243,7 +243,12 @@ export function PopularLocations() {
   const landCount = properties.filter((p) => p.propertyType.toLowerCase() === 'land').length;
 
   return (
-    <section className="bg-navy-50/60 py-16 lg:py-24">
+    <section className="relative bg-navy-50/60 py-16 lg:py-24">
+      {/* Featured → Popular dissolve */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-white to-transparent" />
+      {/* Popular → WhyChooseUs dissolve */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-navy-800/30 to-transparent" />
+
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
