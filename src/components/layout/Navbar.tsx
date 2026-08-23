@@ -45,8 +45,12 @@ export function Navbar() {
       }`}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:h-[72px] sm:px-6 lg:px-8">
-        <Link href="/" aria-label="Boam Real-Estates home" className="transition-opacity hover:opacity-80">
-          <Logo variant={solid ? 'dark' : 'light'} />
+        <Link
+          href="/"
+          aria-label="Boam Real-Estates home"
+          className="flex items-center shrink-0 transition-opacity hover:opacity-90 py-1"
+        >
+          <Logo variant={solid ? 'dark' : 'light'} size="responsive" />
         </Link>
 
         <nav className="hidden items-center gap-1 lg:flex" aria-label="Main">

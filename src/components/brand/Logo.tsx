@@ -2,59 +2,53 @@
 import React from 'react';
 
 interface LogoProps {
-  /** 'light' for dark backgrounds, 'dark' for white backgrounds */
+  /** 'light' for dark/hero backgrounds, 'dark' for white backgrounds */
   variant?: 'light' | 'dark';
+  /** 'horizontal' (default), 'compact' monogram, or 'normal' full logo */
+  type?: 'horizontal' | 'compact' | 'normal';
   showWordmark?: boolean;
   className?: string;
+  size?: 'sm' | 'md' | 'lg' | 'responsive';
 }
 
-export function Logo({ variant = 'dark', showWordmark = true, className = '' }: LogoProps) {
-  const primary = variant === 'light' ? '#FFFFFF' : '#12355B';
-  const sub = variant === 'light' ? 'rgba(255,255,255,0.62)' : '#5e8abc';
+export function Logo({
+  variant = 'dark',
+  type = 'horizontal',
+  showWordmark = true,
+  className = '',
+  size = 'responsive',
+}: LogoProps) {
+  // Select appropriate PNG logo asset from /images/
+  let logoSrc = '/images/boamhorizontallogo.png';
+  if (type === 'compact' || !showWordmark) {
+    logoSrc = '/images/boamcompactmonogram.png';
+  } else if (type === 'normal') {
+    logoSrc = '/images/boamnormallogo.png';
+  }
+
+  // Responsive sizing presets to maintain header balance without layout shift
+  const sizeClasses = {
+    sm: 'h-8 sm:h-9',
+    md: 'h-9 sm:h-10 lg:h-11',
+    lg: 'h-10 sm:h-12 lg:h-14',
+    responsive: 'h-9 sm:h-[42px] lg:h-[46px]',
+  };
+
+  // Contrast filter: On dark hero backgrounds, invert navy text to crisp white with subtle drop-shadow
+  const contrastClass =
+    variant === 'light'
+      ? 'brightness-0 invert drop-shadow-[0_1px_3px_rgba(0,0,0,0.4)] opacity-95 hover:opacity-100'
+      : 'brightness-100 drop-shadow-none opacity-100';
 
   return (
-    <span className={`inline-flex items-center gap-2.5 ${className}`}>
-      <svg
-        width="38"
-        height="38"
-        viewBox="0 0 40 40"
-        fill="none"
-        aria-hidden="true"
-        className="shrink-0">
-        
-        <rect width="40" height="40" rx="11" fill={variant === 'light' ? 'rgba(255,255,255,0.12)' : '#12355B'} />
-        <path
-          d="M11 21.6 20 12.4l9 9.2"
-          stroke="#F4A300"
-          strokeWidth="2.4"
-          strokeLinecap="round"
-          strokeLinejoin="round" />
-        
-        <path
-          d="M13.6 22.4V28h5.1v-4.1h2.6V28h5.1v-5.6"
-          stroke={variant === 'light' ? '#FFFFFF' : '#FFFFFF'}
-          strokeWidth="2.1"
-          strokeLinecap="round"
-          strokeLinejoin="round" />
-        
-      </svg>
-      {showWordmark &&
-      <span className="flex flex-col leading-none">
-          <span
-          className="text-[17px] font-extrabold tracking-tight"
-          style={{ color: primary }}>
-          
-            BOAM
-            <span style={{ color: '#F4A300' }}>.</span>
-          </span>
-          <span
-          className="mt-0.5 text-[9px] font-semibold uppercase tracking-[0.22em]"
-          style={{ color: sub }}>
-          
-            Real-Estates
-          </span>
-        </span>
-      }
-    </span>);
-
+    <span className={`inline-flex items-center shrink-0 ${className}`}>
+      <img
+        src={logoSrc}
+        alt="BOAM Real-Estates"
+        loading="eager"
+        decoding="async"
+        className={`w-auto object-contain transition-all duration-300 ${sizeClasses[size]} ${contrastClass}`}
+      />
+    </span>
+  );
 }
