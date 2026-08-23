@@ -274,7 +274,6 @@ export const properties: Property[] = [
     type: 'Land',
     listingType: 'sale',
     price: 20000000,
-    pricePerPerch: 'Rs. 1.14 Mn per perch',
     negotiable: true,
     city: 'Panadura',
     district: 'Western Province',
@@ -352,7 +351,6 @@ export const properties: Property[] = [
     type: 'Land',
     listingType: 'sale',
     price: 20000000,
-    pricePerPerch: 'Rs. 1 million per perch',
     negotiable: true,
     city: 'Velipenna',
     district: 'Western Province',
@@ -378,7 +376,6 @@ export const properties: Property[] = [
     type: 'Land',
     listingType: 'sale',
     price: 150000000,
-    pricePerPerch: 'Rs. 1.5 Million per perch',
     negotiable: true,
     city: 'Kurunegala',
     district: 'North Western Province',
@@ -447,24 +444,45 @@ export const properties: Property[] = [
   },
   {
     id: 'kalutara-estate-land',
-    title: 'Estate Land in Kalutara',
+    title: 'Exclusive Eco/Agro Tourism Estate for Sale-Bulathsinhala',
     type: 'Land',
     listingType: 'sale',
-    price: 96000000,
-    pricePerPerch: 'Rs. 1.2 Million per perch',
+    price: 150000000,
     negotiable: true,
-    city: 'Kalutara',
-    district: 'Western Province',
-    address: 'Kalutara',
-    lat: 6.5854,
-    lng: 79.9607,
+    city: 'Bulathsinhala',
+    district: 'Kalutara',
+    address: 'Bulathsinhala, Kalutara',
+    lat: 6.6478,
+    lng: 80.1458,
     beds: 0,
     baths: 0,
     parking: 0,
-    landSize: 80,
+    landSize: 14.5,
     houseSize: 0,
     yearBuilt: 0,
-    description: `Estate land for sale in Kalutara. Price: Rs. 1.2 Million per perch (Negotiable). Contact +94 777 80 1470.`,
+    description: `A rare opportunity to own a breathtaking scenic estate surrounded by nature in the heart of Bulathsinhala. Ideal for
+* Eco Tourism
+* Agro Tourism
+* Wellness Retreats
+* Boutique Villas
+* Nature and Adventure Tourism
+
+Estate Highlights
+* Total Extents Approx 14.5 Acres
+* 8.5 Acres of Tea Plantation
+* 2.5 Acres of Young Rubber Plantation
+* 100 Well Grown Coconut Trees
+* Acres of Newly Planted Durian Plantation
+* Various Fruit Trees with Excellents
+
+Excellent investment opportunity for anyone looking to develop
+* Echo Lodges
+* Luxury Villas
+* Glamping Sites
+* Wellness Retreats
+* Sustainable Farming Projects
+
+A perfect blend of Nature, Agriculture, Tourism, and investment potential.`,
     amenities: [],
     nearby: [],
     images: [

@@ -385,7 +385,7 @@ export default function PropertyDetails() {
                     <LandPlot className="w-6 h-6 text-primary" />
                     <span className="text-2xl font-bold text-gray-900">{property.landSize.toLocaleString()}</span>
                     <span className="text-xs text-gray-500 uppercase tracking-wider">
-                      {property.id === 'ratnapura-land' ? 'Acres' : 'Perches'}
+                      {['ratnapura-land', 'kalutara-estate-land'].includes(property.id) ? 'Acres' : 'Perches'}
                     </span>
                   </div>
                 )}

@@ -247,7 +247,7 @@ export default function PropertySearch({ initialType, title, subtitle }: Propert
                     )}
                     {property.landSize && (
                       <div className="flex items-center gap-1">
-                        <Square className="w-4 h-4 text-primary" /> <span>{property.landSize} {property.id === 'ratnapura-land' ? 'Acres' : 'Perches'}</span>
+                        <Square className="w-4 h-4 text-primary" /> <span>{property.landSize} {['ratnapura-land', 'kalutara-estate-land'].includes(property.id) ? 'Acres' : 'Perches'}</span>
                       </div>
                     )}
                     {property.houseSize && (

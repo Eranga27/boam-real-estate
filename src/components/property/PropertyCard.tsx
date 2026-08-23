@@ -70,7 +70,7 @@ export function PropertyCard({ property, view = 'grid' }: PropertyCardProps) {
     <StatItem icon={BathIcon} value={String(property.baths)} label="baths" />
     }
       {property.landSize > 0 &&
-    <StatItem icon={LandPlotIcon} value={String(property.landSize)} label={property.id === 'ratnapura-land' ? 'acres' : 'perches'} />
+    <StatItem icon={LandPlotIcon} value={String(property.landSize)} label={['ratnapura-land', 'kalutara-estate-land'].includes(property.id) ? 'acres' : 'perches'} />
     }
       {property.houseSize > 0 &&
     <StatItem icon={RulerIcon} value={formatNumber(property.houseSize)} label="sq ft" />
