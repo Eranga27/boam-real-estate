@@ -31,6 +31,7 @@ function toApiShape(p: typeof staticProperties[0]): any {
     houseSize: p.houseSize || null,
     landSize: p.landSize || null,
     images: p.images,
+    video: p.video,
     negotiable: p.negotiable,
     featured: p.featured,
   };
@@ -208,7 +209,9 @@ export default function PropertySearch({ initialType, title, subtitle }: Propert
                 className={`bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-gray-100 group ${viewMode === 'list' ? 'flex flex-col sm:flex-row' : 'flex flex-col'}`}
               >
                 <div className={`relative ${viewMode === 'list' ? 'w-full sm:w-2/5 aspect-[4/3] sm:aspect-auto sm:h-full' : 'aspect-[4/3] w-full'} bg-gray-100 overflow-hidden`}>
-                  {property.images && property.images.length > 0 ? (
+                  {property.video ? (
+                    <video src={getImageUrl(property.video)} autoPlay loop muted playsInline className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  ) : property.images && property.images.length > 0 ? (
                     <img src={getImageUrl(property.images[0])} alt={property.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   ) : (
                     <div className="flex items-center justify-center h-full text-gray-400 bg-gray-100">No Image</div>

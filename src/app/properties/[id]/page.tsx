@@ -26,6 +26,7 @@ function staticToApi(p: Property): any {
     saleOrRent: p.listingType === 'sale' ? 'Sale' : 'Rent',
     price: p.price,
     pricePerPerch: p.pricePerPerch,
+    video: p.video,
     negotiable: p.negotiable,
     city: p.city,
     district: p.district,
@@ -306,9 +307,21 @@ export default function PropertyDetails() {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
 
-            {/* Image Gallery */}
+            {/* Media Gallery / Video */}
             <div className="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100">
-              {property.images && property.images.length > 0 ? (
+              {property.video ? (
+                <div className="relative aspect-[16/9] bg-black">
+                  <video
+                    src={getImageUrl(property.video)}
+                    controls
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              ) : property.images && property.images.length > 0 ? (
                 <>
                   <div className="relative aspect-[16/9] bg-gray-100">
                     <motion.img

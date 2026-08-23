@@ -92,11 +92,27 @@ export function PropertyCard({ property, view = 'grid' }: PropertyCardProps) {
         }>
         
         <Link href={`/properties/${property.id}`} aria-label={property.title}>
-          <img
-            src={getImageUrl(property.images[imageIndex])}
-            alt={property.title}
-            loading="lazy"
-            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+          {property.video ? (
+            <video
+              src={getImageUrl(property.video)}
+              muted
+              loop
+              autoPlay
+              playsInline
+              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+            />
+          ) : property.images && property.images.length > 0 ? (
+            <img
+              src={getImageUrl(property.images[imageIndex])}
+              alt={property.title}
+              loading="lazy"
+              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+            />
+          ) : (
+            <div className="h-full w-full flex items-center justify-center text-navy-400 bg-navy-900/40 font-medium text-xs">
+              No Preview
+            </div>
+          )}
           
           <div className="absolute inset-0 bg-gradient-to-t from-navy-950/80 via-navy-950/5 to-transparent" />
         </Link>

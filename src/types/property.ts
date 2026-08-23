@@ -31,6 +31,8 @@ export interface Property {
   featured: boolean;
   /** Price per perch or per unit text e.g. "Rs. 2.5 Mn per perch" */
   pricePerPerch?: string;
+  /** Optional video URL or path e.g. "/uploads/ekala1vid.mp4" */
+  video?: string;
 }
 
 export interface LocationTile {
