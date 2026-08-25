@@ -30,21 +30,25 @@ const BASE_MAPS = {
   road: {
     name: 'Roadmap',
     url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    subdomains: 'abc',
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &bull; BOAM Real Estate',
   },
   satellite: {
     name: 'Satellite',
     url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    subdomains: '',
     attribution: '&copy; Esri World Imagery &bull; BOAM Real Estate',
   },
   dark: {
     name: 'Dark Mode',
     url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    subdomains: 'abcd',
     attribution: '&copy; CARTO Dark &bull; BOAM Real Estate',
   },
   terrain: {
     name: 'Terrain',
     url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Terrain_Base/MapServer/tile/{z}/{y}/{x}',
+    subdomains: '',
     attribution: '&copy; Esri Terrain &bull; BOAM Real Estate',
   },
 };
@@ -55,6 +59,7 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const tileLayerRef = useRef<any>(null);
+  const leafletRef = useRef<any>(null);
   const markersRef = useRef<Record<string, any>>({});
   
   const [activeProperty, setActiveProperty] = useState<PropertyMapItem | null>(null);
@@ -82,6 +87,7 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
     import('leaflet').then((L) => {
       if (!isMounted || !mapContainerRef.current) return;
       const Leaflet = L.default || L;
+      leafletRef.current = Leaflet;
 
       // Fix Leaflet default icon paths
       delete (Leaflet.Icon.Default.prototype as any)._getIconUrl;
@@ -104,26 +110,44 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
 
         mapInstanceRef.current = map;
 
+        // Add tile layer with correct subdomain config
+        const config = BASE_MAPS[mapStyle];
+        const tileLayer = Leaflet.tileLayer(config.url, {
+          attribution: config.attribution,
+          maxZoom: 19,
+          subdomains: config.subdomains || 'abc',
+        }).addTo(map);
+
+        tileLayerRef.current = tileLayer;
+
         // Force Leaflet container recalculation on initial render & layout transitions
         const invalidate = () => {
           if (mapInstanceRef.current) {
             mapInstanceRef.current.invalidateSize();
           }
         };
+
         invalidate();
         setTimeout(invalidate, 100);
         setTimeout(invalidate, 300);
         setTimeout(invalidate, 600);
+
+        // Add ResizeObserver & IntersectionObserver for guaranteed map tile rendering
+        if (typeof ResizeObserver !== 'undefined' && mapContainerRef.current) {
+          const resizeObserver = new ResizeObserver(() => invalidate());
+          resizeObserver.observe(mapContainerRef.current);
+        }
+
+        if (typeof IntersectionObserver !== 'undefined' && mapContainerRef.current) {
+          const observer = new IntersectionObserver((entries) => {
+            if (entries[0]?.isIntersecting) {
+              invalidate();
+            }
+          });
+          observer.observe(mapContainerRef.current);
+        }
+
         window.addEventListener('resize', invalidate);
-
-        // Add OpenStreetMap tile layer
-        const tileLayer = Leaflet.tileLayer(BASE_MAPS[mapStyle].url, {
-          attribution: BASE_MAPS[mapStyle].attribution,
-          maxZoom: 19,
-          subdomains: 'abcd',
-        }).addTo(map);
-
-        tileLayerRef.current = tileLayer;
       }
 
       const map = mapInstanceRef.current;
@@ -194,11 +218,21 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
     };
   }, []);
 
-  // Handle map style / layer changes
+  // Handle map style / layer changes with clean replacement
   const handleMapStyleChange = (style: MapStyle) => {
     setMapStyle(style);
-    if (tileLayerRef.current && mapInstanceRef.current) {
-      tileLayerRef.current.setUrl(BASE_MAPS[style].url);
+    if (mapInstanceRef.current && leafletRef.current) {
+      if (tileLayerRef.current) {
+        tileLayerRef.current.remove();
+      }
+      const config = BASE_MAPS[style];
+      const newTileLayer = leafletRef.current.tileLayer(config.url, {
+        attribution: config.attribution,
+        maxZoom: 19,
+        subdomains: config.subdomains || 'abc',
+      }).addTo(mapInstanceRef.current);
+
+      tileLayerRef.current = newTileLayer;
     }
   };
 

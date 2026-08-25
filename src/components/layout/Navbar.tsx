@@ -41,7 +41,9 @@ export function Navbar() {
   return (
     <header
       className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
-        solid ? 'bg-white/95 shadow-[0_1px_0_rgba(18,53,91,0.08)] backdrop-blur' : 'bg-gradient-to-b from-navy-950/70 to-transparent backdrop-blur-sm'
+        solid
+          ? 'bg-white shadow-[0_2px_15px_-3px_rgba(14,42,73,0.08)] border-b border-navy-100/70'
+          : 'bg-gradient-to-b from-navy-950/85 via-navy-950/40 to-transparent'
       }`}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:h-[72px] sm:px-6 lg:px-8">

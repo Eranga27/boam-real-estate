@@ -30,7 +30,7 @@ const CAPABILITIES = [
 export function StatsStrip() {
   return (
     <section aria-label="BOAM Advantage" className="relative z-10 -mt-10 px-4 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-6xl overflow-hidden rounded-3xl shadow-[0_8px_40px_-12px_rgba(14,42,73,0.25)] border border-white/70 bg-white/98 backdrop-blur-md">
+      <div className="mx-auto max-w-6xl overflow-hidden rounded-3xl bg-white shadow-[0_12px_40px_-12px_rgba(14,42,73,0.18)] border border-navy-100/80">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-navy-100/60">
           {CAPABILITIES.map((item, i) => {
             const Icon = item.icon;

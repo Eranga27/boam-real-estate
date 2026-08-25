@@ -29,19 +29,31 @@ export function HowItWorks() {
     >
       {/* Soft top dissolve from WhyChooseUs warm ivory */}
       <div
-        className="pointer-events-none absolute top-0 left-0 right-0 h-24"
-        style={{ background: 'linear-gradient(to bottom, #F2EFE9, transparent)' }}
+        className="pointer-events-none absolute top-0 left-0 right-0 h-28"
+        style={{ background: 'linear-gradient(to bottom, #F7F5F0, transparent)' }}
         aria-hidden="true"
       />
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {/* Subtle background monogram watermark for visual balance */}
+        <div
+          className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.025] select-none"
+          aria-hidden="true"
+        >
+          <img
+            src="/images/boamcompactmonogram.png"
+            alt=""
+            className="h-[500px] w-auto"
+          />
+        </div>
+
         {/* Section header — left aligned */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-80px' }}
           transition={{ duration: 0.6, ease: 'easeOut' }}
-          className="max-w-2xl mb-16 sm:mb-20"
+          className="max-w-2xl mb-14 sm:mb-16"
         >
           <p className="text-[11px] font-extrabold uppercase tracking-[0.25em] text-amber-600">
             Process
@@ -55,7 +67,7 @@ export function HowItWorks() {
         </motion.div>
 
         {/* Desktop: staggered editorial timeline */}
-        <div className="relative hidden lg:block">
+        <div className="relative hidden lg:block pb-8">
           {/* Thin warm gold connecting line running across all 3 steps */}
           <div
             className="pointer-events-none absolute top-[2.25rem] left-[4rem] right-[4rem] h-px"
@@ -73,10 +85,10 @@ export function HowItWorks() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-60px' }}
                 transition={{ duration: 0.55, delay: i * 0.14, ease: 'easeOut' }}
-                className={`relative flex flex-col ${i === 1 ? 'mt-16' : ''} ${i === 2 ? 'mt-32' : ''}`}
+                className={`relative flex flex-col ${i === 1 ? 'mt-14' : ''} ${i === 2 ? 'mt-28' : ''}`}
               >
                 {/* Step number with gold dot above the line */}
-                <div className="flex items-center gap-4 mb-6">
+                <div className="flex items-center gap-4 mb-5">
                   <div className="relative flex items-center justify-center">
                     <span
                       className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-amber-500 ring-4 ring-amber-500/20 z-10"
@@ -89,14 +101,14 @@ export function HowItWorks() {
                 </div>
 
                 <div>
-                  <span className="text-6xl font-extrabold text-navy-950/[0.07] font-mono leading-none block mb-3 select-none">
+                  <span className="text-7xl font-extrabold text-navy-950/[0.08] font-mono leading-none block mb-2 select-none">
                     {step.number}
                   </span>
                   <h3 className="text-xl font-extrabold text-navy-950 tracking-tight">
                     {step.title}
                   </h3>
-                  <div className="mt-2 h-px w-8 bg-amber-500/50" />
-                  <p className="mt-3 text-sm leading-relaxed text-navy-700/70 font-medium max-w-xs">
+                  <div className="mt-2.5 h-px w-10 bg-amber-500/60" />
+                  <p className="mt-3 text-sm leading-relaxed text-navy-800/80 font-medium max-w-xs">
                     {step.description}
                   </p>
                 </div>
