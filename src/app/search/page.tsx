@@ -1,29 +1,41 @@
-'use client';
+import type { Metadata } from 'next';
+import { getSiteUrl, SITE_SEO, getOgImageUrl } from '@/lib/site';
+import SearchClient from './SearchClient';
 
-import { Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
-import PropertySearch from '@/components/PropertySearch';
+const canonicalUrl = `${getSiteUrl()}/search`;
 
-function SearchPageInner() {
-  const params = useSearchParams();
-  const location = params.get('location') || '';
-  const type = params.get('type') || '';
-
-  return (
-    <PropertySearch
-      initialType=""
-      initialLocation={location}
-      initialPropertyType={type}
-      title="Property Search"
-      subtitle="Explore houses, apartments, villas and prime land opportunities across Sri Lanka."
-    />
-  );
-}
+export const metadata: Metadata = {
+  title: 'Search Properties | BOAM Real Estates',
+  description:
+    'Search and filter houses, apartments, commercial properties, and land for sale and rent in Sri Lanka.',
+  alternates: {
+    canonical: canonicalUrl,
+  },
+  openGraph: {
+    type: 'website',
+    url: canonicalUrl,
+    title: 'Search Properties | BOAM Real Estates',
+    description:
+      'Search and filter houses, apartments, commercial properties, and land for sale and rent in Sri Lanka.',
+    siteName: SITE_SEO.siteName,
+    images: [
+      {
+        url: getOgImageUrl('/images/hero-bg.jpg'),
+        width: 1200,
+        height: 630,
+        alt: 'BOAM Real Estates Property Search',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Search Properties | BOAM Real Estates',
+    description:
+      'Search and filter houses, apartments, commercial properties, and land for sale and rent in Sri Lanka.',
+    images: [getOgImageUrl('/images/hero-bg.jpg')],
+  },
+};
 
 export default function SearchPage() {
-  return (
-    <Suspense fallback={<div className="min-h-screen bg-navy-50/50 flex items-center justify-center"><div className="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" /></div>}>
-      <SearchPageInner />
-    </Suspense>
-  );
+  return <SearchClient />;
 }

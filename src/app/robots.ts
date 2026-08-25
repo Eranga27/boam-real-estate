@@ -1,13 +1,14 @@
 import { MetadataRoute } from 'next';
+import { getSiteUrl } from '@/lib/site';
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://boam-realestates.com';
+  const baseUrl = getSiteUrl();
 
   return {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: ['/dashboard/', '/admin/', '/api/'],
+      disallow: ['/admin/', '/dashboard/', '/api/'],
     },
     sitemap: `${baseUrl}/sitemap.xml`,
   };
