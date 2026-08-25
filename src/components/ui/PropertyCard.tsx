@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, Bed, Bath, Square, Heart } from 'lucide-react';
+import { MapPin, Bed, Bath, Square } from 'lucide-react';
 import { Card, CardContent } from './Card';
 import { Badge } from './Badge';
 
@@ -27,49 +27,46 @@ export function PropertyCard({
   isFeatured,
 }: PropertyCardProps) {
   return (
-    <Card className="group cursor-pointer">
+    <Card className="group cursor-pointer overflow-hidden rounded-3xl">
       <div className="relative aspect-[4/3] overflow-hidden">
         <img
           src={image}
           alt={title}
-          className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110"
+          className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
         />
         <div className="absolute top-4 left-4 flex gap-2">
           <Badge variant={type === 'sale' ? 'primary' : 'secondary'} className="bg-white/90 backdrop-blur shadow-sm">
             For {type === 'sale' ? 'Sale' : 'Rent'}
           </Badge>
           {isFeatured && (
-            <Badge variant="accent" className="bg-accent text-white shadow-sm">
+            <Badge variant="accent" className="bg-amber-500 text-navy-950 font-bold shadow-sm">
               Featured
             </Badge>
           )}
         </div>
-        <button className="absolute top-4 right-4 p-2 rounded-full bg-white/50 backdrop-blur hover:bg-white text-gray-600 hover:text-red-500 transition-colors">
-          <Heart className="w-5 h-5" />
-        </button>
       </div>
       <CardContent className="p-5">
         <div className="mb-3">
-          <h3 className="text-2xl font-bold text-primary mb-1">{price}</h3>
-          <p className="font-semibold text-gray-900 line-clamp-1">{title}</p>
+          <h3 className="text-2xl font-bold text-navy-950 mb-1">{price}</h3>
+          <p className="font-semibold text-navy-900 line-clamp-1">{title}</p>
         </div>
         
-        <div className="flex items-center text-gray-500 text-sm mb-4">
-          <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
+        <div className="flex items-center text-navy-800/60 text-sm mb-4">
+          <MapPin className="w-4 h-4 mr-1 flex-shrink-0 text-amber-500" />
           <span className="line-clamp-1">{address}</span>
         </div>
 
-        <div className="flex items-center justify-between border-t border-gray-100 pt-4 text-gray-600 text-sm">
-          <div className="flex items-center gap-1">
-            <Bed className="w-4 h-4" />
+        <div className="flex items-center justify-between border-t border-navy-100 pt-4 text-navy-800/70 text-sm">
+          <div className="flex items-center gap-1 font-semibold">
+            <Bed className="w-4 h-4 text-amber-500" />
             <span>{beds} Beds</span>
           </div>
-          <div className="flex items-center gap-1">
-            <Bath className="w-4 h-4" />
+          <div className="flex items-center gap-1 font-semibold">
+            <Bath className="w-4 h-4 text-amber-500" />
             <span>{baths} Baths</span>
           </div>
-          <div className="flex items-center gap-1">
-            <Square className="w-4 h-4" />
+          <div className="flex items-center gap-1 font-semibold">
+            <Square className="w-4 h-4 text-amber-500" />
             <span>{sqft} sqft</span>
           </div>
         </div>
