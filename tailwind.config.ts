@@ -12,13 +12,6 @@ const config: Config = {
         sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
       colors: {
-        brand: {
-          navy: '#12355B',
-          deep: '#0E2A49',
-          gold: '#F4A300',
-          emerald: '#2E8B57',
-          gray: '#F5F7FA',
-        },
         navy: {
           50: '#f2f6fb',
           100: '#e2ebf5',

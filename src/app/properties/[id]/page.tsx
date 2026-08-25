@@ -25,6 +25,8 @@ function staticToApi(p: Property): any {
     propertyType: p.type,
     saleOrRent: p.listingType === 'sale' ? 'Sale' : 'Rent',
     price: p.price,
+    pricePerPerch: p.pricePerPerch,
+    video: p.video,
     negotiable: p.negotiable,
     city: p.city,
     district: p.district,
@@ -305,9 +307,21 @@ export default function PropertyDetails() {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
 
-            {/* Image Gallery */}
+            {/* Media Gallery / Video */}
             <div className="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100">
-              {property.images && property.images.length > 0 ? (
+              {property.video ? (
+                <div className="relative aspect-[16/9] bg-black">
+                  <video
+                    src={getImageUrl(property.video)}
+                    controls
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              ) : property.images && property.images.length > 0 ? (
                 <>
                   <div className="relative aspect-[16/9] bg-gray-100">
                     <motion.img
@@ -372,18 +386,27 @@ export default function PropertyDetails() {
                     <span className="text-xs text-gray-500 uppercase tracking-wider">Parking</span>
                   </div>
                 )}
-                {property.houseSize && (
+                {property.pricePerPerch && (
                   <div className="flex flex-col items-center gap-1">
-                    <Square className="w-6 h-6 text-primary" />
-                    <span className="text-2xl font-bold text-gray-900">{property.houseSize.toLocaleString()}</span>
-                    <span className="text-xs text-gray-500 uppercase tracking-wider">House sqft</span>
+                    <LandPlot className="w-6 h-6 text-primary" />
+                    <span className="text-xl font-bold text-gray-900">{property.pricePerPerch}</span>
+                    <span className="text-xs text-gray-500 uppercase tracking-wider">Rate / Unit</span>
                   </div>
                 )}
                 {property.landSize && (
                   <div className="flex flex-col items-center gap-1">
                     <LandPlot className="w-6 h-6 text-primary" />
                     <span className="text-2xl font-bold text-gray-900">{property.landSize.toLocaleString()}</span>
-                    <span className="text-xs text-gray-500 uppercase tracking-wider">Land sqft</span>
+                    <span className="text-xs text-gray-500 uppercase tracking-wider">
+                      {['ratnapura-land', 'kalutara-estate-land'].includes(property.id) ? 'Acres' : 'Perches'}
+                    </span>
+                  </div>
+                )}
+                {property.houseSize && (
+                  <div className="flex flex-col items-center gap-1">
+                    <Square className="w-6 h-6 text-primary" />
+                    <span className="text-2xl font-bold text-gray-900">{property.houseSize.toLocaleString()}</span>
+                    <span className="text-xs text-gray-500 uppercase tracking-wider">House sqft</span>
                   </div>
                 )}
                 {property.yearBuilt && (

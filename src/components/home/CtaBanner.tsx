@@ -6,10 +6,7 @@ import { ArrowRightIcon, PhoneIcon } from 'lucide-react';
 
 export function CtaBanner() {
   return (
-    <section className="relative px-4 pb-20 sm:px-6 lg:px-8 lg:pb-28">
-      {/* HowItWorks → CTA: very soft top hint */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-12 bg-gradient-to-b from-navy-50/20 to-transparent" />
-
+    <section className="px-4 pb-20 sm:px-6 lg:px-8 lg:pb-28">
       <div className="relative mx-auto max-w-7xl overflow-hidden rounded-4xl bg-navy-900 px-6 py-14 text-center sm:px-12 lg:py-20">
         <div
           className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-navy-600/40 blur-3xl"

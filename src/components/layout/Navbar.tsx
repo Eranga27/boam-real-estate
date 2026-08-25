@@ -41,17 +41,12 @@ export function Navbar() {
   return (
     <header
       className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
-        solid ? 'bg-white/95 shadow-[0_1px_0_rgba(18,53,91,0.08)] backdrop-blur' : 'bg-gradient-to-b from-navy-950/75 via-navy-950/30 to-transparent backdrop-blur-sm'
+        solid ? 'bg-white/95 shadow-[0_1px_0_rgba(18,53,91,0.08)] backdrop-blur' : 'bg-gradient-to-b from-navy-950/70 to-transparent backdrop-blur-sm'
       }`}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:h-[72px] sm:px-6 lg:px-8">
-        <Link
-          href="/"
-          aria-label="Boam Real-Estates home"
-          className="flex items-center shrink-0 transition-opacity hover:opacity-90 py-1"
-        >
-          {/* Use larger logo preset on dark hero for better presence */}
-          <Logo variant={solid ? 'dark' : 'light'} size={solid ? 'responsive' : 'lg'} />
+        <Link href="/" aria-label="Boam Real-Estates home" className="transition-opacity hover:opacity-80">
+          <Logo variant={solid ? 'dark' : 'light'} />
         </Link>
 
         <nav className="hidden items-center gap-1 lg:flex" aria-label="Main">

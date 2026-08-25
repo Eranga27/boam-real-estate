@@ -23,10 +23,7 @@ const steps = [
 
 export function HowItWorks() {
   return (
-    <section className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
-      {/* WhyChooseUs → HowItWorks: soft top fade */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-navy-900/10 to-transparent" />
-
+    <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
       <div className="mx-auto max-w-2xl text-center">
         <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-amber-600">
           Simple process

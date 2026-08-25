@@ -75,15 +75,14 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="w-full bg-white overflow-hidden">
+    <div className="w-full bg-white">
       <Hero />
       <StatsStrip />
       <FeaturedProperties properties={featuredProperties} loading={loadingProperties} />
-      <PopularLocations />
       <WhyChooseUs />
       <HowItWorks />
+      <PopularLocations />
       <CtaBanner />
     </div>
   );
 }
-
