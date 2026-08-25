@@ -116,10 +116,10 @@ export default function ContactForm({
   };
 
   return (
-    <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+    <div className="bg-white rounded-3xl shadow-sm border border-navy-100/80 overflow-hidden">
       {/* Seller Quick Contact Header */}
-      <div className="bg-gradient-to-br from-primary to-blue-700 p-6 text-white">
-        <p className="text-sm font-medium text-blue-200 uppercase tracking-wider mb-1">Contact Seller</p>
+      <div className="bg-gradient-to-br from-navy-900 to-navy-950 p-6 text-white">
+        <p className="text-sm font-medium text-amber-400/90 uppercase tracking-wider mb-1">Contact Seller</p>
         <h3 className="text-xl font-bold mb-4">{sellerName}</h3>
 
         <div className="space-y-3">
@@ -131,7 +131,7 @@ export default function ContactForm({
               <Phone className="w-4 h-4" />
             </div>
             <div>
-              <p className="text-xs text-blue-200">Call Direct</p>
+              <p className="text-xs text-amber-400/90">Call Direct</p>
               <p className="font-semibold text-sm">{sellerPhone}</p>
             </div>
           </a>
@@ -144,7 +144,7 @@ export default function ContactForm({
               <Mail className="w-4 h-4" />
             </div>
             <div>
-              <p className="text-xs text-blue-200">Email</p>
+              <p className="text-xs text-amber-400/90">Email</p>
               <p className="font-semibold text-sm truncate max-w-[200px]">{sellerEmail}</p>
             </div>
           </a>
@@ -173,8 +173,8 @@ export default function ContactForm({
       {/* Inquiry Form */}
       <div className="p-6">
         <div className="flex items-center gap-2 mb-5">
-          <MessageSquare className="w-5 h-5 text-primary" />
-          <h4 className="font-bold text-gray-900">Send an Inquiry</h4>
+          <MessageSquare className="w-5 h-5 text-navy-950" />
+          <h4 className="font-bold text-navy-950">Send an Inquiry</h4>
         </div>
 
         <AnimatePresence mode="wait">
@@ -188,8 +188,8 @@ export default function ContactForm({
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle className="w-8 h-8 text-green-600" />
               </div>
-              <h4 className="text-lg font-bold text-gray-900 mb-2">Inquiry Sent!</h4>
-              <p className="text-gray-500 text-sm mb-6 leading-relaxed">{responseMsg}</p>
+              <h4 className="text-lg font-bold text-navy-950 mb-2">Inquiry Sent!</h4>
+              <p className="text-navy-800/70 text-sm mb-6 leading-relaxed">{responseMsg}</p>
               <Button variant="outline" onClick={handleReset} className="text-sm">
                 Send Another Inquiry
               </Button>
@@ -211,7 +211,7 @@ export default function ContactForm({
               )}
 
               <div>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-semibold text-navy-700 uppercase tracking-wider mb-1.5">
                   Your Name *
                 </label>
                 <Input
@@ -225,7 +225,7 @@ export default function ContactForm({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-semibold text-navy-700 uppercase tracking-wider mb-1.5">
                   Email Address *
                 </label>
                 <Input
@@ -240,8 +240,8 @@ export default function ContactForm({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">
-                  Phone Number <span className="text-gray-400 font-normal normal-case">(optional)</span>
+                <label className="block text-xs font-semibold text-navy-700 uppercase tracking-wider mb-1.5">
+                  Phone Number <span className="text-navy-400 font-normal normal-case">(optional)</span>
                 </label>
                 <Input
                   name="senderPhone"
@@ -253,9 +253,9 @@ export default function ContactForm({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-semibold text-navy-700 uppercase tracking-wider mb-1.5">
                   Message *
-                  <span className={`float-right font-normal normal-case ${fields.message.length > 900 ? 'text-red-400' : 'text-gray-400'}`}>
+                  <span className={`float-right font-normal normal-case ${fields.message.length > 900 ? 'text-red-400' : 'text-navy-400'}`}>
                     {fields.message.length}/1000
                   </span>
                 </label>
@@ -268,7 +268,7 @@ export default function ContactForm({
                   className={`w-full rounded-xl border p-3 text-sm outline-none focus:ring-2 resize-none transition-colors ${
                     errors.message
                       ? 'border-red-400 focus:ring-red-200'
-                      : 'border-gray-200 focus:ring-primary/30 focus:border-primary'
+                      : 'border-navy-200 focus:ring-navy-950/30 focus:border-navy-950'
                   }`}
                   placeholder="Describe your requirements..."
                 />
@@ -291,7 +291,7 @@ export default function ContactForm({
                 )}
               </Button>
 
-              <p className="text-xs text-gray-400 text-center">
+              <p className="text-xs text-navy-400 text-center">
                 {isAuthenticated ? 'Sending as ' + user?.fullName : 'You can send without signing up'}
                 {' '}· Your details are shared only with the seller.
               </p>

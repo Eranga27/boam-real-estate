@@ -208,7 +208,7 @@ export default function PropertyDetails() {
   if (!property) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-        <h2 className="text-2xl font-bold text-gray-700">Property not found</h2>
+        <h2 className="text-2xl font-bold text-navy-800">Property not found</h2>
         <Link href="/buy">
           <Button variant="outline">
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -222,22 +222,22 @@ export default function PropertyDetails() {
   const locationQuery = `${property.address || ''}, ${property.city || ''}, Sri Lanka`;
 
   return (
-    <main className="min-h-screen bg-light-gray py-10">
+    <main className="min-h-screen bg-navy-50/50 py-10">
       <div className="max-w-7xl mx-auto px-4">
 
         {/* Back Navigation */}
         <div className="flex items-center gap-4 mb-6">
-          <Link href="/buy" className="flex items-center text-sm text-gray-500 hover:text-primary transition-colors">
+          <Link href="/buy" className="flex items-center text-sm text-navy-800/70 hover:text-navy-950 transition-colors">
             <ArrowLeft className="w-4 h-4 mr-1" /> Back to listings
           </Link>
-          <span className="text-gray-300">/</span>
-          <span className="text-sm text-gray-500">{property.propertyType}</span>
-          <span className="text-gray-300">/</span>
-          <span className="text-sm text-gray-800 font-medium line-clamp-1 max-w-[200px]">{property.title}</span>
+          <span className="text-navy-300">/</span>
+          <span className="text-sm text-navy-800/70">{property.propertyType}</span>
+          <span className="text-navy-300">/</span>
+          <span className="text-sm text-navy-900 font-medium line-clamp-1 max-w-[200px]">{property.title}</span>
         </div>
 
         {/* Header */}
-        <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 mb-6">
+        <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-navy-100/80 mb-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-2 mb-3">
@@ -245,23 +245,23 @@ export default function PropertyDetails() {
                 <Badge variant="outline">{property.propertyType}</Badge>
                 {property.negotiable && <Badge variant="gray">Negotiable</Badge>}
               </div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">{property.title}</h1>
-              <p className="flex items-center text-gray-500 text-sm">
-                <MapPin className="w-4 h-4 mr-1 flex-shrink-0 text-primary" />
+              <h1 className="text-2xl md:text-3xl font-bold text-navy-950 mb-2">{property.title}</h1>
+              <p className="flex items-center text-navy-800/70 text-sm">
+                <MapPin className="w-4 h-4 mr-1 flex-shrink-0 text-navy-950" />
                 {property.address}, {property.city}, {property.district}
               </p>
             </div>
             <div className="text-right">
-              <div className="text-3xl font-bold text-primary">
+              <div className="text-3xl font-bold text-navy-950">
                 {formatFullPrice(property.price)}
-                {property.saleOrRent === 'Rent' && <span className="text-lg font-normal text-gray-500">/mo</span>}
+                {property.saleOrRent === 'Rent' && <span className="text-lg font-normal text-navy-800/70">/mo</span>}
               </div>
               {/* Action Buttons */}
               <div className="flex items-center gap-2 mt-3 justify-end relative">
                 {isAuthenticated && (
                   <button
                     onClick={handleFavorite}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${isFavorite ? 'bg-red-50 border-red-200 text-red-600' : 'bg-gray-50 border-gray-200 text-gray-600 hover:border-red-200 hover:text-red-500'}`}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${isFavorite ? 'bg-red-50 border-red-200 text-red-600' : 'bg-navy-50 border-navy-200 text-navy-700 hover:border-red-200 hover:text-red-500'}`}
                   >
                     <Heart className={`w-4 h-4 ${isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
                     {isFavorite ? 'Favorited' : 'Favorite'}
@@ -269,27 +269,27 @@ export default function PropertyDetails() {
                 )}
                 <button
                   onClick={handleSave}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${saved ? 'bg-primary/10 border-primary/20 text-primary' : 'bg-gray-50 border-gray-200 text-gray-600 hover:border-primary/20 hover:text-primary'}`}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${saved ? 'bg-primary/10 border-primary/20 text-navy-950' : 'bg-navy-50 border-navy-200 text-navy-700 hover:border-primary/20 hover:text-navy-950'}`}
                 >
-                  <BookMarked className={`w-4 h-4 ${saved ? 'fill-primary text-primary' : ''}`} />
+                  <BookMarked className={`w-4 h-4 ${saved ? 'fill-primary text-navy-950' : ''}`} />
                   {saved ? 'Saved' : 'Save'}
                 </button>
-                <button onClick={handleShare} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border border-gray-200 bg-gray-50 text-gray-600 hover:border-primary hover:text-primary transition-all">
+                <button onClick={handleShare} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border border-navy-200 bg-navy-50 text-navy-700 hover:border-primary hover:text-navy-950 transition-all">
                   <Share2 className="w-4 h-4" /> Share
                 </button>
-                <button onClick={handleReport} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${reportSent ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-gray-50 border-gray-200 text-gray-600 hover:border-orange-200 hover:text-orange-500'}`}>
+                <button onClick={handleReport} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${reportSent ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-navy-50 border-navy-200 text-navy-700 hover:border-orange-200 hover:text-orange-500'}`}>
                   <Flag className="w-4 h-4" /> {reportSent ? 'Reported' : 'Report'}
                 </button>
                 {showShareMenu && (
-                  <div className="absolute top-10 right-0 bg-white rounded-xl shadow-lg border border-gray-100 p-3 z-10 min-w-[200px]">
-                    <p className="text-xs text-gray-500 mb-2 font-medium">Share this listing</p>
-                    <button onClick={handleCopyLink} className="w-full text-left text-sm px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors">
+                  <div className="absolute top-10 right-0 bg-white rounded-xl shadow-lg border border-navy-100/80 p-3 z-10 min-w-[200px]">
+                    <p className="text-xs text-navy-800/70 mb-2 font-medium">Share this listing</p>
+                    <button onClick={handleCopyLink} className="w-full text-left text-sm px-3 py-2 rounded-lg hover:bg-navy-50 transition-colors">
                       {copySuccess ? '✓ Link Copied!' : '📋 Copy Link'}
                     </button>
-                    <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}`} target="_blank" rel="noopener noreferrer" className="block text-sm px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors">
+                    <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}`} target="_blank" rel="noopener noreferrer" className="block text-sm px-3 py-2 rounded-lg hover:bg-navy-50 transition-colors">
                       📘 Share on Facebook
                     </a>
-                    <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}&text=${encodeURIComponent(property.title)}`} target="_blank" rel="noopener noreferrer" className="block text-sm px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors">
+                    <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}&text=${encodeURIComponent(property.title)}`} target="_blank" rel="noopener noreferrer" className="block text-sm px-3 py-2 rounded-lg hover:bg-navy-50 transition-colors">
                       🐦 Share on X / Twitter
                     </a>
                     <a href={`https://wa.me/?text=${encodeURIComponent(`${property.title} - ${typeof window !== 'undefined' ? window.location.href : ''}`)}`} target="_blank" rel="noopener noreferrer" className="block text-sm px-3 py-2 rounded-lg hover:bg-green-50 transition-colors text-green-700">
@@ -308,7 +308,7 @@ export default function PropertyDetails() {
           <div className="lg:col-span-2 space-y-6">
 
             {/* Media Gallery / Video */}
-            <div className="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100">
+            <div className="bg-white rounded-3xl overflow-hidden shadow-sm border border-navy-100/80">
               {property.video ? (
                 <div className="relative aspect-[16/9] bg-black">
                   <video
@@ -323,7 +323,7 @@ export default function PropertyDetails() {
                 </div>
               ) : property.images && property.images.length > 0 ? (
                 <>
-                  <div className="relative aspect-[16/9] bg-gray-100">
+                  <div className="relative aspect-[16/9] bg-navy-100">
                     <motion.img
                       key={activeImage}
                       src={getImageUrl(property.images[activeImage])}
@@ -358,82 +358,82 @@ export default function PropertyDetails() {
                   )}
                 </>
               ) : (
-                <div className="aspect-[16/9] bg-gray-100 flex items-center justify-center text-gray-400">No images available</div>
+                <div className="aspect-[16/9] bg-navy-100 flex items-center justify-center text-navy-400">No images available</div>
               )}
             </div>
 
             {/* Stats */}
-            <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+            <div className="bg-white rounded-3xl p-6 shadow-sm border border-navy-100/80">
               <div className="flex flex-wrap gap-6 justify-around">
                 {property.bedrooms && (
                   <div className="flex flex-col items-center gap-1">
-                    <Bed className="w-6 h-6 text-primary" />
-                    <span className="text-2xl font-bold text-gray-900">{property.bedrooms}</span>
-                    <span className="text-xs text-gray-500 uppercase tracking-wider">Bedrooms</span>
+                    <Bed className="w-6 h-6 text-navy-950" />
+                    <span className="text-2xl font-bold text-navy-950">{property.bedrooms}</span>
+                    <span className="text-xs text-navy-800/70 uppercase tracking-wider">Bedrooms</span>
                   </div>
                 )}
                 {property.bathrooms && (
                   <div className="flex flex-col items-center gap-1">
-                    <Bath className="w-6 h-6 text-primary" />
-                    <span className="text-2xl font-bold text-gray-900">{property.bathrooms}</span>
-                    <span className="text-xs text-gray-500 uppercase tracking-wider">Bathrooms</span>
+                    <Bath className="w-6 h-6 text-navy-950" />
+                    <span className="text-2xl font-bold text-navy-950">{property.bathrooms}</span>
+                    <span className="text-xs text-navy-800/70 uppercase tracking-wider">Bathrooms</span>
                   </div>
                 )}
                 {property.parking && (
                   <div className="flex flex-col items-center gap-1">
-                    <Car className="w-6 h-6 text-primary" />
-                    <span className="text-2xl font-bold text-gray-900">{property.parking}</span>
-                    <span className="text-xs text-gray-500 uppercase tracking-wider">Parking</span>
+                    <Car className="w-6 h-6 text-navy-950" />
+                    <span className="text-2xl font-bold text-navy-950">{property.parking}</span>
+                    <span className="text-xs text-navy-800/70 uppercase tracking-wider">Parking</span>
                   </div>
                 )}
                 {property.pricePerPerch && (
                   <div className="flex flex-col items-center gap-1">
-                    <LandPlot className="w-6 h-6 text-primary" />
-                    <span className="text-xl font-bold text-gray-900">{property.pricePerPerch}</span>
-                    <span className="text-xs text-gray-500 uppercase tracking-wider">Rate / Unit</span>
+                    <LandPlot className="w-6 h-6 text-navy-950" />
+                    <span className="text-xl font-bold text-navy-950">{property.pricePerPerch}</span>
+                    <span className="text-xs text-navy-800/70 uppercase tracking-wider">Rate / Unit</span>
                   </div>
                 )}
                 {property.landSize && (
                   <div className="flex flex-col items-center gap-1">
-                    <LandPlot className="w-6 h-6 text-primary" />
-                    <span className="text-2xl font-bold text-gray-900">{property.landSize.toLocaleString()}</span>
-                    <span className="text-xs text-gray-500 uppercase tracking-wider">
+                    <LandPlot className="w-6 h-6 text-navy-950" />
+                    <span className="text-2xl font-bold text-navy-950">{property.landSize.toLocaleString()}</span>
+                    <span className="text-xs text-navy-800/70 uppercase tracking-wider">
                       {['ratnapura-land', 'kalutara-estate-land'].includes(property.id) ? 'Acres' : 'Perches'}
                     </span>
                   </div>
                 )}
                 {property.houseSize && (
                   <div className="flex flex-col items-center gap-1">
-                    <Square className="w-6 h-6 text-primary" />
-                    <span className="text-2xl font-bold text-gray-900">{property.houseSize.toLocaleString()}</span>
-                    <span className="text-xs text-gray-500 uppercase tracking-wider">House sqft</span>
+                    <Square className="w-6 h-6 text-navy-950" />
+                    <span className="text-2xl font-bold text-navy-950">{property.houseSize.toLocaleString()}</span>
+                    <span className="text-xs text-navy-800/70 uppercase tracking-wider">House sqft</span>
                   </div>
                 )}
                 {property.yearBuilt && (
                   <div className="flex flex-col items-center gap-1">
-                    <Calendar className="w-6 h-6 text-primary" />
-                    <span className="text-2xl font-bold text-gray-900">{property.yearBuilt}</span>
-                    <span className="text-xs text-gray-500 uppercase tracking-wider">Year Built</span>
+                    <Calendar className="w-6 h-6 text-navy-950" />
+                    <span className="text-2xl font-bold text-navy-950">{property.yearBuilt}</span>
+                    <span className="text-xs text-navy-800/70 uppercase tracking-wider">Year Built</span>
                   </div>
                 )}
               </div>
             </div>
 
             {/* Description */}
-            <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+            <div className="bg-white rounded-3xl p-8 shadow-sm border border-navy-100/80">
               <h3 className="text-xl font-bold mb-4">About this Property</h3>
-              <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">{property.description}</p>
+              <p className="text-navy-700 leading-relaxed whitespace-pre-wrap">{property.description}</p>
             </div>
 
             {/* Amenities & Nearby */}
             {(property.amenities?.length > 0 || property.nearbyFacilities?.length > 0) && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {property.amenities?.length > 0 && (
-                  <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+                  <div className="bg-white rounded-3xl p-8 shadow-sm border border-navy-100/80">
                     <h3 className="text-xl font-bold mb-4">Amenities</h3>
                     <ul className="space-y-3">
                       {property.amenities.map((item: string, i: number) => (
-                        <li key={i} className="flex items-center gap-3 text-gray-700">
+                        <li key={i} className="flex items-center gap-3 text-navy-800">
                           <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
                           {item}
                         </li>
@@ -442,11 +442,11 @@ export default function PropertyDetails() {
                   </div>
                 )}
                 {property.nearbyFacilities?.length > 0 && (
-                  <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+                  <div className="bg-white rounded-3xl p-8 shadow-sm border border-navy-100/80">
                     <h3 className="text-xl font-bold mb-4">Nearby Facilities</h3>
                     <ul className="space-y-3">
                       {property.nearbyFacilities.map((item: string, i: number) => (
-                        <li key={i} className="flex items-center gap-3 text-gray-700">
+                        <li key={i} className="flex items-center gap-3 text-navy-800">
                           <CheckCircle2 className="w-5 h-5 text-blue-500 flex-shrink-0" />
                           {item}
                         </li>
@@ -459,9 +459,9 @@ export default function PropertyDetails() {
 
             {/* Video */}
             {property.video && (
-              <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+              <div className="bg-white rounded-3xl p-8 shadow-sm border border-navy-100/80">
                 <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                  <Video className="w-5 h-5 text-primary" /> Property Video
+                  <Video className="w-5 h-5 text-navy-950" /> Property Video
                 </h3>
                 <div className="aspect-video rounded-2xl overflow-hidden bg-black">
                   <video src={property.video} controls className="w-full h-full" />
@@ -470,11 +470,11 @@ export default function PropertyDetails() {
             )}
 
             {/* Map */}
-            <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+            <div className="bg-white rounded-3xl p-6 shadow-sm border border-navy-100/80">
               <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-primary" /> Location
+                <MapPin className="w-5 h-5 text-navy-950" /> Location
               </h3>
-              <div className="rounded-2xl overflow-hidden aspect-[16/9] bg-gray-100 relative">
+              <div className="rounded-2xl overflow-hidden aspect-[16/9] bg-navy-100 relative">
                 <iframe
                   title="Property Location"
                   width="100%"
@@ -490,7 +490,7 @@ export default function PropertyDetails() {
                 href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationQuery)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-sm text-primary mt-3 hover:underline"
+                className="inline-flex items-center gap-1.5 text-sm text-navy-950 mt-3 hover:underline"
               >
                 <ExternalLink className="w-4 h-4" /> View on Google Maps
               </a>
@@ -502,16 +502,16 @@ export default function PropertyDetails() {
                 <h3 className="text-xl font-bold mb-4">Similar Properties</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {relatedProperties.slice(0, 4).map((rel: any) => (
-                    <Link key={rel.id} href={`/properties/${rel.id}`} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-all group flex">
-                      <div className="w-28 h-28 flex-shrink-0 bg-gray-100 overflow-hidden">
+                    <Link key={rel.id} href={`/properties/${rel.id}`} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-navy-100/80 hover:shadow-md transition-all group flex">
+                      <div className="w-28 h-28 flex-shrink-0 bg-navy-100 overflow-hidden">
                         {rel.images?.[0] ? (
                           <img src={getImageUrl(rel.images[0])} alt={rel.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                        ) : <div className="w-full h-full bg-gray-100" />}
+                        ) : <div className="w-full h-full bg-navy-100" />}
                       </div>
                       <div className="p-4 flex-1 min-w-0">
-                        <p className="font-semibold text-sm text-gray-900 line-clamp-1 group-hover:text-primary transition-colors">{rel.title}</p>
-                        <p className="text-xs text-gray-500 flex items-center mt-1"><MapPin className="w-3 h-3 mr-1" />{rel.city}</p>
-                        <p className="text-primary font-bold mt-2">{formatPrice(rel.price, rel.saleOrRent === 'Rent' ? 'rent' : 'sale')}</p>
+                        <p className="font-semibold text-sm text-navy-950 line-clamp-1 group-hover:text-navy-950 transition-colors">{rel.title}</p>
+                        <p className="text-xs text-navy-800/70 flex items-center mt-1"><MapPin className="w-3 h-3 mr-1" />{rel.city}</p>
+                        <p className="text-navy-950 font-bold mt-2">{formatPrice(rel.price, rel.saleOrRent === 'Rent' ? 'rent' : 'sale')}</p>
                       </div>
                     </Link>
                   ))}
@@ -537,21 +537,21 @@ export default function PropertyDetails() {
 
             {/* Recently Viewed */}
             {recentlyViewed.length > 0 && (
-              <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+              <div className="bg-white rounded-3xl p-6 shadow-sm border border-navy-100/80">
                 <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                  <Eye className="w-5 h-5 text-gray-400" /> Recently Viewed
+                  <Eye className="w-5 h-5 text-navy-400" /> Recently Viewed
                 </h3>
                 <div className="space-y-3">
                   {recentlyViewed.map((rv: any) => (
                     <Link key={rv.id} href={`/properties/${rv.id}`} className="flex items-center gap-3 group">
-                      <div className="w-14 h-14 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0">
+                      <div className="w-14 h-14 rounded-xl bg-navy-100 overflow-hidden flex-shrink-0">
                         {rv.images?.[0] ? (
                           <img src={getImageUrl(rv.images[0])} alt={rv.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                        ) : <div className="w-full h-full bg-gray-100" />}
+                        ) : <div className="w-full h-full bg-navy-100" />}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold text-gray-800 group-hover:text-primary transition-colors line-clamp-1">{rv.title}</p>
-                        <p className="text-xs text-primary font-bold">{formatPrice(rv.price, rv.saleOrRent === 'Rent' ? 'rent' : 'sale')}</p>
+                        <p className="text-sm font-semibold text-navy-900 group-hover:text-navy-950 transition-colors line-clamp-1">{rv.title}</p>
+                        <p className="text-xs text-navy-950 font-bold">{formatPrice(rv.price, rv.saleOrRent === 'Rent' ? 'rent' : 'sale')}</p>
                       </div>
                     </Link>
                   ))}
