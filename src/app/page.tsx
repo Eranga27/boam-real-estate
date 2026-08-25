@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Hero } from '@/components/home/Hero';
 import { StatsStrip } from '@/components/home/StatsStrip';
 import { FeaturedProperties } from '@/components/home/FeaturedProperties';
+import { CategoryIntro } from '@/components/home/CategoryIntro';
 import { WhyChooseUs } from '@/components/home/WhyChooseUs';
 import { HowItWorks } from '@/components/home/HowItWorks';
 import { PopularLocations } from '@/components/home/PopularLocations';
@@ -79,9 +80,10 @@ export default function HomePage() {
       <Hero />
       <StatsStrip />
       <FeaturedProperties properties={featuredProperties} loading={loadingProperties} />
+      <CategoryIntro />
+      <PopularLocations />
       <WhyChooseUs />
       <HowItWorks />
-      <PopularLocations />
       <CtaBanner />
     </div>
   );
