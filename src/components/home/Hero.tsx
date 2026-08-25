@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter as useNavigate } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { ChevronDownIcon, MapPinIcon, SearchIcon } from 'lucide-react';
@@ -9,12 +9,12 @@ import { propertyTypes } from '@/data/properties';
 
 const CITIES = ['Colombo', 'Kandy', 'Galle', 'Negombo', 'Jaffna', 'Nugegoda', 'Mount Lavinia', 'Matara'];
 
-const SLIDESHOW_IMAGES = [
+/** Exactly 4 premium property/location hero images */
+const HERO_SLIDES = [
   heroImage,
-  '/uploads/property-1787331336449-kandy1.jpeg',
-  '/uploads/property-1787331334740-upkotmaskeliya1.jpeg',
-  '/uploads/property-1787331343370-kadawatha1.jpeg',
-  '/uploads/thungadhura1.jpeg',
+  '/uploads/upkotmaskeliya1.jpeg',
+  '/uploads/kandy1.jpeg',
+  '/uploads/kaluthara1.jpeg',
 ];
 
 export function Hero() {
@@ -25,15 +25,27 @@ export function Hero() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loadedImages, setLoadedImages] = useState<string[]>([heroImage]);
 
-  const suggestions = useMemo(() => {
-    if (!location.trim()) return CITIES.slice(0, 5);
-    return CITIES.filter((c) => c.toLowerCase().includes(location.trim().toLowerCase())).slice(0, 5);
-  }, [location]);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const startTimer = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        return;
+      }
+      setCurrentIndex((prev) => (prev + 1) % HERO_SLIDES.length);
+    }, 3500);
+  }, []);
+
+  const goToSlide = (idx: number) => {
+    setCurrentIndex(idx);
+    startTimer();
+  };
 
   useEffect(() => {
     let isMounted = true;
     const preloadTimeout = setTimeout(() => {
-      SLIDESHOW_IMAGES.slice(1).forEach((src) => {
+      HERO_SLIDES.slice(1).forEach((src) => {
         const img = new Image();
         img.src = src;
         img.onload = () => {
@@ -42,18 +54,21 @@ export function Hero() {
           }
         };
       });
-    }, 1200);
+    }, 800);
 
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % SLIDESHOW_IMAGES.length);
-    }, 7000);
+    startTimer();
 
     return () => {
       isMounted = false;
       clearTimeout(preloadTimeout);
-      clearInterval(interval);
+      if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, []);
+  }, [startTimer]);
+
+  const suggestions = useMemo(() => {
+    if (!location.trim()) return CITIES.slice(0, 5);
+    return CITIES.filter((c) => c.toLowerCase().includes(location.trim().toLowerCase())).slice(0, 5);
+  }, [location]);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,7 +80,7 @@ export function Hero() {
 
   return (
     <section
-      className="relative flex min-h-[100svh] items-center overflow-hidden pt-24 pb-16 lg:py-32"
+      className="relative flex min-h-[100svh] items-center overflow-hidden pt-24 pb-20 lg:py-32"
       style={{
         backgroundColor: '#0E2A49',
         backgroundImage: `url(${heroImage})`,
@@ -75,7 +90,7 @@ export function Hero() {
     >
       {/* Background Slideshow Layer */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {SLIDESHOW_IMAGES.map((imgSrc, idx) => {
+        {HERO_SLIDES.map((imgSrc, idx) => {
           const isVisible = idx === currentIndex;
           const isAvailable = idx === 0 || loadedImages.includes(imgSrc);
           if (!isAvailable) return null;
@@ -83,7 +98,7 @@ export function Hero() {
           return (
             <div
               key={imgSrc}
-              className={`absolute inset-0 h-full w-full transition-opacity duration-[1200ms] ease-in-out ${
+              className={`absolute inset-0 h-full w-full transition-opacity duration-[950ms] ease-in-out ${
                 isVisible ? 'opacity-100' : 'opacity-0'
               }`}
             >
@@ -91,7 +106,7 @@ export function Hero() {
                 src={imgSrc}
                 alt=""
                 aria-hidden="true"
-                className="h-full w-full object-cover object-center"
+                className="h-full w-full object-cover object-center sm:object-[center_35%]"
                 {...(idx === 0 ? { fetchPriority: 'high' as any } : { loading: 'lazy' })}
               />
             </div>
@@ -99,15 +114,15 @@ export function Hero() {
         })}
       </div>
 
-      {/* Atmospheric Overlays for Readability */}
-      <div className="absolute inset-0 bg-navy-950/35 pointer-events-none" />
+      {/* Atmospheric Overlays preserving right-side photography while guaranteeing left text contrast */}
+      <div className="absolute inset-0 bg-navy-950/30 pointer-events-none" />
       <div className="absolute inset-0 bg-gradient-to-r from-navy-950/90 via-navy-950/50 to-transparent pointer-events-none" />
       <div className="absolute inset-0 bg-gradient-to-t from-navy-950/70 via-transparent to-navy-950/30 pointer-events-none" />
 
       {/* Left-Aligned Editorial Composition */}
       <div className="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="max-w-xl lg:max-w-2xl text-left">
-          {/* Minimal BOAM Brand Treatment (Integrated, No Container/Pill) */}
+          {/* Minimal BOAM Brand Treatment */}
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -157,7 +172,7 @@ export function Hero() {
             role="search"
           >
             <div className="flex flex-col gap-2.5 rounded-3xl bg-white/95 p-3 shadow-2xl backdrop-blur-md border border-white/20 sm:flex-row sm:items-center sm:rounded-full sm:p-2 sm:pr-2.5">
-              {/* Location Input */}
+              {/* Location Autocomplete Input */}
               <div className="relative flex-1">
                 <label htmlFor="hero-location" className="sr-only">
                   Location
@@ -198,7 +213,7 @@ export function Hero() {
               {/* Vertical Separator */}
               <div className="hidden h-7 w-px bg-navy-100 sm:block" />
 
-              {/* Property Type Selector */}
+              {/* Property Type Dropdown */}
               <div className="relative sm:w-48">
                 <label htmlFor="hero-type" className="sr-only">
                   Property type
@@ -233,6 +248,36 @@ export function Hero() {
             </div>
           </motion.form>
         </div>
+      </div>
+
+      {/* Accessible Minimal Pagination Dots (Exactly 4 Dots) */}
+      <div
+        className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1"
+        role="tablist"
+        aria-label="Hero Image Slideshow Controls"
+      >
+        {HERO_SLIDES.map((_, idx) => {
+          const isActive = idx === currentIndex;
+          return (
+            <button
+              key={idx}
+              type="button"
+              role="tab"
+              aria-selected={isActive}
+              aria-label={`Go to slide ${idx + 1}`}
+              onClick={() => goToSlide(idx)}
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer group focus:outline-none"
+            >
+              <span
+                className={`block transition-all duration-300 rounded-full ${
+                  isActive
+                    ? 'w-7 h-2 bg-amber-500 shadow-md ring-2 ring-amber-400/40'
+                    : 'w-2.5 h-2.5 bg-white/45 group-hover:bg-white/80'
+                }`}
+              />
+            </button>
+          );
+        })}
       </div>
     </section>
   );
