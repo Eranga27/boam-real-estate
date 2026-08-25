@@ -29,8 +29,8 @@ interface SriLankaMapProps {
 const BASE_MAPS = {
   road: {
     name: 'Roadmap',
-    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-    attribution: '&copy; <a href="https://carto.com/">CARTO</a> &bull; BOAM Real Estate',
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &bull; BOAM Real Estate',
   },
   satellite: {
     name: 'Satellite',
@@ -73,14 +73,17 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
     }
   }, [selectedId, properties]);
 
-  // Handle map initialization and pin rendering
+  // Handle Leaflet map initialization & pin updates
   useEffect(() => {
     if (typeof window === 'undefined' || !mapContainerRef.current) return;
 
+    let isMounted = true;
+
     import('leaflet').then((L) => {
+      if (!isMounted || !mapContainerRef.current) return;
       const Leaflet = L.default || L;
 
-      // Fix default Leaflet icon paths in Next.js
+      // Fix Leaflet default icon paths
       delete (Leaflet.Icon.Default.prototype as any)._getIconUrl;
       Leaflet.Icon.Default.mergeOptions({
         iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -88,8 +91,9 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
         shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
       });
 
+      // Initialize map instance if not created yet
       if (!mapInstanceRef.current) {
-        const map = Leaflet.map(mapContainerRef.current!, {
+        const map = Leaflet.map(mapContainerRef.current, {
           center: [7.8731, 80.7718],
           zoom: 8,
           minZoom: 7,
@@ -100,6 +104,7 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
 
         mapInstanceRef.current = map;
 
+        // Force Leaflet container recalculation on initial render & layout transitions
         const invalidate = () => {
           if (mapInstanceRef.current) {
             mapInstanceRef.current.invalidateSize();
@@ -108,9 +113,10 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
         invalidate();
         setTimeout(invalidate, 100);
         setTimeout(invalidate, 300);
-        setTimeout(invalidate, 800);
+        setTimeout(invalidate, 600);
         window.addEventListener('resize', invalidate);
 
+        // Add OpenStreetMap tile layer
         const tileLayer = Leaflet.tileLayer(BASE_MAPS[mapStyle].url, {
           attribution: BASE_MAPS[mapStyle].attribution,
           maxZoom: 19,
@@ -122,11 +128,11 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
 
       const map = mapInstanceRef.current;
 
-      // Clear previous markers
+      // Clear existing markers before re-adding
       Object.values(markersRef.current).forEach((marker) => marker.remove());
       markersRef.current = {};
 
-      // Plot markers
+      // Add custom HTML markers with House/Land BOAM styling
       properties.forEach((prop) => {
         const isHouse = prop.propertyType.toLowerCase() === 'house';
         const isSelected = selectedId === prop.id;
@@ -135,7 +141,7 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
           <div class="relative group cursor-pointer transition-all duration-300">
             <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full shadow-lg border transition-all duration-300 ${
               isSelected
-                ? 'ring-4 ring-amber-400/50 scale-110 z-30 ' + (isHouse ? 'bg-navy-950 text-amber-400 border-amber-400 font-black' : 'bg-emerald-900 text-emerald-200 border-emerald-400 font-black')
+                ? 'ring-4 ring-amber-400/50 scale-110 z-30 ' + (isHouse ? 'bg-navy-950 text-amber-400 border-amber-400 font-extrabold' : 'bg-emerald-900 text-emerald-200 border-emerald-400 font-extrabold')
                 : (isHouse ? 'bg-navy-900 text-white border-navy-700 hover:border-amber-400' : 'bg-emerald-700 text-white border-emerald-500 hover:border-white')
             }">
               <span class="w-2 h-2 rounded-full ${
@@ -173,10 +179,20 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
     });
 
     return () => {
-      // Retain map instance across re-renders for smooth transitions
+      isMounted = false;
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [properties, selectedId]);
+
+  // Clean up map instance on unmount
+  useEffect(() => {
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, []);
 
   // Handle map style / layer changes
   const handleMapStyleChange = (style: MapStyle) => {
@@ -239,8 +255,8 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
         </button>
       </div>
 
-      {/* Map Canvas Container */}
-      <div ref={mapContainerRef} className="h-[520px] sm:h-[580px] w-full z-0" />
+      {/* Map Canvas Container with Explicit Dimensions */}
+      <div ref={mapContainerRef} className="h-[520px] sm:h-[580px] w-full min-h-[520px] relative z-0" />
 
       {/* Floating Active Mini Card Popup */}
       <AnimatePresence>
@@ -277,7 +293,7 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
                 )}
                 <span className={`absolute top-2 left-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold shadow ${
                   activeProperty.propertyType.toLowerCase() === 'house'
-                    ? 'bg-navy-900 text-amber-400 border border-amber-400/40'
+                    ? 'bg-navy-900 text-amber-400 border border-amber-400/30'
                     : 'bg-emerald-700 text-white'
                 }`}>
                   {activeProperty.propertyType.toLowerCase() === 'house' ? (

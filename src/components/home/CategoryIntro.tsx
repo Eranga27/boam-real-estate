@@ -7,22 +7,9 @@ import { ArrowUpRight, Home, Trees } from 'lucide-react';
 
 export function CategoryIntro() {
   return (
-    <section className="relative bg-white py-16 sm:py-20 lg:py-24 overflow-hidden border-t border-navy-100/60">
+    <section className="relative bg-white pb-16 sm:pb-20 lg:pb-24 pt-4 overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Editorial Section Header */}
-        <div className="mb-10 sm:mb-14 max-w-2xl">
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-amber-600">
-            Portfolio Pathways
-          </p>
-          <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-navy-950 sm:text-4xl lg:text-5xl">
-            Curated across two distinct realms.
-          </h2>
-          <p className="mt-3 text-base text-navy-800/70 leading-relaxed">
-            Whether looking for luxury residences or expansive land with long-term investment potential, explore hand-verified listings tailored to your vision.
-          </p>
-        </div>
-
-        {/* Balanced Two-Column Editorial Cards */}
+        {/* Balanced Two-Column Editorial Cards — Natural continuation of Featured Properties */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
           {/* HOMES Composition */}
           <motion.div
@@ -30,7 +17,7 @@ export function CategoryIntro() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="group relative flex flex-col justify-end min-h-[440px] sm:min-h-[500px] lg:min-h-[540px] overflow-hidden rounded-3xl p-7 sm:p-10 shadow-xl transition-all"
+            className="group relative flex flex-col justify-end min-h-[420px] sm:min-h-[480px] lg:min-h-[520px] overflow-hidden rounded-3xl p-7 sm:p-10 shadow-xl transition-all"
           >
             {/* Background Image with Gentle Zoom */}
             <div className="absolute inset-0 bg-navy-950">
@@ -76,7 +63,7 @@ export function CategoryIntro() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.15 }}
-            className="group relative flex flex-col justify-end min-h-[440px] sm:min-h-[500px] lg:min-h-[540px] overflow-hidden rounded-3xl p-7 sm:p-10 shadow-xl transition-all"
+            className="group relative flex flex-col justify-end min-h-[420px] sm:min-h-[480px] lg:min-h-[520px] overflow-hidden rounded-3xl p-7 sm:p-10 shadow-xl transition-all"
           >
             {/* Background Image with Gentle Zoom */}
             <div className="absolute inset-0 bg-emerald-950">
