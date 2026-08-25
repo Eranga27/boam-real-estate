@@ -83,7 +83,7 @@ export default function MyInquiriesPage() {
             <h1 className="text-3xl font-bold text-gray-900 mb-1">My Inquiries</h1>
             <p className="text-gray-500">Track all the properties you have contacted sellers about.</p>
           </div>
-          <Link href="/buy">
+          <Link href="/search">
             <Button variant="outline">Browse Properties</Button>
           </Link>
         </div>
@@ -97,7 +97,7 @@ export default function MyInquiriesPage() {
             <p className="text-gray-500 max-w-md mx-auto mb-6">
               When you send an inquiry to a seller on a property page, it will appear here so you can track your conversations.
             </p>
-            <Link href="/buy">
+            <Link href="/search">
               <Button>Start Browsing</Button>
             </Link>
           </div>

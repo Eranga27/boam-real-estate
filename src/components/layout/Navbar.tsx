@@ -1,26 +1,21 @@
 'use client';
+
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { MenuIcon, PhoneIcon, XIcon, UserCircle } from 'lucide-react';
+import { MenuIcon, PhoneIcon, XIcon } from 'lucide-react';
 import { Logo } from '../brand/Logo';
-import { useAuth } from '@/context/AuthContext';
 
 export function Navbar() {
   const pathname = usePathname();
   const isHome = pathname === '/';
   const [scrolled, setScrolled] = useState(!isHome);
   const [open, setOpen] = useState(false);
-  const { user, isAuthenticated, logout } = useAuth();
-  
-  const isAdmin = user?.role === 'ADMIN';
 
   const links = [
     { to: '/', label: 'Home' },
-    { to: '/buy', label: 'Buy' },
-    { to: '/rent', label: 'Rent' },
-    { to: '/search', label: 'All Properties' },
-    ...(isAdmin ? [{ to: '/add-property', label: 'Add Property' }] : []),
+    { to: '/search', label: 'Properties' },
+    { to: 'tel:+94777801470', label: 'Contact', isExternal: true },
   ];
 
   useEffect(() => {
@@ -28,7 +23,7 @@ export function Navbar() {
       setScrolled(true);
       return;
     }
-    const onScroll = () => setScrolled(window.scrollY > 40);
+    const onScroll = () => setScrolled(window.scrollY > 30);
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
@@ -40,137 +35,141 @@ export function Navbar() {
 
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
+      className={`fixed inset-x-0 top-0 z-50 transition-all duration-350 ease-in-out ${
         solid
-          ? 'bg-white shadow-[0_2px_15px_-3px_rgba(14,42,73,0.08)] border-b border-navy-100/70'
-          : 'bg-gradient-to-b from-navy-950/85 via-navy-950/40 to-transparent'
+          ? 'bg-white shadow-[0_2px_15px_-3px_rgba(14,42,73,0.06)] border-b border-navy-100/80 py-3'
+          : 'bg-transparent py-5'
       }`}
     >
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:h-[72px] sm:px-6 lg:px-8">
-        <Link href="/" aria-label="Boam Real-Estates home" className="transition-opacity hover:opacity-80">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        {/* Brand Logo */}
+        <Link href="/" aria-label="BOAM Real-Estates home" className="transition-transform hover:scale-[0.98]">
           <Logo variant={solid ? 'dark' : 'light'} />
         </Link>
 
-        <nav className="hidden items-center gap-1 lg:flex" aria-label="Main">
+        {/* Desktop Primary Navigation */}
+        <nav className="hidden items-center gap-8 md:flex" aria-label="Main Navigation">
           {links.map((link) => {
-            const isActive = pathname === link.to;
+            const isPropertiesActive = link.to === '/search' && (pathname.startsWith('/search') || pathname.startsWith('/properties'));
+            const isHomeActive = link.to === '/' && pathname === '/';
+            const isActive = isHomeActive || isPropertiesActive;
+
+            if (link.isExternal) {
+              return (
+                <a
+                  key={link.label}
+                  href={link.to}
+                  className={`group relative py-1 text-sm font-bold tracking-wide transition-colors ${
+                    solid ? 'text-navy-800/80 hover:text-navy-950' : 'text-white/80 hover:text-white'
+                  }`}
+                >
+                  {link.label}
+                  <span className="absolute inset-x-0 -bottom-1 h-0.5 scale-x-0 rounded-full bg-amber-500 transition-transform duration-200 ease-out group-hover:scale-x-100" />
+                </a>
+              );
+            }
+
             return (
               <Link
                 key={link.to}
                 href={link.to}
-                className={`relative rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
+                className={`group relative py-1 text-sm font-bold tracking-wide transition-colors ${
                   solid
                     ? isActive
-                      ? 'text-navy-800'
-                      : 'text-navy-800/60 hover:text-navy-800'
+                      ? 'text-navy-950 font-extrabold'
+                      : 'text-navy-800/75 hover:text-navy-950'
                     : isActive
-                    ? 'text-white'
-                    : 'text-white/70 hover:text-white'
+                    ? 'text-white font-extrabold'
+                    : 'text-white/80 hover:text-white'
                 }`}
               >
                 {link.label}
-                {isActive && (
-                  <span className="absolute inset-x-4 -bottom-0.5 h-0.5 rounded-full bg-amber-500" />
-                )}
+                <span
+                  className={`absolute inset-x-0 -bottom-1 h-0.5 rounded-full bg-amber-500 transition-transform duration-200 ease-out ${
+                    isActive ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'
+                  }`}
+                />
               </Link>
             );
           })}
         </nav>
 
-        <div className="hidden items-center gap-3 lg:flex">
+        {/* Desktop Direct Contact CTA */}
+        <div className="hidden items-center gap-4 md:flex">
           <a
             href="tel:+94777801470"
-            className={`flex items-center gap-2 text-sm font-semibold transition-colors ${
-              solid ? 'text-navy-800 hover:text-navy-600' : 'text-white hover:text-amber-300'
+            className={`group inline-flex items-center gap-2.5 rounded-full px-5 py-2.5 text-xs font-extrabold uppercase tracking-wider transition-all duration-200 ${
+              solid
+                ? 'bg-navy-950 text-white hover:bg-navy-900 shadow-sm'
+                : 'bg-white/10 text-white backdrop-blur-sm border border-white/20 hover:bg-white/20'
             }`}
           >
-            <PhoneIcon className="h-4 w-4" aria-hidden="true" />
-            +94 777 80 1470
+            <PhoneIcon className="h-3.5 w-3.5 text-amber-400" aria-hidden="true" />
+            <span>+94 777 80 1470</span>
           </a>
-          
-          {!isAuthenticated ? (
-            <Link
-              href="/login"
-              className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
-                solid ? 'text-navy-800 hover:bg-navy-50' : 'text-white hover:bg-white/10'
-              }`}
-            >
-              Sign in
-            </Link>
-          ) : (
-            <Link
-              href="/profile"
-              className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
-                solid ? 'text-navy-800 hover:bg-navy-50' : 'text-white hover:bg-white/10'
-              }`}
-            >
-              <UserCircle className="w-5 h-5" />
-              Profile
-            </Link>
-          )}
-
-          <Link
-            href="/search"
-            className="rounded-full bg-amber-500 px-5 py-2.5 text-sm font-bold text-navy-900 shadow-[0_10px_24px_-12px_rgba(244,163,0,0.9)] transition-all hover:-translate-y-0.5 hover:bg-amber-400"
-          >
-            Browse Listings
-          </Link>
         </div>
 
+        {/* Mobile Menu Toggle Button */}
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
-          aria-label={open ? 'Close menu' : 'Open menu'}
-          className={`grid h-10 w-10 place-items-center rounded-full transition-colors lg:hidden ${
-            solid ? 'text-navy-800 hover:bg-navy-50' : 'text-white hover:bg-white/10'
+          aria-label={open ? 'Close navigation menu' : 'Open navigation menu'}
+          className={`grid h-11 w-11 place-items-center rounded-full transition-colors md:hidden ${
+            solid ? 'text-navy-950 hover:bg-navy-50' : 'text-white hover:bg-white/10'
           }`}
         >
-          {open ? <XIcon className="h-5 w-5" /> : <MenuIcon className="h-5 w-5" />}
+          {open ? <XIcon className="h-6 w-6" aria-hidden="true" /> : <MenuIcon className="h-6 w-6" aria-hidden="true" />}
         </button>
       </div>
 
+      {/* Mobile Drawer Panel */}
       {open && (
-        <div className="border-t border-navy-100 bg-white px-4 pb-6 pt-4 lg:hidden shadow-lg">
-          <nav className="flex flex-col gap-1" aria-label="Mobile">
+        <div className="border-b border-navy-100 bg-white px-6 pb-8 pt-5 md:hidden shadow-xl animate-in slide-in-from-top-2 duration-200">
+          <nav className="flex flex-col gap-3" aria-label="Mobile Navigation">
             {links.map((link) => {
-              const isActive = pathname === link.to;
+              const isPropertiesActive = link.to === '/search' && (pathname.startsWith('/search') || pathname.startsWith('/properties'));
+              const isHomeActive = link.to === '/' && pathname === '/';
+              const isActive = isHomeActive || isPropertiesActive;
+
+              if (link.isExternal) {
+                return (
+                  <a
+                    key={link.label}
+                    href={link.to}
+                    className="flex items-center justify-between rounded-2xl px-4 py-3.5 text-base font-bold text-navy-900 hover:bg-navy-50 transition-colors"
+                  >
+                    <span>{link.label}</span>
+                    <PhoneIcon className="h-4 w-4 text-amber-500" aria-hidden="true" />
+                  </a>
+                );
+              }
+
               return (
                 <Link
                   key={link.to}
                   href={link.to}
-                  className={`rounded-xl px-3 py-3 text-base font-semibold transition-colors ${
-                    isActive ? 'bg-navy-50 text-navy-800' : 'text-navy-800/70 hover:bg-navy-50'
+                  className={`flex items-center justify-between rounded-2xl px-4 py-3.5 text-base font-bold transition-colors ${
+                    isActive
+                      ? 'bg-navy-950 text-white'
+                      : 'text-navy-800 hover:bg-navy-50'
                   }`}
                 >
-                  {link.label}
+                  <span>{link.label}</span>
+                  {isActive && <span className="h-2 w-2 rounded-full bg-amber-400" />}
                 </Link>
               );
             })}
           </nav>
-          <div className="mt-6 flex flex-col gap-3 pt-4 border-t border-navy-50">
-            {!isAuthenticated ? (
-              <Link
-                href="/login"
-                className="rounded-full border border-navy-200 px-5 py-3 text-center text-sm font-semibold text-navy-800 transition-colors hover:bg-navy-50"
-              >
-                Sign in
-              </Link>
-            ) : (
-              <Link
-                href="/profile"
-                className="rounded-full border border-navy-200 px-5 py-3 text-center text-sm font-semibold text-navy-800 transition-colors hover:bg-navy-50 flex items-center justify-center gap-2"
-              >
-                <UserCircle className="w-5 h-5" />
-                Profile
-              </Link>
-            )}
-            <Link
-              href="/search"
-              className="rounded-full bg-amber-500 px-5 py-3 text-center text-sm font-bold text-navy-900 transition-colors hover:bg-amber-400"
+
+          <div className="mt-6 pt-5 border-t border-navy-100/80">
+            <a
+              href="tel:+94777801470"
+              className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-amber-500 px-5 py-4 text-sm font-extrabold text-navy-950 transition-all hover:bg-amber-400 active:scale-[0.99]"
             >
-              Browse Listings
-            </Link>
+              <PhoneIcon className="h-4 w-4" aria-hidden="true" />
+              <span>Call BOAM Broker (+94 777 80 1470)</span>
+            </a>
           </div>
         </div>
       )}

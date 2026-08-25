@@ -64,7 +64,7 @@ export default function FavoritesPage() {
           <Heart className="w-14 h-14 mx-auto mb-4 text-gray-200" />
           <h3 className="text-xl font-bold text-gray-900 mb-2">No favorites yet</h3>
           <p className="text-gray-500 mb-6">Browse properties and click the heart icon to save your favorites here.</p>
-          <Link href="/buy"><Button>Browse Properties</Button></Link>
+          <Link href="/search"><Button>Browse Properties</Button></Link>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">

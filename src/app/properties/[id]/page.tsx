@@ -209,7 +209,7 @@ export default function PropertyDetails() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
         <h2 className="text-2xl font-bold text-navy-800">Property not found</h2>
-        <Link href="/buy">
+        <Link href="/search">
           <Button variant="outline">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Browse Properties
@@ -227,7 +227,7 @@ export default function PropertyDetails() {
 
         {/* Back Navigation */}
         <div className="flex items-center gap-4 mb-6">
-          <Link href="/buy" className="flex items-center text-sm text-navy-800/70 hover:text-navy-950 transition-colors">
+          <Link href="/search" className="flex items-center text-sm text-navy-800/70 hover:text-navy-950 transition-colors">
             <ArrowLeft className="w-4 h-4 mr-1" /> Back to listings
           </Link>
           <span className="text-navy-300">/</span>

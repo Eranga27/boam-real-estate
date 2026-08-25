@@ -60,7 +60,7 @@ export default function SavedPropertiesPage() {
           <BookMarked className="w-14 h-14 mx-auto mb-4 text-gray-200" />
           <h3 className="text-xl font-bold text-gray-900 mb-2">Nothing saved yet</h3>
           <p className="text-gray-500 mb-6">When viewing a property, click the bookmark icon to save it here for later.</p>
-          <Link href="/buy"><Button>Browse Properties</Button></Link>
+          <Link href="/search"><Button>Browse Properties</Button></Link>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">

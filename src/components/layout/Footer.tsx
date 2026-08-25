@@ -8,25 +8,23 @@ import {
   LinkedinIcon,
   MailIcon,
   MapPinIcon,
-  PhoneIcon } from
-'lucide-react';
+  PhoneIcon,
+} from 'lucide-react';
 import { Logo } from '../brand/Logo';
 
 const quickLinks = [
-{ label: 'Home', to: '/' },
-{ label: 'Properties for Sale', to: '/buy' },
-{ label: 'Properties for Rent', to: '/rent' },
-{ label: 'All Listings', to: '/search' },
-{ label: 'Sign in', to: '/login' }];
-
+  { label: 'Home', to: '/' },
+  { label: 'Properties', to: '/search' },
+  { label: 'Contact', to: 'tel:+94777801470', isExternal: true },
+];
 
 const services = [
-'Buyer Representation',
-'Rental Placement',
-'Property Valuation',
-'Title & Legal Checks',
-'Relocation Advisory'];
-
+  'Buyer Representation',
+  'Rental Placement',
+  'Property Valuation',
+  'Title & Legal Checks',
+  'Relocation Advisory',
+];
 
 export function Footer() {
   return (
@@ -41,16 +39,16 @@ export function Footer() {
               agents before it goes live.
             </p>
             <div className="mt-6 flex gap-2">
-              {[FacebookIcon, InstagramIcon, LinkedinIcon].map((Icon, i) =>
-              <a
-                key={i}
-                href="#"
-                aria-label={['Facebook', 'Instagram', 'LinkedIn'][i]}
-                className="grid h-9 w-9 place-items-center rounded-full bg-white/10 text-white/80 transition-all hover:-translate-y-0.5 hover:bg-amber-500 hover:text-navy-900">
-                
+              {[FacebookIcon, InstagramIcon, LinkedinIcon].map((Icon, i) => (
+                <a
+                  key={i}
+                  href="#"
+                  aria-label={['Facebook', 'Instagram', 'LinkedIn'][i]}
+                  className="grid h-9 w-9 place-items-center rounded-full bg-white/10 text-white/80 transition-all hover:-translate-y-0.5 hover:bg-amber-500 hover:text-navy-900"
+                >
                   <Icon className="h-4 w-4" aria-hidden="true" />
                 </a>
-              )}
+              ))}
             </div>
           </div>
 
@@ -59,16 +57,25 @@ export function Footer() {
               Quick Links
             </h2>
             <ul className="mt-5 space-y-3 text-sm">
-              {quickLinks.map((link) =>
-              <li key={link.to + link.label}>
-                  <Link
-                  href={link.to}
-                  className="text-white/65 transition-colors hover:text-white">
-                  
-                    {link.label}
-                  </Link>
+              {quickLinks.map((link) => (
+                <li key={link.label}>
+                  {link.isExternal ? (
+                    <a
+                      href={link.to}
+                      className="text-white/65 transition-colors hover:text-white"
+                    >
+                      {link.label}
+                    </a>
+                  ) : (
+                    <Link
+                      href={link.to}
+                      className="text-white/65 transition-colors hover:text-white"
+                    >
+                      {link.label}
+                    </Link>
+                  )}
                 </li>
-              )}
+              ))}
             </ul>
           </div>
 
@@ -77,9 +84,9 @@ export function Footer() {
               Services
             </h2>
             <ul className="mt-5 space-y-3 text-sm text-white/65">
-              {services.map((service) =>
-              <li key={service}>{service}</li>
-              )}
+              {services.map((service) => (
+                <li key={service}>{service}</li>
+              ))}
             </ul>
           </div>
 
@@ -98,7 +105,7 @@ export function Footer() {
               </li>
               <li className="flex gap-3">
                 <PhoneIcon className="mt-0.5 h-4 w-4 shrink-0 text-white/40" aria-hidden="true" />
-                <a href="tel:+94777801470" className="transition-colors hover:text-white">
+                <a href="tel:+94777801470" className="transition-colors hover:text-white font-semibold text-white/90">
                   +94 777 80 1470
                 </a>
               </li>
@@ -126,6 +133,6 @@ export function Footer() {
           </div>
         </div>
       </div>
-    </footer>);
-
+    </footer>
+  );
 }
