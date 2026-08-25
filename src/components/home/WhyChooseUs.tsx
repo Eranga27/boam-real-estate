@@ -1,69 +1,87 @@
 'use client';
+
 import React from 'react';
 import { motion } from 'framer-motion';
-import { GemIcon, HandshakeIcon, ScrollTextIcon } from 'lucide-react';
+import { FileText, Compass, UserCheck } from 'lucide-react';
 
-const reasons = [
-{
-  icon: GemIcon,
-  title: 'Exclusive, off-market listings',
-  body:
-  'Roughly two in three homes on our books are never advertised publicly. Owners bring them to us first, so you see them before the market does.',
-  stat: '68% off-market'
-},
-{
-  icon: ScrollTextIcon,
-  title: 'Every title verified before listing',
-  body:
-  'Our legal team checks deeds, survey plans, local authority approvals and outstanding rates. If a property does not clear, it never reaches this site.',
-  stat: '100% checked'
-},
-{
-  icon: HandshakeIcon,
-  title: 'One broker, start to finish',
-  body:
-  'No call-centre handoffs. A single named agent handles your viewings, negotiation and transfer, and stays reachable on WhatsApp throughout.',
-  stat: '1 dedicated agent'
-}];
-
+const TRUST_ITEMS = [
+  {
+    number: '01',
+    icon: FileText,
+    title: 'Clear Property Details',
+    description: 'Present useful property information clearly so buyers can understand what they are considering.',
+  },
+  {
+    number: '02',
+    icon: Compass,
+    title: 'Local Context',
+    description: 'Explore homes and land across Sri Lanka with location-focused discovery.',
+  },
+  {
+    number: '03',
+    icon: UserCheck,
+    title: 'Direct Broker Guidance',
+    description: 'Connect directly with BOAM for enquiries, viewings and the next step.',
+  },
+];
 
 export function WhyChooseUs() {
   return (
-    <section className="bg-navy-800 py-20 lg:py-28">
+    <section className="bg-white py-16 sm:py-20 lg:py-28 border-t border-navy-100/60">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {/* Editorial Section Header */}
         <div className="max-w-2xl">
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-amber-500">
-            Why Boam
+          <p className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-amber-600">
+            Why BOAM
           </p>
-          <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-white sm:text-[2.5rem]">
-            Why buyers choose us
+          <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-navy-950 sm:text-4xl lg:text-5xl">
+            Good property decisions start with clarity.
           </h2>
+          <p className="mt-3 text-base sm:text-lg text-navy-800/75 leading-relaxed font-normal">
+            From the first search to the next conversation, BOAM keeps property discovery simple, clear and personal.
+          </p>
         </div>
 
-        <div className="mt-12 grid gap-5 lg:grid-cols-3">
-          {reasons.map((reason, i) =>
-          <motion.div
-            key={reason.title}
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-80px' }}
-            transition={{ duration: 0.5, delay: i * 0.1 }}
-            className="group flex gap-5 rounded-3xl border border-white/10 bg-white/[0.04] p-7 transition-all hover:-translate-y-1 hover:border-amber-500/40 hover:bg-white/[0.07] lg:flex-col">
-            
-              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-amber-500 text-navy-900 transition-transform group-hover:scale-105">
-                <reason.icon className="h-6 w-6" aria-hidden="true" />
-              </div>
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-amber-400">
-                  {reason.stat}
-                </p>
-                <h3 className="mt-2 text-lg font-bold text-white">{reason.title}</h3>
-                <p className="mt-2.5 text-sm leading-relaxed text-white/60">{reason.body}</p>
-              </div>
-            </motion.div>
-          )}
+        {/* 3 Restrained Editorial Cards */}
+        <div className="mt-12 sm:mt-16 grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+          {TRUST_ITEMS.map((item, i) => {
+            const Icon = item.icon;
+            return (
+              <motion.div
+                key={item.number}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-60px' }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+                className="group relative flex flex-col justify-between rounded-3xl bg-navy-50/50 p-8 border border-navy-100/80 transition-all duration-300 hover:bg-white hover:shadow-xl hover:border-amber-400/40"
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xl font-extrabold text-amber-600 font-mono tracking-wider">
+                      {item.number}
+                    </span>
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-navy-900 shadow-sm border border-navy-100 group-hover:bg-navy-950 group-hover:text-amber-400 transition-colors">
+                      <Icon className="h-5 w-5" />
+                    </div>
+                  </div>
+
+                  <h3 className="mt-6 text-xl font-extrabold text-navy-950 tracking-tight">
+                    {item.title}
+                  </h3>
+                  <p className="mt-3 text-sm leading-relaxed text-navy-800/70 font-medium">
+                    {item.description}
+                  </p>
+                </div>
+
+                <div className="mt-8 pt-4 border-t border-navy-100/60 flex items-center gap-2 text-xs font-bold text-navy-900 group-hover:text-amber-600 transition-colors">
+                  <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                  <span>The BOAM Approach</span>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
-    </section>);
-
+    </section>
+  );
 }

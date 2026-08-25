@@ -1,74 +1,78 @@
 'use client';
+
 import React from 'react';
 import { motion } from 'framer-motion';
-import { KeyRoundIcon, MessageSquareIcon, SearchIcon } from 'lucide-react';
 
-const steps = [
-{
-  icon: SearchIcon,
-  title: 'Browse the portfolio',
-  body: 'Filter by city, budget and property type. Every listing shows verified sizes, real photos and a genuine asking price.'
-},
-{
-  icon: MessageSquareIcon,
-  title: 'Send an inquiry',
-  body: 'Tell us what you need. Your assigned broker replies within one working day and arranges viewings around your schedule.'
-},
-{
-  icon: KeyRoundIcon,
-  title: 'Close the deal',
-  body: 'We negotiate on your behalf, coordinate the lawyers and hand over the keys — with the paperwork already settled.'
-}];
-
+const STEPS = [
+  {
+    number: '01',
+    title: 'Explore',
+    description: 'Browse homes and land based on location, property type and your needs.',
+  },
+  {
+    number: '02',
+    title: 'Enquire',
+    description: "Connect directly with BOAM about a property you're interested in.",
+  },
+  {
+    number: '03',
+    title: 'Move Forward',
+    description: 'Arrange the next conversation, viewing or decision with broker assistance.',
+  },
+];
 
 export function HowItWorks() {
   return (
-    <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
-      <div className="mx-auto max-w-2xl text-center">
-        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-amber-600">
-          Simple process
-        </p>
-        <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-navy-800 sm:text-[2.5rem]">
-          How It Works
-        </h2>
-        <p className="mt-3 text-[15px] leading-relaxed text-navy-800/60">
-          Three steps from first browse to keys in hand.
-        </p>
-      </div>
+    <section className="bg-slate-50/60 py-16 sm:py-20 lg:py-28 border-t border-navy-100/60">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {/* Section Header */}
+        <div className="max-w-2xl">
+          <p className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-amber-600">
+            Process
+          </p>
+          <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-navy-950 sm:text-4xl lg:text-5xl">
+            From discovery to decision.
+          </h2>
+          <p className="mt-3 text-base sm:text-lg text-navy-800/75 leading-relaxed font-normal">
+            Three simple steps to move from browsing to your next property conversation.
+          </p>
+        </div>
 
-      <div className="relative mt-14">
-        <div
-          className="absolute left-1/2 top-7 hidden h-px w-[70%] -translate-x-1/2 lg:block"
-          style={{
-            backgroundImage:
-            'repeating-linear-gradient(to right, #c3d5e9 0 10px, transparent 10px 20px)'
-          }}
-          aria-hidden="true" />
-        
-        <ol className="relative grid gap-10 lg:grid-cols-3 lg:gap-8">
-          {steps.map((step, i) =>
-          <motion.li
-            key={step.title}
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-80px' }}
-            transition={{ duration: 0.5, delay: i * 0.12 }}
-            className="flex flex-col items-center text-center">
-            
-              <div className="relative grid h-14 w-14 place-items-center rounded-full bg-navy-800 text-lg font-extrabold text-white ring-8 ring-white">
-                {i + 1}
-                <span className="absolute -bottom-1 -right-1 grid h-7 w-7 place-items-center rounded-full bg-amber-500 text-navy-900">
-                  <step.icon className="h-3.5 w-3.5" aria-hidden="true" />
-                </span>
-              </div>
-              <h3 className="mt-6 text-lg font-bold text-navy-800">{step.title}</h3>
-              <p className="mt-2.5 max-w-sm text-sm leading-relaxed text-navy-800/60">
-                {step.body}
-              </p>
-            </motion.li>
-          )}
-        </ol>
-      </div>
-    </section>);
+        {/* Steps Grid with Minimal Gold Connecting Line */}
+        <div className="relative mt-12 sm:mt-16">
+          {/* Subtle Horizontal Gold Line for Desktop */}
+          <div className="hidden lg:block absolute top-10 left-[10%] right-[10%] h-px bg-gradient-to-r from-amber-400/20 via-amber-400/60 to-amber-400/20 z-0" />
 
+          <ol className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
+            {STEPS.map((step, i) => (
+              <motion.li
+                key={step.number}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-60px' }}
+                transition={{ duration: 0.5, delay: i * 0.12 }}
+                className="flex flex-col justify-between rounded-3xl bg-white p-8 shadow-sm border border-navy-100/80 transition-all duration-300 hover:shadow-md"
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-4xl font-extrabold text-navy-950 font-mono tracking-tight">
+                      {step.number}
+                    </span>
+                    <span className="h-2 w-2 rounded-full bg-amber-500" />
+                  </div>
+
+                  <h3 className="mt-6 text-xl font-extrabold text-navy-950 tracking-tight">
+                    {step.title}
+                  </h3>
+                  <p className="mt-3 text-sm leading-relaxed text-navy-800/70 font-medium">
+                    {step.description}
+                  </p>
+                </div>
+              </motion.li>
+            ))}
+          </ol>
+        </div>
+      </div>
+    </section>
+  );
 }
