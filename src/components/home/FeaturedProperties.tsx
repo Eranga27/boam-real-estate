@@ -10,7 +10,8 @@ export function FeaturedProperties({ properties = [], loading = false }: { prope
   const featured = properties.slice(0, 3);
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
+    <section className="relative bg-white px-4 py-16 sm:px-6 lg:px-8 lg:py-24 overflow-hidden">
+      <div className="mx-auto max-w-7xl">
       <div className="flex flex-wrap items-end justify-between gap-5">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-amber-600">
@@ -48,6 +49,7 @@ export function FeaturedProperties({ properties = [], loading = false }: { prope
             <PropertyCard property={property} />
           </motion.div>
         ))}
+      </div>
       </div>
     </section>
   );

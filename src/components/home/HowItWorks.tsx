@@ -23,48 +23,80 @@ const STEPS = [
 
 export function HowItWorks() {
   return (
-    <section className="bg-slate-50/60 py-16 sm:py-20 lg:py-28 border-t border-navy-100/60">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div className="max-w-2xl">
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-amber-600">
+    <section
+      className="relative py-20 sm:py-24 lg:py-32 overflow-hidden"
+      style={{ background: 'linear-gradient(to bottom, #F2F4F7 0%, #EEF0F5 100%)' }}
+    >
+      {/* Soft top dissolve from WhyChooseUs warm ivory */}
+      <div
+        className="pointer-events-none absolute top-0 left-0 right-0 h-24"
+        style={{ background: 'linear-gradient(to bottom, #F2EFE9, transparent)' }}
+        aria-hidden="true"
+      />
+
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {/* Section header — left aligned */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-80px' }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+          className="max-w-2xl mb-16 sm:mb-20"
+        >
+          <p className="text-[11px] font-extrabold uppercase tracking-[0.25em] text-amber-600">
             Process
           </p>
-          <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-navy-950 sm:text-4xl lg:text-5xl">
+          <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-navy-950 sm:text-4xl lg:text-5xl leading-[1.1]">
             From discovery to decision.
           </h2>
-          <p className="mt-3 text-base sm:text-lg text-navy-800/75 leading-relaxed font-normal">
+          <p className="mt-4 text-base sm:text-lg text-navy-800/70 leading-relaxed font-normal">
             Three simple steps to move from browsing to your next property conversation.
           </p>
-        </div>
+        </motion.div>
 
-        {/* Steps Grid with Minimal Gold Connecting Line */}
-        <div className="relative mt-12 sm:mt-16">
-          {/* Subtle Horizontal Gold Line for Desktop */}
-          <div className="hidden lg:block absolute top-10 left-[10%] right-[10%] h-px bg-gradient-to-r from-amber-400/20 via-amber-400/60 to-amber-400/20 z-0" />
+        {/* Desktop: staggered editorial timeline */}
+        <div className="relative hidden lg:block">
+          {/* Thin warm gold connecting line running across all 3 steps */}
+          <div
+            className="pointer-events-none absolute top-[2.25rem] left-[4rem] right-[4rem] h-px"
+            style={{
+              background: 'linear-gradient(to right, #C9972A40, #C9972A 20%, #C9972A 80%, #C9972A40)',
+            }}
+            aria-hidden="true"
+          />
 
-          <ol className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
+          <ol className="relative grid grid-cols-3 gap-12">
             {STEPS.map((step, i) => (
               <motion.li
                 key={step.number}
-                initial={{ opacity: 0, y: 16 }}
+                initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-60px' }}
-                transition={{ duration: 0.5, delay: i * 0.12 }}
-                className="flex flex-col justify-between rounded-3xl bg-white p-8 shadow-sm border border-navy-100/80 transition-all duration-300 hover:shadow-md"
+                transition={{ duration: 0.55, delay: i * 0.14, ease: 'easeOut' }}
+                className={`relative flex flex-col ${i === 1 ? 'mt-16' : ''} ${i === 2 ? 'mt-32' : ''}`}
               >
-                <div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-4xl font-extrabold text-navy-950 font-mono tracking-tight">
-                      {step.number}
-                    </span>
-                    <span className="h-2 w-2 rounded-full bg-amber-500" />
+                {/* Step number with gold dot above the line */}
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="relative flex items-center justify-center">
+                    <span
+                      className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-amber-500 ring-4 ring-amber-500/20 z-10"
+                      aria-hidden="true"
+                    />
                   </div>
+                  <span className="text-xs font-extrabold uppercase tracking-[0.2em] text-navy-400">
+                    Step {step.number}
+                  </span>
+                </div>
 
-                  <h3 className="mt-6 text-xl font-extrabold text-navy-950 tracking-tight">
+                <div>
+                  <span className="text-6xl font-extrabold text-navy-950/[0.07] font-mono leading-none block mb-3 select-none">
+                    {step.number}
+                  </span>
+                  <h3 className="text-xl font-extrabold text-navy-950 tracking-tight">
                     {step.title}
                   </h3>
-                  <p className="mt-3 text-sm leading-relaxed text-navy-800/70 font-medium">
+                  <div className="mt-2 h-px w-8 bg-amber-500/50" />
+                  <p className="mt-3 text-sm leading-relaxed text-navy-700/70 font-medium max-w-xs">
                     {step.description}
                   </p>
                 </div>
@@ -72,7 +104,52 @@ export function HowItWorks() {
             ))}
           </ol>
         </div>
+
+        {/* Mobile: clean vertical timeline */}
+        <ol className="relative lg:hidden space-y-0 pl-10">
+          {/* Vertical gold line */}
+          <div
+            className="pointer-events-none absolute left-[1.1rem] top-3 bottom-3 w-px"
+            style={{ background: 'linear-gradient(to bottom, #C9972A40, #C9972A 20%, #C9972A 80%, #C9972A40)' }}
+            aria-hidden="true"
+          />
+
+          {STEPS.map((step, i) => (
+            <motion.li
+              key={step.number}
+              initial={{ opacity: 0, x: -12 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: '-40px' }}
+              transition={{ duration: 0.5, delay: i * 0.1, ease: 'easeOut' }}
+              className="relative pb-10 last:pb-0"
+            >
+              {/* Gold dot on the vertical line */}
+              <span
+                className="absolute -left-[2.25rem] top-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 ring-4 ring-amber-500/20"
+                aria-hidden="true"
+              />
+
+              <span className="text-4xl font-extrabold text-navy-950/[0.06] font-mono leading-none block mb-2 select-none">
+                {step.number}
+              </span>
+              <h3 className="text-lg font-extrabold text-navy-950 tracking-tight">
+                {step.title}
+              </h3>
+              <div className="mt-1.5 h-px w-6 bg-amber-500/50" />
+              <p className="mt-2.5 text-sm leading-relaxed text-navy-700/70 font-medium max-w-xs">
+                {step.description}
+              </p>
+            </motion.li>
+          ))}
+        </ol>
       </div>
+
+      {/* Soft dissolve into deep navy CTA */}
+      <div
+        className="pointer-events-none absolute bottom-0 left-0 right-0 h-32"
+        style={{ background: 'linear-gradient(to bottom, transparent, #0C1F35)' }}
+        aria-hidden="true"
+      />
     </section>
   );
 }

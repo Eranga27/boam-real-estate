@@ -81,7 +81,7 @@ export function PopularLocations() {
   const landCount = properties.filter((p) => p.propertyType.toLowerCase() === 'land').length;
 
   return (
-    <section className="bg-navy-50/50 py-16 sm:py-20 lg:py-24 border-t border-navy-100/60">
+    <section className="relative bg-navy-50/50 py-16 sm:py-20 lg:py-24 border-t border-navy-100/60 overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section Heading & Transition into Explorer */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -289,6 +289,13 @@ export function PopularLocations() {
           </div>
         </div>
       </div>
+
+      {/* Soft dissolve → warm ivory WhyChooseUs */}
+      <div
+        className="pointer-events-none absolute bottom-0 left-0 right-0 h-32"
+        style={{ background: 'linear-gradient(to bottom, transparent, #F7F5F0)' }}
+        aria-hidden="true"
+      />
     </section>
   );
 }

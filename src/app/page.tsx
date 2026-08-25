@@ -76,7 +76,7 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="w-full bg-white">
+    <div className="w-full">
       <Hero />
       <StatsStrip />
       <FeaturedProperties properties={featuredProperties} loading={loadingProperties} />
