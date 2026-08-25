@@ -173,7 +173,7 @@ export default function ContactForm({
       {/* Inquiry Form */}
       <div className="p-6">
         <div className="flex items-center gap-2 mb-5">
-          <MessageSquare className="w-5 h-5 text-navy-950" />
+          <MessageSquare className="w-5 h-5 text-amber-600" />
           <h4 className="font-bold text-navy-950">Send an Inquiry</h4>
         </div>
 
@@ -233,7 +233,7 @@ export default function ContactForm({
                   type="email"
                   value={fields.senderEmail}
                   onChange={handleChange}
-                  placeholder="anilbwt26@yahoo.com"
+                  placeholder="you@example.com"
                   className={errors.senderEmail ? 'border-red-400 focus:ring-red-300' : ''}
                 />
                 {errors.senderEmail && <p className="text-red-500 text-xs mt-1">{errors.senderEmail}</p>}

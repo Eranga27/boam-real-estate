@@ -46,15 +46,15 @@ export default function Register() {
   };
 
   return (
-    <main className="flex-1 flex items-center justify-center py-20 px-4 bg-light-gray min-h-[80vh]">
+    <main className="flex-1 flex items-center justify-center py-20 px-4 bg-navy-50/50 min-h-screen pt-24">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8"
       >
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-primary mb-2">Create an Account</h1>
-          <p className="text-gray-500 text-sm">Join Boam Real-Estates today</p>
+          <h1 className="text-2xl font-extrabold text-navy-950 mb-2">Create an Account</h1>
+          <p className="text-navy-800/60 text-sm">Join Boam Real-Estates today</p>
         </div>
 
         {error && (
@@ -65,7 +65,7 @@ export default function Register() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+            <label className="block text-sm font-semibold text-navy-800 mb-1">Full Name</label>
             <Input 
               type="text" 
               placeholder="John Doe" 
@@ -76,7 +76,7 @@ export default function Register() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+            <label className="block text-sm font-semibold text-navy-800 mb-1">Email Address</label>
             <Input 
               type="email" 
               placeholder="you@example.com" 
@@ -87,7 +87,7 @@ export default function Register() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
+            <label className="block text-sm font-semibold text-navy-800 mb-1">Mobile Number</label>
             <Input 
               type="tel" 
               placeholder="+1 (555) 000-0000" 
@@ -97,7 +97,7 @@ export default function Register() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <label className="block text-sm font-semibold text-navy-800 mb-1">Password</label>
             <Input 
               type="password" 
               placeholder="••••••••" 
@@ -114,9 +114,9 @@ export default function Register() {
           </Button>
         </form>
 
-        <p className="text-center text-sm text-gray-600 mt-8">
+        <p className="text-center text-sm text-navy-800/70 mt-8">
           Already have an account?{' '}
-          <Link href="/login" className="text-primary font-medium hover:underline">
+          <Link href="/login" className="text-amber-600 font-semibold hover:underline">
             Sign in
           </Link>
         </p>

@@ -170,7 +170,7 @@ export default function EditProperty() {
   }
 
   return (
-    <main className="flex-1 py-24 bg-light-gray min-h-screen">
+    <main className="flex-1 py-24 bg-navy-50/50 min-h-screen">
       <div className="max-w-4xl mx-auto px-4">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-primary">Edit Property</h1>

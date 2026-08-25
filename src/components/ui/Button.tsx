@@ -14,7 +14,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       secondary: 'bg-secondary text-white hover:bg-secondary/90 focus:ring-secondary',
       accent: 'bg-accent text-white hover:bg-accent/90 focus:ring-accent',
       outline: 'border-2 border-primary text-primary hover:bg-primary/10 focus:ring-primary',
-      ghost: 'text-foreground hover:bg-light-gray focus:ring-light-gray',
+      ghost: 'text-foreground hover:bg-navy-50/50 focus:ring-light-gray',
     };
     const sizes = {
       sm: 'px-3 py-1.5 text-sm',
@@ -33,3 +33,4 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 );
 
 Button.displayName = 'Button';
+

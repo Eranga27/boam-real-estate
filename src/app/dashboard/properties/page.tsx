@@ -94,7 +94,7 @@ export default function MyProperties() {
   }
 
   return (
-    <main className="flex-1 py-24 px-4 bg-light-gray min-h-screen">
+    <main className="flex-1 py-24 px-4 bg-navy-50/50 min-h-screen">
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <div>
@@ -180,3 +180,4 @@ export default function MyProperties() {
     </main>
   );
 }
+

@@ -38,7 +38,7 @@ export default function VerifyEmail({ params }: { params: { token: string } }) {
   }, [params.token, login, router]);
 
   return (
-    <main className="flex-1 flex items-center justify-center py-20 px-4 bg-light-gray min-h-[80vh]">
+    <main className="flex-1 flex items-center justify-center py-20 px-4 bg-navy-50/50 min-h-[80vh]">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

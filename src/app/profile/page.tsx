@@ -144,7 +144,7 @@ export default function Profile() {
   if (isLoading || !user) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
 
   return (
-    <main className="flex-1 py-24 px-4 bg-light-gray min-h-screen">
+    <main className="flex-1 py-24 px-4 bg-navy-50/50 min-h-screen">
       <div className="max-w-4xl mx-auto space-y-8">
         <h1 className="text-3xl font-bold text-primary mb-8">Profile Management</h1>
 
@@ -294,3 +294,4 @@ export default function Profile() {
     </main>
   );
 }
+

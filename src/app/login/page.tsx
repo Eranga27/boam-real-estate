@@ -45,15 +45,15 @@ export default function Login() {
   };
 
   return (
-    <main className="flex-1 flex items-center justify-center py-20 px-4 bg-light-gray min-h-[80vh]">
+    <main className="flex-1 flex items-center justify-center py-20 px-4 bg-navy-50/50 min-h-screen pt-24">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8"
       >
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-primary mb-2">Welcome Back</h1>
-          <p className="text-gray-500 text-sm">Please sign in to your account</p>
+          <h1 className="text-2xl font-extrabold text-navy-950 mb-2">Welcome Back</h1>
+          <p className="text-navy-800/60 text-sm">Please sign in to your account</p>
         </div>
 
         {error && (
@@ -64,7 +64,7 @@ export default function Login() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+            <label className="block text-sm font-semibold text-navy-800 mb-1">Email Address</label>
             <Input 
               type="email" 
               placeholder="you@example.com" 
@@ -75,7 +75,7 @@ export default function Login() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <label className="block text-sm font-semibold text-navy-800 mb-1">Password</label>
             <Input 
               type="password" 
               placeholder="••••••••" 
@@ -87,16 +87,16 @@ export default function Login() {
           </div>
 
           <div className="flex items-center justify-between pt-2">
-            <label className="flex items-center gap-2 text-sm text-gray-600">
+            <label className="flex items-center gap-2 text-sm text-navy-700">
               <input 
                 type="checkbox" 
-                className="rounded border-gray-300 text-primary focus:ring-primary"
+                className="rounded border-navy-300 text-navy-950 focus:ring-navy-500"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
               />
               Remember me
             </label>
-            <Link href="/forgot-password" className="text-sm text-primary hover:underline font-medium">
+            <Link href="/forgot-password" className="text-sm text-amber-600 hover:text-amber-700 font-semibold hover:underline">
               Forgot password?
             </Link>
           </div>
@@ -106,9 +106,9 @@ export default function Login() {
           </Button>
         </form>
 
-        <p className="text-center text-sm text-gray-600 mt-8">
+        <p className="text-center text-sm text-navy-800/70 mt-8">
           Don't have an account?{' '}
-          <Link href="/register" className="text-primary font-medium hover:underline">
+          <Link href="/register" className="text-amber-600 font-semibold hover:underline">
             Sign up
           </Link>
         </p>

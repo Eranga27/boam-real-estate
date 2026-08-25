@@ -75,7 +75,7 @@ export default function MyInquiriesPage() {
   }
 
   return (
-    <main className="min-h-screen bg-light-gray py-24 px-4">
+    <main className="min-h-screen bg-navy-50/50 py-24 px-4">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-10">
@@ -185,3 +185,4 @@ export default function MyInquiriesPage() {
     </main>
   );
 }
+

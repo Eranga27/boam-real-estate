@@ -5,7 +5,7 @@ export default function RentPropertiesPage() {
     <PropertySearch
       initialType="Rent"
       title="Properties for Rent"
-      subtitle="Discover the perfect rental property that fits your lifestyle and budget."
+      subtitle="Find rental homes, apartments and villas across Sri Lanka's key districts."
     />
   );
 }
