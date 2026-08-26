@@ -400,7 +400,7 @@ export default function PropertySearch({
                       {property.landSize > 0 && (
                         <div className="flex items-center gap-1 text-[12px] sm:text-[13px] font-semibold text-navy-800">
                           <LandPlot className="h-3.5 w-3.5 text-amber-500" aria-hidden="true" />
-                          {property.landSize} <span className="font-normal text-navy-800/60">{['ratnapura-land', 'kalutara-estate-land'].includes(property.id) ? 'acres' : 'perches'}</span>
+                          {property.landSize} <span className="font-normal text-navy-800/60">{property.landUnit || 'perches'}</span>
                         </div>
                       )}
                       {property.houseSize > 0 && (

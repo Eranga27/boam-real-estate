@@ -301,9 +301,7 @@ export default function PropertyDetailsClient({
                       {property.landSize.toLocaleString()}
                     </span>
                     <span className="text-[11px] font-semibold text-navy-800/60 uppercase tracking-wider">
-                      {['ratnapura-land', 'kalutara-estate-land'].includes(property.id)
-                        ? 'Acres'
-                        : 'Perches'}
+                      {property.landUnit === 'acres' ? 'Acres' : 'Perches'}
                     </span>
                   </div>
                 )}

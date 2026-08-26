@@ -67,7 +67,7 @@ export function PropertyCard({ property, view = 'grid' }: PropertyCardProps) {
         <StatItem
           icon={LandPlotIcon}
           value={String(property.landSize)}
-          label={['ratnapura-land', 'kalutara-estate-land'].includes(property.id) ? 'acres' : 'perches'}
+          label={property.landUnit || 'perches'}
         />
       )}
       {property.houseSize > 0 && (

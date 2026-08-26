@@ -2,6 +2,8 @@ export type ListingType = 'sale' | 'rent';
 
 export type PropertyType = 'House' | 'Apartment' | 'Condo' | 'Land' | 'Commercial';
 
+export type LandUnit = 'perches' | 'acres';
+
 export interface Property {
   id: string;
   title: string;
@@ -18,8 +20,10 @@ export interface Property {
   beds: number;
   baths: number;
   parking: number;
-  /** perches (Sri Lankan land unit) */
+  /** perches or acres — see landUnit */
   landSize: number;
+  /** unit for landSize: 'perches' (default) or 'acres' */
+  landUnit: LandUnit;
   /** square feet */
   houseSize: number;
   yearBuilt: number;
