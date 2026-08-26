@@ -297,7 +297,7 @@ export const properties: Property[] = [
   },
   {
     id: 'katugastota-land',
-    title: 'Land in Katugastota',
+    title: 'Land in Katugastota (Kahalla)',
     type: 'Land',
     listingType: 'sale',
     price: 80000000,
@@ -541,7 +541,7 @@ A perfect blend of Nature, Agriculture, Tourism, and investment potential.`,
   },
   {
     id: 'katugastota-station-road-land',
-    title: 'Land in Katugastota',
+    title: 'Land in Katugastota (Station Road)',
     type: 'Land',
     listingType: 'sale',
     price: 36000000,

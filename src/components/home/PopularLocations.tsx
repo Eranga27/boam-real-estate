@@ -22,166 +22,19 @@ const SriLankaMap = dynamic(() => import('./SriLankaMap').then((m) => m.SriLanka
   ),
 });
 
-const INITIAL_PROPERTIES: PropertyMapItem[] = [
-  {
-    id: 'upkot-maskeliya-house',
-    title: 'Luxury House in Upkot Maskeliya',
-    propertyType: 'House',
-    price: 115000000,
-    city: 'Upkot, Maskeliya',
-    lat: 6.8347,
-    lng: 80.5732,
-    images: ['property-1787331334740-upkotmaskeliya1.jpeg'],
-  },
-  {
-    id: 'kandy-three-storey-house',
-    title: 'Three-Storey House in Kandy',
-    propertyType: 'House',
-    price: 210000000,
-    city: 'Kandy',
-    lat: 7.2783,
-    lng: 80.6321,
-    images: ['property-1787331336449-kandy1.jpeg'],
-  },
-  {
-    id: 'ekala-house',
-    title: 'House in Ekala',
-    propertyType: 'House',
-    price: 45000000,
-    city: 'Ekala',
-    lat: 7.0863,
-    lng: 79.9041,
-    images: ['property-1787331341909-ekala1.jpeg'],
-  },
-  {
-    id: 'kadawatha-house',
-    title: 'House in Kadawatha',
-    propertyType: 'House',
-    price: 48000000,
-    city: 'Kadawatha',
-    lat: 7.0016,
-    lng: 79.9515,
-    images: ['property-1787331343370-kadawatha1.jpeg'],
-  },
-  {
-    id: 'rajagiriya-land',
-    title: 'Land in Rajagiriya',
-    propertyType: 'Land',
-    price: 43750000,
-    city: 'Rajagiriya',
-    lat: 6.9083,
-    lng: 79.8967,
-    images: [],
-  },
-  {
-    id: 'welisara-land',
-    title: 'Land in Welisara',
-    propertyType: 'Land',
-    price: 21000000,
-    city: 'Welisara',
-    lat: 7.0270,
-    lng: 79.9048,
-    images: [],
-  },
-  {
-    id: 'malabe-land',
-    title: 'Land in Malabe',
-    propertyType: 'Land',
-    price: 21750000,
-    city: 'Malabe',
-    lat: 6.9061,
-    lng: 79.9647,
-    images: [],
-  },
-  {
-    id: 'kandy-land',
-    title: 'Land in Kandy',
-    propertyType: 'Land',
-    price: 84000000,
-    city: 'Kandy',
-    lat: 7.2950,
-    lng: 80.6380,
-    images: [],
-  },
-  {
-    id: 'mount-lavinia-land',
-    title: 'Land in Mount Lavinia',
-    propertyType: 'Land',
-    price: 82500000,
-    city: 'Mount Lavinia',
-    lat: 6.8301,
-    lng: 79.8654,
-    images: [],
-  },
-  {
-    id: 'panadura-land',
-    title: 'Land in Panadura',
-    propertyType: 'Land',
-    price: 20000000,
-    city: 'Panadura',
-    lat: 6.7106,
-    lng: 79.9074,
-    images: [],
-  },
-  {
-    id: 'katugastota-land',
-    title: 'Land in Katugastota',
-    propertyType: 'Land',
-    price: 80000000,
-    city: 'Katugastota',
-    lat: 7.3275,
-    lng: 80.6219,
-    images: [],
-  },
-  {
-    id: 'ratnapura-land',
-    title: 'Land in Ratnapura',
-    propertyType: 'Land',
-    price: 85200000,
-    city: 'Ratnapura',
-    lat: 6.6828,
-    lng: 80.3992,
-    images: [],
-  },
-  {
-    id: 'velipenna-land',
-    title: 'Land in Velipenna/ Aluthgama',
-    propertyType: 'Land',
-    price: 20000000,
-    city: 'Velipenna',
-    lat: 6.4258,
-    lng: 80.0521,
-    images: [],
-  },
-  {
-    id: 'kurunegala-land',
-    title: 'Land in Kurunegala',
-    propertyType: 'Land',
-    price: 150000000,
-    city: 'Kurunegala',
-    lat: 7.4863,
-    lng: 80.3647,
-    images: [],
-  },
-  {
-    id: 'udathalawinna-thungadhura-land',
-    title: '140 Perches Land in Udathalawinna, Thungadhura',
-    propertyType: 'Land',
-    price: 35000000,
-    city: 'Udathalawinna',
-    lat: 7.3385,
-    lng: 80.6480,
-    images: ['thungadhura1.jpeg'],
-  },
-];
+import { properties as staticProperties } from '@/data/properties';
 
-function assignCoords(city: string, title: string) {
+function assignCoords(city: string, title: string, id?: string) {
   const t = title.toLowerCase();
   const c = city.toLowerCase();
 
+  if (id === 'katugastota-station-road-land' || t.includes('station road')) return { lat: 7.3310, lng: 80.6240 };
+  if (id === 'katugastota-land' || t.includes('kahalla')) return { lat: 7.3275, lng: 80.6219 };
   if (t.includes('udathalawinna') || c.includes('udathalawinna') || t.includes('thungadhura') || c.includes('thungadhura')) return { lat: 7.3385, lng: 80.6480 };
   if (t.includes('upkot') || c.includes('maskeliya')) return { lat: 6.8347, lng: 80.5732 };
   if (t.includes('three-storey') || t.includes('george e')) return { lat: 7.2783, lng: 80.6321 };
+  if (c.includes('nillamba')) return { lat: 7.1850, lng: 80.6025 };
+  if (c.includes('bulathsinhala') || c.includes('kalutara')) return { lat: 6.6478, lng: 80.1458 };
   if (c.includes('kandy')) return { lat: 7.2950, lng: 80.6380 };
   if (c.includes('ekala')) return { lat: 7.0863, lng: 79.9041 };
   if (c.includes('kadawatha')) return { lat: 7.0016, lng: 79.9515 };
@@ -197,6 +50,22 @@ function assignCoords(city: string, title: string) {
 
   return { lat: 6.9271, lng: 79.8612 };
 }
+
+const INITIAL_PROPERTIES: PropertyMapItem[] = staticProperties.map((p) => {
+  const coords = assignCoords(p.city || p.district || '', p.title || '', p.id);
+  return {
+    id: p.id,
+    title: p.title,
+    propertyType: p.type || 'Land',
+    price: p.price,
+    city: p.city || p.district || 'Sri Lanka',
+    address: p.address,
+    images: p.images || [],
+    lat: p.lat || coords.lat,
+    lng: p.lng || coords.lng,
+    description: p.description,
+  };
+});
 
 export function PopularLocations() {
   const [properties, setProperties] = useState<PropertyMapItem[]>(INITIAL_PROPERTIES);
