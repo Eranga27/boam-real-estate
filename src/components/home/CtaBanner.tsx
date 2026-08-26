@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowRightIcon, PhoneIcon } from 'lucide-react';
+import { getPhoneHref } from '@/lib/contact';
 
 export function CtaBanner() {
   return (
@@ -66,7 +67,7 @@ export function CtaBanner() {
             </Link>
 
             <a
-              href="tel:+94777801470"
+              href={getPhoneHref()}
               className="inline-flex w-full items-center justify-center gap-2.5 rounded-full border border-white/15 px-8 py-4 text-sm font-bold text-white/90 transition-all duration-200 hover:border-white/40 hover:bg-white/8 hover:text-white sm:w-auto"
             >
               <PhoneIcon className="h-4 w-4 text-amber-400/80" aria-hidden="true" />

@@ -462,9 +462,6 @@ export default function PropertyDetailsClient({
                 propertyId={property.id}
                 propertyTitle={property.title}
                 sellerName={property.user?.fullName || 'BOAM Real Estates'}
-                sellerPhone={property.contactPhone}
-                sellerEmail={property.contactEmail}
-                whatsappNumber={property.whatsappNumber}
               />
             </div>
           </div>

@@ -11,11 +11,17 @@ import {
   PhoneIcon,
 } from 'lucide-react';
 import { Logo } from '../brand/Logo';
+import {
+  getPhoneHref,
+  getEmailHref,
+  BROKER_PHONE_DISPLAY,
+  BROKER_EMAIL_DISPLAY,
+} from '@/lib/contact';
 
 const quickLinks = [
   { label: 'Home', to: '/' },
   { label: 'Properties', to: '/search' },
-  { label: 'Contact', to: 'tel:+94777801470', isExternal: true },
+  { label: 'Contact', to: getPhoneHref(), isExternal: true },
 ];
 
 const services = [
@@ -105,14 +111,14 @@ export function Footer() {
               </li>
               <li className="flex gap-3">
                 <PhoneIcon className="mt-0.5 h-4 w-4 shrink-0 text-white/40" aria-hidden="true" />
-                <a href="tel:+94777801470" className="transition-colors hover:text-white font-semibold text-white/90">
-                  +94 777 80 1470
+                <a href={getPhoneHref()} className="transition-colors hover:text-white font-semibold text-white/90">
+                  {BROKER_PHONE_DISPLAY}
                 </a>
               </li>
               <li className="flex gap-3">
                 <MailIcon className="mt-0.5 h-4 w-4 shrink-0 text-white/40" aria-hidden="true" />
-                <a href="mailto:anilbwt26@yahoo.com" className="transition-colors hover:text-white">
-                  anilbwt26@yahoo.com
+                <a href={getEmailHref()} className="transition-colors hover:text-white">
+                  {BROKER_EMAIL_DISPLAY}
                 </a>
               </li>
               <li className="flex gap-3">

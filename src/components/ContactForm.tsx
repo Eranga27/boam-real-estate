@@ -6,13 +6,23 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Send, CheckCircle, AlertCircle, Loader2, Phone, Mail, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import {
+  getPhoneHref,
+  getPropertyEmailHref,
+  getPropertyWhatsAppHref,
+  BROKER_PHONE_DISPLAY,
+  BROKER_EMAIL_DISPLAY,
+} from '@/lib/contact';
 
 interface ContactFormProps {
   propertyId: string;
   propertyTitle: string;
   sellerName: string;
-  sellerPhone: string;
-  sellerEmail: string;
+  /** @deprecated — kept for API compat; ignored internally (use SITE_SEO via contact.ts) */
+  sellerPhone?: string;
+  /** @deprecated — kept for API compat; ignored internally (use SITE_SEO via contact.ts) */
+  sellerEmail?: string;
+  /** @deprecated — kept for API compat; ignored internally (use SITE_SEO via contact.ts) */
   whatsappNumber?: string;
 }
 
@@ -22,9 +32,6 @@ export default function ContactForm({
   propertyId,
   propertyTitle,
   sellerName,
-  sellerPhone,
-  sellerEmail,
-  whatsappNumber,
 }: ContactFormProps) {
   const { user, isAuthenticated } = useAuth();
   const [formState, setFormState] = useState<FormState>('idle');
@@ -124,7 +131,7 @@ export default function ContactForm({
 
         <div className="space-y-3">
           <a
-            href={`tel:${sellerPhone}`}
+            href={getPhoneHref()}
             className="flex items-center gap-3 p-3 rounded-xl bg-white/10 hover:bg-white/20 transition-colors"
           >
             <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
@@ -132,12 +139,12 @@ export default function ContactForm({
             </div>
             <div>
               <p className="text-xs text-amber-400/90">Call Direct</p>
-              <p className="font-semibold text-sm">{sellerPhone}</p>
+              <p className="font-semibold text-sm">{BROKER_PHONE_DISPLAY}</p>
             </div>
           </a>
 
           <a
-            href={`mailto:${sellerEmail}`}
+            href={getPropertyEmailHref(propertyId, propertyTitle)}
             className="flex items-center gap-3 p-3 rounded-xl bg-white/10 hover:bg-white/20 transition-colors"
           >
             <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
@@ -145,13 +152,13 @@ export default function ContactForm({
             </div>
             <div>
               <p className="text-xs text-amber-400/90">Email</p>
-              <p className="font-semibold text-sm truncate max-w-[200px]">{sellerEmail}</p>
+              <p className="font-semibold text-sm truncate max-w-[200px]">{BROKER_EMAIL_DISPLAY}</p>
             </div>
           </a>
 
-          {whatsappNumber && (
+          {(
             <a
-              href={`https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi, I'm interested in "${propertyTitle}". Can we discuss further?`)}`}
+              href={getPropertyWhatsAppHref(propertyId, propertyTitle)}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-3 p-3 rounded-xl bg-green-500/80 hover:bg-green-500 transition-colors"
@@ -163,7 +170,7 @@ export default function ContactForm({
               </div>
               <div>
                 <p className="text-xs text-green-100">WhatsApp</p>
-                <p className="font-semibold text-sm">{whatsappNumber}</p>
+                <p className="font-semibold text-sm">{BROKER_PHONE_DISPLAY}</p>
               </div>
             </a>
           )}

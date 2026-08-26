@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { MenuIcon, PhoneIcon, XIcon } from 'lucide-react';
 import { Logo } from '../brand/Logo';
+import { getPhoneHref, BROKER_PHONE_DISPLAY } from '@/lib/contact';
 
 export function Navbar() {
   const pathname = usePathname();
@@ -15,7 +16,7 @@ export function Navbar() {
   const links = [
     { to: '/', label: 'Home' },
     { to: '/search', label: 'Properties' },
-    { to: 'tel:+94777801470', label: 'Contact', isExternal: true },
+    { to: getPhoneHref(), label: 'Contact', isExternal: true },
   ];
 
   useEffect(() => {
@@ -97,7 +98,7 @@ export function Navbar() {
         {/* Desktop Direct Contact CTA */}
         <div className="hidden items-center gap-4 md:flex">
           <a
-            href="tel:+94777801470"
+            href={getPhoneHref()}
             className={`group inline-flex items-center gap-2.5 rounded-full px-5 py-2.5 text-xs font-extrabold uppercase tracking-wider transition-all duration-200 ${
               solid
                 ? 'bg-navy-950 text-white hover:bg-navy-900 shadow-sm'
@@ -105,7 +106,7 @@ export function Navbar() {
             }`}
           >
             <PhoneIcon className="h-3.5 w-3.5 text-amber-400" aria-hidden="true" />
-            <span>+94 777 80 1470</span>
+            <span>{BROKER_PHONE_DISPLAY}</span>
           </a>
         </div>
 
@@ -164,11 +165,11 @@ export function Navbar() {
 
           <div className="mt-6 pt-5 border-t border-navy-100/80">
             <a
-              href="tel:+94777801470"
+              href={getPhoneHref()}
               className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-amber-500 px-5 py-4 text-sm font-extrabold text-navy-950 transition-all hover:bg-amber-400 active:scale-[0.99]"
             >
               <PhoneIcon className="h-4 w-4" aria-hidden="true" />
-              <span>Call BOAM Broker (+94 777 80 1470)</span>
+              <span>Call BOAM Broker ({BROKER_PHONE_DISPLAY})</span>
             </a>
           </div>
         </div>

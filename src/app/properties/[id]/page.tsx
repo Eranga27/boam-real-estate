@@ -34,9 +34,6 @@ function staticToApi(p: any): any {
     images: p.images,
     listedDaysAgo: p.listedDaysAgo,
     featured: p.featured,
-    contactPhone: '+94 777 80 1470',
-    contactEmail: 'anilbwt26@yahoo.com',
-    whatsappNumber: '94777801470',
     user: { fullName: 'BOAM Real Estates' },
   };
 }
