@@ -156,8 +156,7 @@ export default function ContactForm({
             </div>
           </a>
 
-          {(
-            <a
+          <a
               href={getPropertyWhatsAppHref(propertyId, propertyTitle)}
               target="_blank"
               rel="noopener noreferrer"
@@ -173,7 +172,6 @@ export default function ContactForm({
                 <p className="font-semibold text-sm">{BROKER_PHONE_DISPLAY}</p>
               </div>
             </a>
-          )}
         </div>
       </div>
 

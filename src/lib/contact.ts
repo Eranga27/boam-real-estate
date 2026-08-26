@@ -5,7 +5,37 @@
  * Always consumes SITE_SEO — never hardcode contact details elsewhere.
  */
 
-import { SITE_SEO, getPropertyUrl } from './site';
+import { SITE_SEO } from './site';
+
+// ---------------------------------------------------------------------------
+// Internal URL helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns the canonical site origin for use in outbound contact links
+ * (WhatsApp messages, email bodies).
+ *
+ * Priority:
+ * 1. NEXT_PUBLIC_SITE_URL env var (set in production / Vercel)
+ * 2. Hardcoded production domain (safe fallback — never localhost)
+ *
+ * Deliberately does NOT use window.location.origin so that WhatsApp
+ * and email links always contain the real production URL, not localhost.
+ */
+function getCanonicalOrigin(): string {
+  if (process.env.NEXT_PUBLIC_SITE_URL) {
+    return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/+$/, '');
+  }
+  return 'https://boamrealestates.com';
+}
+
+/**
+ * Returns the canonical URL for a property listing.
+ * Safe for use in outbound links — never produces a localhost URL.
+ */
+function getCanonicalPropertyUrl(propertyId: string): string {
+  return `${getCanonicalOrigin()}/properties/${encodeURIComponent(propertyId)}`;
+}
 
 // ---------------------------------------------------------------------------
 // Plain contact link helpers
@@ -13,7 +43,6 @@ import { SITE_SEO, getPropertyUrl } from './site';
 
 /** tel: href — e.g. href={getPhoneHref()} */
 export function getPhoneHref(): string {
-  // Strip all non-numeric chars for a valid tel: URI
   const digits = SITE_SEO.contactPhone.replace(/[^0-9+]/g, '');
   return `tel:${digits}`;
 }
@@ -42,10 +71,12 @@ export function getWhatsAppHref(): string {
  *   [Property Title]
  *
  *   [Canonical Property URL]
+ *
+ * Uses the canonical production URL — never localhost.
  */
 export function getPropertyWhatsAppHref(propertyId: string, propertyTitle: string): string {
   const num = SITE_SEO.whatsappNumber.replace(/[^0-9]/g, '');
-  const url = getPropertyUrl(propertyId);
+  const url = getCanonicalPropertyUrl(propertyId);
   const text = `Hello BOAM, I'm interested in:\n\n${propertyTitle}\n\n${url}`;
   return `https://wa.me/${num}?text=${encodeURIComponent(text)}`;
 }
@@ -63,12 +94,22 @@ export function getPropertyWhatsAppHref(propertyId: string, propertyTitle: strin
  *   [Canonical Property URL]
  *
  *   Please provide more information.
+ *
+ * Uses the canonical production URL — never localhost.
  */
 export function getPropertyEmailHref(propertyId: string, propertyTitle: string): string {
-  const url = getPropertyUrl(propertyId);
+  const url = getCanonicalPropertyUrl(propertyId);
   const subject = `Enquiry: ${propertyTitle}`;
-  const body =
-    `Hi BOAM,\n\nI am interested in ${propertyTitle}.\n\nProperty:\n${url}\n\nPlease provide more information.`;
+  const body = [
+    'Hi BOAM,',
+    '',
+    `I am interested in ${propertyTitle}.`,
+    '',
+    'Property:',
+    url,
+    '',
+    'Please provide more information.',
+  ].join('\n');
   return `mailto:${SITE_SEO.contactEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
