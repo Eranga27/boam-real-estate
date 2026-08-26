@@ -20,7 +20,7 @@ export const properties: Property[] = [
     landUnit: 'perches',
     houseSize: 2500,
     yearBuilt: 0,
-    description: `40 perches with 2,500 sq. ft. luxury houses for sale in a high-class residential environment. Only 20 houses remain out of 70.`,
+    description: `40 perches with a 2,500 sq. ft. luxury house for sale in a high-class residential environment. Only 20 houses remain available out of 70.`,
     amenities: [],
     nearby: [],
     images: [
@@ -97,7 +97,7 @@ export const properties: Property[] = [
     landUnit: 'perches',
     houseSize: 0,
     yearBuilt: 0,
-    description: `House with four bedrooms (each room has a balcony), three bathrooms, a living room, a kitchen, and a servant’s kitchen/room/toilet. Land extent: 14 perches. Swimming pool and gym facilities are included for Millennium City residents.`,
+    description: `Four-bedroom house (each bedroom features a private balcony), three bathrooms, living room, main kitchen, and separate servant's kitchen/room/toilet. Situated on 14 perches of land. Includes access to Millennium City resident amenities such as the swimming pool and gym facilities.`,
     amenities: [],
     nearby: [],
     images: [],
@@ -124,7 +124,11 @@ export const properties: Property[] = [
     landUnit: 'perches',
     houseSize: 3500,
     yearBuilt: 0,
-    description: `36 perch. Single-story house. With 3 bedrooms. Living and dining area with Ample space. Attached toilets. Separate Annexe and 2 shops. Araliyagas junction, Busholt, in front of the house. 48 million. 8 km from Kadawatha. On Kirindiwela Road. Araliya janction, Ambaruluwa, 3500 sqft completely new house. Separate the old house. And 2 separate boutiques besides the road. Near the bus stop.`,
+    description: `Newly built 3,500 sq. ft. single-storey house on 36 perches of land, located along Kirindiwela Road at Araliya Junction, Ambaruluwa (8 km from Kadawatha).
+- 3 bedrooms with attached toilets
+- Spacious living and dining area
+- Separate annex and old house structure
+- 2 separate road-front shops/boutiques adjacent to the bus stop`,
     amenities: [],
     nearby: [],
     images: [
@@ -164,7 +168,7 @@ export const properties: Property[] = [
     landUnit: 'perches',
     houseSize: 0,
     yearBuilt: 0,
-    description: `17.5 perches of land for sale at Kalapuwawa, Rajagiriya. 100 meters from the main road. A perfect residential area.`,
+    description: `17.5 perches of land for sale at Kalapuwawa, Rajagiriya. Located 100 meters from the main road in a quiet residential neighborhood.`,
     amenities: [],
     nearby: [],
     images: [],
@@ -191,7 +195,7 @@ export const properties: Property[] = [
     landUnit: 'perches',
     houseSize: 0,
     yearBuilt: 0,
-    description: `Two blocks of land, measuring 14.5 and 13.5 perches, respectively, are for sale at Welisara, complete with all basic facilities. Close to the Kerawalapitiya Highway exit. A perfect residential area.`,
+    description: `Two blocks of land measuring 14.5 and 13.5 perches (28 perches total) for sale at Welisara with all basic utilities available. Conveniently located near the Kerawalapitiya Highway exit in a well-established residential area.`,
     amenities: [],
     nearby: [],
     images: [],
@@ -218,7 +222,7 @@ export const properties: Property[] = [
     landUnit: 'perches',
     houseSize: 0,
     yearBuilt: 0,
-    description: `A land plot of 14.5 perches for sale at Malabe, Vihara Road. 500 meters to the Kottawa exit and 1 km to the main road. A highly decent residential area.`,
+    description: `14.5-perch land plot for sale on Vihara Road, Malabe. Located 500 meters from the Kottawa exit and 1 km from the main road in a peaceful residential setting.`,
     amenities: [],
     nearby: [],
     images: [],
@@ -245,7 +249,7 @@ export const properties: Property[] = [
     landUnit: 'perches',
     houseSize: 0,
     yearBuilt: 0,
-    description: `21 perches of land for sale on Peradeniya Road, Kandy (near the new Damro; very commercial property).`,
+    description: `21 perches of land for sale on Peradeniya Road, Kandy, near the new Damro outlet. High-visibility location suitable for commercial development.`,
     amenities: [],
     nearby: [],
     images: [],
@@ -272,7 +276,11 @@ export const properties: Property[] = [
     landUnit: 'perches',
     houseSize: 0,
     yearBuilt: 0,
-    description: `Land area: Total 15 perches(2 blocks), Well mannered neighborhood., Special features: 3 min to Galle road, 5 min to st Thomas College, 5 min to beach`,
+    description: `15 perches of land (offered in 2 blocks) located at No. 16, College Avenue, Mount Lavinia.
+- 3 minutes to Galle Road
+- 5 minutes to S. Thomas' College
+- 5 minutes to Mount Lavinia Beach
+Situated in a well-established residential neighborhood.`,
     amenities: [],
     nearby: [],
     images: [],
@@ -298,7 +306,7 @@ export const properties: Property[] = [
     landUnit: 'perches',
     houseSize: 0,
     yearBuilt: 0,
-    description: `17.5 perches of land for sale, located 3 km from the Panadura Town Clock Tower and 50 meters from the Horana Main Road`,
+    description: `17.5 perches of land for sale in Panadura, located 50 meters from the Horana Main Road and 3 km from the Panadura Town Clock Tower.`,
     amenities: [],
     nearby: [],
     images: [],
@@ -325,7 +333,9 @@ export const properties: Property[] = [
     landUnit: 'perches',
     houseSize: 0,
     yearBuilt: 0,
-    description: `Size: 80 perches, View: Stunning Knuckles & Hunasgiriya ranges, Ideal for: Hotel | Housing scheme | Private residence, Investment: Excellent future value. Location: 2 km from Katugastota Police Station, 1 km from Katugastota Railway Station`,
+    description: `80 perches of land located in Kahalla, Katugastota, featuring views of the Knuckles and Hunasgiriya mountain ranges.
+- 1 km from Katugastota Railway Station and 2 km from Katugastota Police Station
+- Suitable for hotel development, a housing scheme, or a private residence`,
     amenities: [],
     nearby: [],
     images: [],
@@ -352,7 +362,7 @@ export const properties: Property[] = [
     landUnit: 'acres',
     houseSize: 0,
     yearBuilt: 0,
-    description: `Palawela: 71 acres of bare land, ideal for cinnamon cultivation. Just a 15-minute drive from Ratnapura town`,
+    description: `71 acres of bare land for sale in Palawela, Ratnapura, suitable for cinnamon cultivation. Located a 15-minute drive from Ratnapura town.`,
     amenities: [],
     nearby: [],
     images: [],
@@ -378,7 +388,7 @@ export const properties: Property[] = [
     landUnit: 'perches',
     houseSize: 0,
     yearBuilt: 0,
-    description: `From the Velipenna exit to Aviththawa Road, Gorakaduwa Junction is 14.5 km. From there, it is 1.5 km by road to the land (12 ft wide). Three-phase electricity is available. One side borders the Bentara River.`,
+    description: `20 perches of land in Velipenna / Aluthgama, bordering the Bentara River on one side. Access via a 12 ft wide road (1.5 km from Gorakaduwa Junction on Aviththawa Road, 14.5 km from the Velipenna exit). Three-phase electricity available.`,
     amenities: [],
     nearby: [],
     images: [],
@@ -404,7 +414,10 @@ export const properties: Property[] = [
     landUnit: 'perches',
     houseSize: 0,
     yearBuilt: 0,
-    description: `MILLĀWA HOUSING SCHEME, KURUNEGALA. A prime 100 perches of valuable land located at the Millāwa Housing Scheme, Kurunegala, situated on high ground in a well-developed residential area. Total extent: 100 Perches. Subdivision: 6 equal blocks (sold together). Elevated land with excellent drainage, surrounded by sealed roads. 3-phase electricity and main water available. Ideal for housing development or investment.`,
+    description: `100 perches of elevated land located at the Millāwa Housing Scheme, Kurunegala. Divided into 6 equal blocks (sold together) in a well-developed residential area.
+- Elevated terrain with natural drainage and sealed access roads
+- Three-phase electricity and main water connection available
+- Suitable for residential housing development`,
     amenities: [],
     nearby: [],
     images: [],
@@ -433,10 +446,10 @@ export const properties: Property[] = [
     yearBuilt: 0,
     description: `Prime 140-perch land located at Udathalawinna, Thungadhura, facing the Doragamuwa Main Road, just 8 km from Kandy town.
 - Carpeted road access
-- Buses available every 30 minutes
-- Labour availability in the area
-- Well water available
-- Ideal for greenhouse projects, factories, or other commercial ventures`,
+- Bus service available every 30 minutes
+- Local labor availability
+- Well water supply on site
+- Suitable for greenhouse projects, factory facilities, or commercial ventures`,
     amenities: [],
     nearby: [],
     images: [
@@ -478,29 +491,15 @@ export const properties: Property[] = [
     landUnit: 'acres',
     houseSize: 0,
     yearBuilt: 0,
-    description: `A rare opportunity to own a breathtaking scenic estate surrounded by nature in the heart of Bulathsinhala. Ideal for
-* Eco Tourism
-* Agro Tourism
-* Wellness Retreats
-* Boutique Villas
-* Nature and Adventure Tourism
+    description: `14.5-acre scenic agricultural estate located in Bulathsinhala, Kalutara.
 
-Estate Highlights
-* Total Extents Approx 14.5 Acres
-* 8.5 Acres of Tea Plantation
-* 2.5 Acres of Young Rubber Plantation
-* 100 + Well Grown Coconut Trees
-* Acres of Newly Planted Durian Plantation
-* Various Fruit Trees with Excellents
+Estate Highlights:
+- 8.5 acres of tea plantation
+- 2.5 acres of young rubber plantation
+- 100+ mature coconut trees
+- Newly planted durian plantation and fruit trees
 
-Excellent investment opportunity for anyone looking to develop
-* Echo Lodges
-* Luxury Villas
-* Glamping Sites
-* Wellness Retreats
-* Sustainable Farming Projects
-
-A perfect blend of Nature, Agriculture, Tourism, and investment potential.`,
+Suitable for eco-tourism, agro-tourism, wellness retreats, boutique villas, glamping sites, eco lodges, or sustainable farming projects.`,
     amenities: [],
     nearby: [],
     images: [
@@ -542,7 +541,7 @@ A perfect blend of Nature, Agriculture, Tourism, and investment potential.`,
     landUnit: 'perches',
     houseSize: 0,
     yearBuilt: 0,
-    description: `17km to Peradeniya town. Clear deeds. Water & electricity line available. Land is below this hotel called Club Lespri.`,
+    description: `27.5 perches of land located in Nillamba, 17 km from Peradeniya town, situated below Hotel Club Lespri. Includes clear deeds with water and electricity supply lines available.`,
     amenities: [],
     nearby: [],
     images: [

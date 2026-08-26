@@ -385,16 +385,16 @@ export default function PropertySearch({
 
                   <div className="mt-3 space-y-2.5">
                     <div className="flex flex-wrap items-center gap-x-3 sm:gap-x-4 gap-y-1.5 border-t border-navy-100/80 pt-2.5">
-                      {property.bedrooms > 0 && (
+                      {property.beds > 0 && (
                         <div className="flex items-center gap-1 text-[12px] sm:text-[13px] font-semibold text-navy-800">
                           <Bed className="h-3.5 w-3.5 text-amber-500" aria-hidden="true" />
-                          {property.bedrooms} <span className="font-normal text-navy-800/60">beds</span>
+                          {property.beds} <span className="font-normal text-navy-800/60">beds</span>
                         </div>
                       )}
-                      {property.bathrooms > 0 && (
+                      {property.baths > 0 && (
                         <div className="flex items-center gap-1 text-[12px] sm:text-[13px] font-semibold text-navy-800">
                           <Bath className="h-3.5 w-3.5 text-amber-500" aria-hidden="true" />
-                          {property.bathrooms} <span className="font-normal text-navy-800/60">baths</span>
+                          {property.baths} <span className="font-normal text-navy-800/60">baths</span>
                         </div>
                       )}
                       {property.landSize > 0 && (

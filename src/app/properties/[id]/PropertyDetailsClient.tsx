@@ -188,7 +188,7 @@ export default function PropertyDetailsClient({
                     <motion.img
                       key={activeImage}
                       src={getImageUrl(property.images[activeImage])}
-                      alt={property.title}
+                      alt={`${property.title} - Image ${activeImage + 1} of ${property.images.length}`}
                       className="w-full h-full object-cover"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
@@ -256,25 +256,25 @@ export default function PropertyDetailsClient({
                 Property Specifications
               </h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 text-center">
-                {property.bedrooms && (
+                {property.beds > 0 && (
                   <div className="flex flex-col items-center p-3 bg-navy-50/70 rounded-2xl">
                     <Bed className="w-5 h-5 text-amber-500 mb-1" aria-hidden="true" />
-                    <span className="text-xl font-bold text-navy-950">{property.bedrooms}</span>
+                    <span className="text-xl font-bold text-navy-950">{property.beds}</span>
                     <span className="text-[11px] font-semibold text-navy-800/60 uppercase tracking-wider">
                       Bedrooms
                     </span>
                   </div>
                 )}
-                {property.bathrooms && (
+                {property.baths > 0 && (
                   <div className="flex flex-col items-center p-3 bg-navy-50/70 rounded-2xl">
                     <Bath className="w-5 h-5 text-amber-500 mb-1" aria-hidden="true" />
-                    <span className="text-xl font-bold text-navy-950">{property.bathrooms}</span>
+                    <span className="text-xl font-bold text-navy-950">{property.baths}</span>
                     <span className="text-[11px] font-semibold text-navy-800/60 uppercase tracking-wider">
                       Bathrooms
                     </span>
                   </div>
                 )}
-                {property.parking && (
+                {property.parking > 0 && (
                   <div className="flex flex-col items-center p-3 bg-navy-50/70 rounded-2xl">
                     <Car className="w-5 h-5 text-amber-500 mb-1" aria-hidden="true" />
                     <span className="text-xl font-bold text-navy-950">{property.parking}</span>
@@ -294,7 +294,7 @@ export default function PropertyDetailsClient({
                     </span>
                   </div>
                 )}
-                {property.landSize && (
+                {property.landSize > 0 && (
                   <div className="flex flex-col items-center p-3 bg-navy-50/70 rounded-2xl">
                     <LandPlot className="w-5 h-5 text-amber-500 mb-1" aria-hidden="true" />
                     <span className="text-xl font-bold text-navy-950">
@@ -305,7 +305,7 @@ export default function PropertyDetailsClient({
                     </span>
                   </div>
                 )}
-                {property.houseSize && (
+                {property.houseSize > 0 && (
                   <div className="flex flex-col items-center p-3 bg-navy-50/70 rounded-2xl">
                     <Square className="w-5 h-5 text-amber-500 mb-1" aria-hidden="true" />
                     <span className="text-xl font-bold text-navy-950">
@@ -316,7 +316,7 @@ export default function PropertyDetailsClient({
                     </span>
                   </div>
                 )}
-                {property.yearBuilt && (
+                {property.yearBuilt > 0 && (
                   <div className="flex flex-col items-center p-3 bg-navy-50/70 rounded-2xl">
                     <Calendar className="w-5 h-5 text-amber-500 mb-1" aria-hidden="true" />
                     <span className="text-xl font-bold text-navy-950">{property.yearBuilt}</span>
