@@ -61,8 +61,8 @@ const INITIAL_PROPERTIES: PropertyMapItem[] = staticProperties.map((p) => {
     city: p.city || p.district || 'Sri Lanka',
     address: p.address,
     images: p.images || [],
-    lat: p.lat || coords.lat,
-    lng: p.lng || coords.lng,
+    lat: typeof p.lat === 'number' ? p.lat : coords.lat,
+    lng: typeof p.lng === 'number' ? p.lng : coords.lng,
     description: p.description,
   };
 });
@@ -73,14 +73,17 @@ export function PopularLocations() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   useEffect(() => {
+    // Keep map synced with canonical static catalogue and merge any optional API items
     const fetchAll = async () => {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        if (!apiUrl) return;
+
         const res = await fetch(`${apiUrl}/api/v1/properties?limit=50`);
         const data = await res.json();
         if (data.success && Array.isArray(data.data) && data.data.length > 0) {
-          const mapped: PropertyMapItem[] = data.data.map((p: any) => {
-            const coords = assignCoords(p.city || p.district || '', p.title || '');
+          const apiProperties: PropertyMapItem[] = data.data.map((p: any) => {
+            const coords = assignCoords(p.city || p.district || '', p.title || '', p.id);
             return {
               id: p.id,
               title: p.title,
@@ -89,17 +92,26 @@ export function PopularLocations() {
               city: p.city || p.district || 'Sri Lanka',
               address: p.address,
               images: p.images || [],
-              lat: p.latitude || coords.lat,
-              lng: p.longitude || coords.lng,
+              lat: typeof p.latitude === 'number' ? p.latitude : (p.lat || coords.lat),
+              lng: typeof p.longitude === 'number' ? p.longitude : (p.lng || coords.lng),
               description: p.description,
             };
           });
-          setProperties(mapped);
+
+          // Merge API properties with INITIAL_PROPERTIES, ensuring no duplicates by ID
+          const existingIds = new Set(INITIAL_PROPERTIES.map((p) => p.id));
+          const newApiItems = apiProperties.filter((p) => !existingIds.has(p.id));
+          if (newApiItems.length > 0) {
+            setProperties([...INITIAL_PROPERTIES, ...newApiItems]);
+          }
         }
       } catch {
-        // Fall back to INITIAL_PROPERTIES if offline
+        // Fall back to INITIAL_PROPERTIES
       }
     };
+
+    // Ensure properties state stays in sync with INITIAL_PROPERTIES
+    setProperties(INITIAL_PROPERTIES);
     fetchAll();
   }, []);
 
