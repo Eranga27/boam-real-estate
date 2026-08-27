@@ -91,8 +91,10 @@ async function main() {
       cur.customTitle = line.replace(/^Title\s*[-:]\s*/i, '').trim();
     } else if (/^Description\s*[-:]\s*/i.test(line)) {
       cur.description = line.replace(/^Description\s*[-:]\s*/i, '').trim();
-    } else if (/^Price\s*[-:]\s*/i.test(line)) {
-      cur.priceStr = line.replace(/^Price\s*[-:]\s*/i, '').trim();
+    } else if (/^(?:Price|Amount\s*Per\s*Perch)\s*[-:]\s*/i.test(line)) {
+      cur.priceStr = line.replace(/^(?:Price|Amount\s*Per\s*Perch)\s*[-:]\s*/i, '').trim();
+    } else if (/^No\.\s*of\s*Perches\s*[-:]\s*/i.test(line)) {
+      cur.perchesStr = line.replace(/^No\.\s*of\s*Perches\s*[-:]\s*/i, '').trim();
     } else if (/^Contact\s*[-:]\s*/i.test(line)) {
       cur.contactPhone = line.replace(/^Contact\s*[-:]\s*/i, '').trim();
     } else if (/^Pictures\s*[-:]\s*/i.test(line)) {
@@ -112,12 +114,12 @@ async function main() {
 
   // ─── Import each property ────────────────────────────────────────────────────
   for (const p of properties) {
-    // Parse price — handles "Rs. 2.5 million", "Rs. 15 lakhs", "Rs. 210,000,000"
+    // Parse price — handles "Rs. 2.5 million", "Rs. 15 lakhs", "Rs. 210,000,000", "Amount Per Perch"
     let price = 0;
-    const s = p.priceStr.toLowerCase();
+    const s = (p.priceStr || '').toLowerCase();
     const mnMatch = s.match(/([\d.]+)\s*(?:million|mn)/);
     const lakhMatch = s.match(/([\d.]+)\s*(?:lakh|lakhs)/);
-    const flatMatch = p.priceStr.replace(/,/g, '').match(/(\d+)/);
+    const flatMatch = (p.priceStr || '').replace(/,/g, '').match(/(\d+)/);
 
     if (mnMatch) {
       price = parseFloat(mnMatch[1]) * 1_000_000;
@@ -125,6 +127,14 @@ async function main() {
       price = parseFloat(lakhMatch[1]) * 100_000;
     } else if (flatMatch) {
       price = parseFloat(flatMatch[1]);
+    }
+
+    if (p.perchesStr && price > 0 && price < 10000000) {
+      const perchesMatch = p.perchesStr.match(/([\d.]+)/);
+      if (perchesMatch) {
+        const perches = parseFloat(perchesMatch[1]);
+        price = price * perches;
+      }
     }
 
     // Property type

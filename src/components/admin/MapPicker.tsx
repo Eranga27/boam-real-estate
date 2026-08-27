@@ -32,7 +32,9 @@ export function MapPicker({ position, onChange }: MapPickerProps) {
       const map = Leaflet.map(containerRef.current!).setView(position, 12);
       mapRef.current = map;
 
-      Leaflet.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+      Leaflet.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      }).addTo(map);
 
       const circle = Leaflet.circleMarker(position, {
         radius: 11,

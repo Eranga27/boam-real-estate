@@ -26,30 +26,27 @@ interface SriLankaMapProps {
   onSelectProperty?: (id: string) => void;
 }
 
+// Map Tile Layers (Free, non-API-key tile layers)
 const BASE_MAPS = {
   road: {
     name: 'Roadmap',
     url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-    subdomains: 'abc',
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &bull; BOAM Real Estate',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &bull; Boam Real Estate',
   },
   satellite: {
     name: 'Satellite',
     url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    subdomains: '',
-    attribution: '&copy; Esri World Imagery &bull; BOAM Real Estate',
+    attribution: '&copy; Esri World Imagery &bull; Boam Real Estate',
   },
   dark: {
     name: 'Dark Mode',
-    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    subdomains: 'abcd',
-    attribution: '&copy; CARTO Dark &bull; BOAM Real Estate',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+    attribution: '&copy; Esri Dark &bull; Boam Real Estate',
   },
   terrain: {
     name: 'Terrain',
     url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Terrain_Base/MapServer/tile/{z}/{y}/{x}',
-    subdomains: '',
-    attribution: '&copy; Esri Terrain &bull; BOAM Real Estate',
+    attribution: '&copy; Esri Terrain &bull; Boam Real Estate',
   },
 };
 
@@ -58,14 +55,16 @@ type MapStyle = keyof typeof BASE_MAPS;
 export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLankaMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
-  const tileLayerRef = useRef<any>(null);
   const leafletRef = useRef<any>(null);
-  const markersRef = useRef<Record<string, any>>({});
-  
+  const tileLayerRef = useRef<any>(null);
+  const markersGroupRef = useRef<any>(null);
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
+
+  const [mapReady, setMapReady] = useState(false);
   const [activeProperty, setActiveProperty] = useState<PropertyMapItem | null>(null);
   const [mapStyle, setMapStyle] = useState<MapStyle>('road');
 
-  // Synchronize active property and flyTo on selectedId change
+  // Synchronize internal active state with external selectedId
   useEffect(() => {
     if (selectedId) {
       const found = properties.find((p) => p.id === selectedId);
@@ -78,18 +77,15 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
     }
   }, [selectedId, properties]);
 
-  // Handle Leaflet map initialization & pin updates
+  // 1. Initialize Leaflet Map Instance ONCE on mount
   useEffect(() => {
     if (typeof window === 'undefined' || !mapContainerRef.current) return;
-
-    let isMounted = true;
+    if (mapInstanceRef.current) return;
 
     import('leaflet').then((L) => {
-      if (!isMounted || !mapContainerRef.current) return;
       const Leaflet = L.default || L;
-      leafletRef.current = Leaflet;
 
-      // Fix Leaflet default icon paths
+      // Fix icon URL default issues in Next.js
       delete (Leaflet.Icon.Default.prototype as any)._getIconUrl;
       Leaflet.Icon.Default.mergeOptions({
         iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -97,120 +93,54 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
         shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
       });
 
-      // Initialize map instance if not created yet
-      if (!mapInstanceRef.current) {
-        const map = Leaflet.map(mapContainerRef.current, {
-          center: [7.8731, 80.7718],
-          zoom: 8,
-          minZoom: 7,
-          maxZoom: 18,
-          zoomControl: true,
-          scrollWheelZoom: false,
-        });
-
-        mapInstanceRef.current = map;
-
-        // Add tile layer with correct subdomain config
-        const config = BASE_MAPS[mapStyle];
-        const tileLayer = Leaflet.tileLayer(config.url, {
-          attribution: config.attribution,
-          maxZoom: 19,
-          subdomains: config.subdomains || 'abc',
-        }).addTo(map);
-
-        tileLayerRef.current = tileLayer;
-
-        // Force Leaflet container recalculation on initial render & layout transitions
-        const invalidate = () => {
-          if (mapInstanceRef.current) {
-            mapInstanceRef.current.invalidateSize();
-          }
-        };
-
-        invalidate();
-        setTimeout(invalidate, 100);
-        setTimeout(invalidate, 300);
-        setTimeout(invalidate, 600);
-
-        // Add ResizeObserver & IntersectionObserver for guaranteed map tile rendering
-        if (typeof ResizeObserver !== 'undefined' && mapContainerRef.current) {
-          const resizeObserver = new ResizeObserver(() => invalidate());
-          resizeObserver.observe(mapContainerRef.current);
-        }
-
-        if (typeof IntersectionObserver !== 'undefined' && mapContainerRef.current) {
-          const observer = new IntersectionObserver((entries) => {
-            if (entries[0]?.isIntersecting) {
-              invalidate();
-            }
-          });
-          observer.observe(mapContainerRef.current);
-        }
-
-        window.addEventListener('resize', invalidate);
-      }
-
-      const map = mapInstanceRef.current;
-
-      // Clear existing markers before re-adding
-      Object.values(markersRef.current).forEach((marker) => marker.remove());
-      markersRef.current = {};
-
-      // Add custom HTML markers with House/Land BOAM styling
-      properties.forEach((prop) => {
-        const isHouse = prop.propertyType.toLowerCase() === 'house';
-        const isSelected = selectedId === prop.id;
-
-        const customHtml = `
-          <div class="relative group cursor-pointer transition-all duration-300">
-            <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full shadow-lg border transition-all duration-300 ${
-              isSelected
-                ? 'ring-4 ring-amber-400/50 scale-110 z-30 ' + (isHouse ? 'bg-navy-950 text-amber-400 border-amber-400 font-extrabold' : 'bg-emerald-900 text-emerald-200 border-emerald-400 font-extrabold')
-                : (isHouse ? 'bg-navy-900 text-white border-navy-700 hover:border-amber-400' : 'bg-emerald-700 text-white border-emerald-500 hover:border-white')
-            }">
-              <span class="w-2 h-2 rounded-full ${
-                isSelected ? 'bg-amber-400 animate-ping' : (isHouse ? 'bg-amber-400' : 'bg-emerald-300')
-              }"></span>
-              <span class="text-[11px] tracking-tight font-bold whitespace-nowrap">${prop.city}</span>
-            </div>
-            <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 ${
-              isSelected ? 'bg-amber-400' : (isHouse ? 'bg-navy-900' : 'bg-emerald-700')
-            } rotate-45 border-r border-b border-white/30"></div>
-          </div>
-        `;
-
-        const icon = Leaflet.divIcon({
-          className: 'bg-transparent border-none',
-          html: `
-            <div style="transform: translate(-50%, -100%); width: max-content; padding-bottom: 4px; position: relative;">
-              ${customHtml}
-            </div>
-          `,
-          iconSize: [0, 0],
-          iconAnchor: [0, 0],
-        });
-
-        const marker = Leaflet.marker([prop.lat, prop.lng], { icon }).addTo(map);
-
-        marker.on('click', () => {
-          setActiveProperty(prop);
-          if (onSelectProperty) onSelectProperty(prop.id);
-          map.flyTo([prop.lat, prop.lng], 12, { animate: true, duration: 1 });
-        });
-
-        markersRef.current[prop.id] = marker;
+      // Center map on Sri Lanka
+      const map = Leaflet.map(mapContainerRef.current!, {
+        center: [7.8731, 80.7718],
+        zoom: 8,
+        minZoom: 7,
+        maxZoom: 18,
+        zoomControl: true,
+        scrollWheelZoom: false,
+        fadeAnimation: true,
+        zoomAnimation: true,
       });
+
+      mapInstanceRef.current = map;
+      leafletRef.current = Leaflet;
+
+      // Add default tile layer
+      const tileLayer = Leaflet.tileLayer(BASE_MAPS.road.url, {
+        attribution: BASE_MAPS.road.attribution,
+        maxZoom: 19,
+      }).addTo(map);
+
+      tileLayerRef.current = tileLayer;
+
+      // ResizeObserver to ensure Leaflet recalculates dimensions smoothly without grey tile glitches
+      const invalidate = () => {
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.invalidateSize();
+        }
+      };
+
+      invalidate();
+      setTimeout(invalidate, 100);
+      setTimeout(invalidate, 400);
+
+      const resizeObserver = new ResizeObserver(() => {
+        invalidate();
+      });
+      resizeObserver.observe(mapContainerRef.current!);
+      resizeObserverRef.current = resizeObserver;
+
+      setMapReady(true);
     });
 
     return () => {
-      isMounted = false;
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [properties, selectedId]);
-
-  // Clean up map instance on unmount
-  useEffect(() => {
-    return () => {
+      if (resizeObserverRef.current) {
+        resizeObserverRef.current.disconnect();
+        resizeObserverRef.current = null;
+      }
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
@@ -218,34 +148,92 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
     };
   }, []);
 
-  // Handle map style / layer changes with clean replacement
+  // 2. Render & Update Marker Layer dynamically without destroying map instance
+  useEffect(() => {
+    if (!mapReady || !mapInstanceRef.current || !leafletRef.current) return;
+    const Leaflet = leafletRef.current;
+    const map = mapInstanceRef.current;
+
+    // Clear existing markers layer group if it exists
+    if (markersGroupRef.current) {
+      markersGroupRef.current.clearLayers();
+    } else {
+      markersGroupRef.current = Leaflet.layerGroup().addTo(map);
+    }
+
+    properties.forEach((prop) => {
+      const isHouse = prop.propertyType.toLowerCase() === 'house';
+      const isSelected = selectedId === prop.id;
+
+      // Sleek animated circular marker node (replaces clustered city text badges)
+      const customHtml = `
+        <div class="relative group cursor-pointer flex items-center justify-center">
+          <!-- Outer subtle pulsing animation ring -->
+          <span class="absolute inline-flex h-8 w-8 rounded-full ${
+            isHouse ? 'bg-amber-400/40' : 'bg-emerald-400/40'
+          } animate-ping opacity-60"></span>
+
+          <!-- Main Pin Node -->
+          <div class="relative flex items-center justify-center h-8 w-8 rounded-full shadow-lg border-2 border-white transition-all duration-300 transform group-hover:scale-125 ${
+            isSelected
+              ? 'scale-125 ring-4 ring-amber-400 bg-navy-950 text-amber-400 z-50'
+              : isHouse
+              ? 'bg-amber-500 text-navy-950 hover:bg-amber-400'
+              : 'bg-emerald-600 text-white hover:bg-emerald-500'
+          }">
+            ${
+              isHouse
+                ? '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>'
+                : '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>'
+            }
+          </div>
+
+          <!-- Hover Tooltip Popup -->
+          <div class="absolute bottom-full mb-2 hidden group-hover:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-navy-950/95 text-white text-xs font-bold whitespace-nowrap shadow-2xl backdrop-blur-md border border-navy-700/60 z-50 pointer-events-none transition-all transform -translate-y-1">
+            <span class="text-amber-400 font-extrabold">${prop.city}</span>
+            <span class="text-navy-300">•</span>
+            <span class="text-white/90 truncate max-w-[160px]">${prop.title}</span>
+          </div>
+        </div>
+      `;
+
+      const icon = Leaflet.divIcon({
+        className: 'bg-transparent border-none',
+        html: customHtml,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
+      });
+
+      const marker = Leaflet.marker([prop.lat, prop.lng], { icon });
+
+      marker.on('click', () => {
+        setActiveProperty(prop);
+        if (onSelectProperty) onSelectProperty(prop.id);
+        map.flyTo([prop.lat, prop.lng], 12, { animate: true, duration: 1 });
+      });
+
+      markersGroupRef.current.addLayer(marker);
+    });
+  }, [properties, selectedId, mapReady, onSelectProperty]);
+
+  // Handle map style / layer changes
   const handleMapStyleChange = (style: MapStyle) => {
     setMapStyle(style);
-    if (mapInstanceRef.current && leafletRef.current) {
-      if (tileLayerRef.current) {
-        tileLayerRef.current.remove();
-      }
-      const config = BASE_MAPS[style];
-      const newTileLayer = leafletRef.current.tileLayer(config.url, {
-        attribution: config.attribution,
-        maxZoom: 19,
-        subdomains: config.subdomains || 'abc',
-      }).addTo(mapInstanceRef.current);
-
-      tileLayerRef.current = newTileLayer;
+    if (tileLayerRef.current && mapInstanceRef.current) {
+      tileLayerRef.current.setUrl(BASE_MAPS[style].url);
     }
   };
 
   return (
-    <div className="relative w-full overflow-hidden rounded-3xl bg-navy-950 shadow-2xl border border-navy-800">
-      {/* Restyled Compact Map Layer Controls */}
-      <div className="absolute top-4 left-4 z-20 flex flex-wrap items-center gap-1 rounded-2xl bg-navy-950/85 p-1.5 shadow-xl backdrop-blur-md border border-white/10">
+    <div className="relative w-full overflow-hidden rounded-3xl bg-[#f8fafc] shadow-2xl ring-1 ring-navy-100/10">
+      {/* Map Layer Mode Controls */}
+      <div className="absolute top-4 left-4 z-20 flex flex-wrap items-center gap-1.5 rounded-2xl bg-white/95 p-1.5 shadow-lg backdrop-blur-md ring-1 ring-navy-900/10">
         <button
           onClick={() => handleMapStyleChange('road')}
-          className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[11px] font-bold transition-all ${
+          className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
             mapStyle === 'road'
-              ? 'bg-amber-500 text-navy-950 shadow'
-              : 'text-white/70 hover:bg-white/10 hover:text-white'
+              ? 'bg-navy-900 text-white shadow-sm'
+              : 'text-navy-700 hover:bg-navy-100/60'
           }`}
         >
           <MapIcon className="h-3.5 w-3.5" />
@@ -254,10 +242,10 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
 
         <button
           onClick={() => handleMapStyleChange('satellite')}
-          className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[11px] font-bold transition-all ${
+          className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
             mapStyle === 'satellite'
-              ? 'bg-amber-500 text-navy-950 shadow'
-              : 'text-white/70 hover:bg-white/10 hover:text-white'
+              ? 'bg-amber-500 text-navy-950 shadow-sm'
+              : 'text-navy-700 hover:bg-navy-100/60'
           }`}
         >
           <Globe className="h-3.5 w-3.5" />
@@ -266,10 +254,10 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
 
         <button
           onClick={() => handleMapStyleChange('dark')}
-          className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[11px] font-bold transition-all ${
+          className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
             mapStyle === 'dark'
-              ? 'bg-amber-500 text-navy-950 shadow'
-              : 'text-white/70 hover:bg-white/10 hover:text-white'
+              ? 'bg-slate-900 text-white shadow-sm'
+              : 'text-navy-700 hover:bg-navy-100/60'
           }`}
         >
           <Moon className="h-3.5 w-3.5" />
@@ -278,10 +266,10 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
 
         <button
           onClick={() => handleMapStyleChange('terrain')}
-          className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[11px] font-bold transition-all ${
+          className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
             mapStyle === 'terrain'
-              ? 'bg-amber-500 text-navy-950 shadow'
-              : 'text-white/70 hover:bg-white/10 hover:text-white'
+              ? 'bg-emerald-600 text-white shadow-sm'
+              : 'text-navy-700 hover:bg-navy-100/60'
           }`}
         >
           <Layers className="h-3.5 w-3.5" />
@@ -289,18 +277,18 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
         </button>
       </div>
 
-      {/* Map Canvas Container with Explicit Dimensions */}
-      <div ref={mapContainerRef} className="h-[520px] sm:h-[580px] w-full min-h-[520px] relative z-0" />
+      {/* Map Canvas Container */}
+      <div ref={mapContainerRef} className="h-[580px] w-full z-0 min-h-[580px] bg-[#f8fafc]" />
 
       {/* Floating Active Mini Card Popup */}
       <AnimatePresence>
         {activeProperty && (
           <motion.div
-            initial={{ opacity: 0, y: 16, scale: 0.96 }}
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 16, scale: 0.96 }}
-            transition={{ duration: 0.25, ease: 'easeOut' }}
-            className="absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-6 sm:right-auto sm:max-w-md z-30 overflow-hidden rounded-2xl bg-white/95 p-4 shadow-2xl backdrop-blur-md border border-navy-100"
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+            className="absolute bottom-6 left-6 right-6 md:left-6 md:right-auto md:max-w-md z-30 overflow-hidden rounded-2xl bg-white/95 p-4 shadow-2xl backdrop-blur-md ring-1 ring-navy-900/10"
           >
             {/* Close Button */}
             <button
@@ -313,7 +301,7 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
 
             <div className="flex flex-col sm:flex-row gap-4">
               {/* Thumbnail Image */}
-              <div className="relative h-36 sm:h-32 sm:w-36 shrink-0 overflow-hidden rounded-xl bg-navy-100">
+              <div className="relative h-40 sm:h-36 sm:w-40 shrink-0 overflow-hidden rounded-xl bg-navy-100">
                 {activeProperty.images && activeProperty.images.length > 0 ? (
                   <img
                     src={getImageUrl(activeProperty.images[0])}
@@ -321,14 +309,14 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
                     className="h-full w-full object-cover"
                   />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-navy-900 text-white/40">
-                    <Building2 className="h-8 w-8" />
+                  <div className="flex h-full w-full items-center justify-center bg-navy-800 text-navy-400">
+                    <Building2 className="h-10 w-10 opacity-40" />
                   </div>
                 )}
-                <span className={`absolute top-2 left-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold shadow ${
+                <span className={`absolute top-2 left-2 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold shadow-md ${
                   activeProperty.propertyType.toLowerCase() === 'house'
-                    ? 'bg-navy-900 text-amber-400 border border-amber-400/30'
-                    : 'bg-emerald-700 text-white'
+                    ? 'bg-amber-500 text-navy-950'
+                    : 'bg-emerald-600 text-white'
                 }`}>
                   {activeProperty.propertyType.toLowerCase() === 'house' ? (
                     <Home className="h-3 w-3" />
@@ -347,22 +335,22 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
                     <span>{activeProperty.city}</span>
                   </div>
 
-                  <h3 className="mt-1 text-sm sm:text-base font-extrabold text-navy-950 line-clamp-2 leading-snug">
+                  <h3 className="mt-1 text-base font-extrabold text-navy-900 line-clamp-2 leading-snug">
                     {activeProperty.title}
                   </h3>
 
-                  <p className="mt-1 text-sm font-extrabold text-navy-900">
+                  <p className="mt-2 text-base font-black text-amber-600">
                     {formatFullPrice(activeProperty.price)}
                   </p>
                 </div>
 
-                {/* Explore Button */}
+                {/* Explore More Button */}
                 <div className="mt-3 pt-2 border-t border-navy-100">
                   <Link
                     href={`/properties/${activeProperty.id}`}
-                    className="group inline-flex w-full items-center justify-center gap-2 rounded-xl bg-navy-950 px-4 py-2.5 text-xs font-bold text-white shadow transition-all hover:bg-amber-500 hover:text-navy-950"
+                    className="group inline-flex w-full items-center justify-center gap-2 rounded-xl bg-navy-900 px-4 py-2.5 text-xs font-bold text-white shadow-md transition-all hover:bg-amber-500 hover:text-navy-950"
                   >
-                    <span>Explore Listing</span>
+                    <span>Explore More</span>
                     <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
                   </Link>
                 </div>
