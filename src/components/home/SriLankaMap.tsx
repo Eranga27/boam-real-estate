@@ -26,12 +26,12 @@ interface SriLankaMapProps {
   onSelectProperty?: (id: string) => void;
 }
 
-// Map Tile Layers adopted from Lanka-Climate-Hub
+// Map Tile Layers (Free, non-API-key tile layers)
 const BASE_MAPS = {
   road: {
     name: 'Roadmap',
-    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-    attribution: '&copy; <a href="https://carto.com/">CARTO</a> &bull; Boam Real Estate',
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &bull; Boam Real Estate',
   },
   satellite: {
     name: 'Satellite',
@@ -40,8 +40,8 @@ const BASE_MAPS = {
   },
   dark: {
     name: 'Dark Mode',
-    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    attribution: '&copy; CARTO Dark &bull; Boam Real Estate',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+    attribution: '&copy; Esri Dark &bull; Boam Real Estate',
   },
   terrain: {
     name: 'Terrain',
