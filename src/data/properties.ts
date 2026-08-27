@@ -572,6 +572,7 @@ Suitable for eco-tourism, agro-tourism, wellness retreats, boutique villas, glam
     baths: 0,
     parking: 0,
     landSize: 40,
+    landUnit: 'perches',
     houseSize: 0,
     yearBuilt: 0,
     description: `4 blocks,Each 10 perches, Station road katugastota ,kandy. 600 meters from the main toad.`,
