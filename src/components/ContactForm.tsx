@@ -42,6 +42,7 @@ export default function ContactForm({
     senderEmail: '',
     senderPhone: '',
     message: `Hi, I'm interested in this property and would like to get more details. Please contact me at your earliest convenience.`,
+    website: '',
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -88,38 +89,42 @@ export default function ContactForm({
 
     setFormState('loading');
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
-
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/v1/inquiries/${propertyId}`, {
+      const res = await fetch('/api/enquiry', {
         method: 'POST',
-        headers,
-        body: JSON.stringify(fields),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          senderName: fields.senderName,
+          senderEmail: fields.senderEmail,
+          senderPhone: fields.senderPhone,
+          message: fields.message,
+          propertyId,
+          website: fields.website,
+        }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
 
-      if (data.success) {
+      if (res.ok && data?.success) {
         setFormState('success');
-        setResponseMsg(data.message || 'Your inquiry has been sent!');
-      } else if (res.status === 429) {
-        setFormState('error');
-        setResponseMsg('Too many inquiries sent. Please wait an hour before trying again.');
+        setResponseMsg(data.message || 'Your enquiry has been sent. BOAM will get back to you.');
       } else {
         setFormState('error');
-        setResponseMsg(data.message || 'Failed to send inquiry. Please try again.');
+        setResponseMsg(data?.message || 'Unable to send your enquiry right now. Please call or WhatsApp BOAM directly.');
       }
     } catch {
       setFormState('error');
-      setResponseMsg('Network error. Please check your connection and try again.');
+      setResponseMsg('Unable to send your enquiry right now. Please call or WhatsApp BOAM directly.');
     }
   };
 
   const handleReset = () => {
     setFormState('idle');
     setResponseMsg('');
-    setFields((prev) => ({ ...prev, message: `Hi, I'm interested in this property and would like to get more details. Please contact me at your earliest convenience.` }));
+    setFields((prev) => ({
+      ...prev,
+      message: `Hi, I'm interested in this property and would like to get more details. Please contact me at your earliest convenience.`,
+      website: '',
+    }));
   };
 
   return (
@@ -208,6 +213,18 @@ export default function ContactForm({
               className="space-y-4"
               noValidate
             >
+              {/* Honeypot field for bot protection */}
+              <div className="hidden" aria-hidden="true">
+                <input
+                  type="text"
+                  name="website"
+                  value={fields.website}
+                  onChange={handleChange}
+                  tabIndex={-1}
+                  autoComplete="off"
+                />
+              </div>
+
               {formState === 'error' && (
                 <div className="flex items-start gap-3 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
                   <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
