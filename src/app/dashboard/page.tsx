@@ -68,7 +68,6 @@ export default function DashboardOverview() {
   const statCards = [
     { label: 'Total Listings', value: stats?.listings.total ?? 0, icon: Building2, color: 'bg-blue-50 text-blue-600', href: '/dashboard/properties' },
     { label: 'Published', value: stats?.listings.published ?? 0, icon: CheckCircle, color: 'bg-green-50 text-green-600', href: '/dashboard/properties' },
-    { label: 'Inquiries Received', value: stats?.inquiriesReceived ?? 0, icon: MessageSquare, color: 'bg-purple-50 text-purple-600', href: '/dashboard/inquiries' },
     { label: 'Favorites Saved', value: stats?.favorites ?? 0, icon: Heart, color: 'bg-red-50 text-red-600', href: '/dashboard/favorites' },
   ];
 
@@ -169,8 +168,6 @@ export default function DashboardOverview() {
                     <p className="font-medium text-sm text-gray-900 truncate">{p.title}</p>
                     <p className="text-xs text-gray-500 flex items-center mt-0.5">
                       <MapPin className="w-3 h-3 mr-0.5" />{p.city}
-                      <span className="mx-1">·</span>
-                      <MessageSquare className="w-3 h-3 mr-0.5" />{p._count.inquiries} inquiries
                     </p>
                   </div>
                   <div className="text-right flex-shrink-0">
@@ -183,39 +180,22 @@ export default function DashboardOverview() {
           )}
         </div>
 
-        {/* Recent Inquiries Received */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="flex items-center justify-between p-6 border-b border-gray-100">
-            <h3 className="font-semibold text-gray-900">Recent Inquiries</h3>
-            <Link href="/dashboard/inquiries" className="text-sm text-primary hover:underline">View all</Link>
+        {/* Direct Broker Actions */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between">
+          <div>
+            <h3 className="font-semibold text-gray-900 mb-2">BOAM Direct Support</h3>
+            <p className="text-xs text-gray-500 leading-relaxed mb-4">
+              Need assistance with your property listings or client enquiries? Connect directly with the BOAM broker team.
+            </p>
           </div>
-          {(!stats?.recentInquiries || stats.recentInquiries.length === 0) ? (
-            <div className="p-8 text-center text-gray-400">
-              <MessageSquare className="w-10 h-10 mx-auto mb-2 opacity-30" />
-              <p className="text-sm">No inquiries received yet</p>
-            </div>
-          ) : (
-            <div className="divide-y divide-gray-50">
-              {stats.recentInquiries.map((inq: any) => (
-                <div key={inq.id} className="p-4 hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm flex-shrink-0">
-                      {inq.senderName.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium text-sm text-gray-900">{inq.senderName}</p>
-                      <p className="text-xs text-gray-500 truncate">{inq.property.title}</p>
-                    </div>
-                    <p className="text-xs text-gray-400 flex-shrink-0 flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {new Date(inq.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <p className="text-xs text-gray-600 line-clamp-2 pl-11">{inq.message}</p>
-                </div>
-              ))}
-            </div>
-          )}
+          <div className="space-y-2">
+            <Link
+              href="/search"
+              className="flex items-center justify-center gap-2 w-full py-2.5 px-4 bg-navy-950 text-white rounded-xl text-xs font-bold hover:bg-navy-900 transition-colors"
+            >
+              Browse All Listings
+            </Link>
+          </div>
         </div>
       </div>
     </div>

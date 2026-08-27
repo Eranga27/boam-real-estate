@@ -17,7 +17,6 @@ const navItems = [
   { href: '/dashboard/properties', label: 'My Listings', icon: Building2 },
   { href: '/dashboard/saved', label: 'Saved Properties', icon: BookMarked },
   { href: '/dashboard/favorites', label: 'Favorites', icon: Heart },
-  { href: '/dashboard/inquiries', label: 'Messages', icon: MessageSquare },
   { href: '/dashboard/notifications', label: 'Notifications', icon: Bell },
   { href: '/dashboard/activity', label: 'Activity Log', icon: Activity },
   { href: '/dashboard/settings', label: 'Settings', icon: Settings },
