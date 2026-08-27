@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { formatFullPrice, formatPrice, getImageUrl } from '@/lib/format';
 import { getPropertyUrl } from '@/lib/site';
+import MobileContactBar from '@/components/detail/MobileContactBar';
 
 interface PropertyDetailsClientProps {
   property: any;
@@ -85,7 +86,7 @@ export default function PropertyDetailsClient({
   const isLongDescription = property.description && property.description.length > 320;
 
   return (
-    <div className="min-h-screen bg-navy-50/50 pt-20 sm:pt-24 pb-16">
+    <div className="min-h-screen bg-navy-50/50 pt-20 sm:pt-24 pb-32 md:pb-16">
       {/* Clipboard Toast Notification */}
       {showShareToast && (
         <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-2xl bg-navy-950 px-4 py-3 text-xs font-bold text-white shadow-2xl border border-navy-700">
@@ -467,6 +468,9 @@ export default function PropertyDetailsClient({
           </div>
         </div>
       </div>
+
+      {/* Sticky Mobile Conversion Contact Bar */}
+      <MobileContactBar propertyId={property.id} propertyTitle={property.title} />
     </div>
   );
 }
