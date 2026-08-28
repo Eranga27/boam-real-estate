@@ -24,8 +24,11 @@ function staticToApi(p: any): any {
     longitude: p.lng,
     bedrooms: p.beds || null,
     bathrooms: p.baths || null,
+    beds: p.beds || 0,
+    baths: p.baths || 0,
     parking: p.parking || null,
     landSize: p.landSize || null,
+    landUnit: p.landUnit || 'perches',
     houseSize: p.houseSize || null,
     yearBuilt: p.yearBuilt || null,
     description: p.description,
@@ -44,12 +47,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!localMatch) {
     return {
-      title: 'Property Not Found | BOAM Real Estates',
+      title: 'Property Not Found',
       description: 'The requested property listing was not found or is no longer available.',
     };
   }
 
-  const title = `${localMatch.title} | BOAM Real Estates`;
+  const title = localMatch.title;
   const description = `Explore ${localMatch.title} in ${localMatch.city}, ${localMatch.district}. View detailed property specifications, images, location and contact BOAM Real Estates.`;
   const canonical = getPropertyUrl(localMatch.id);
   const mainImage = getOgImageUrl(localMatch.images?.[0]);

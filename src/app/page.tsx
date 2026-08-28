@@ -41,11 +41,12 @@ export default function HomePage() {
   const [loadingProperties] = useState(false);
 
   useEffect(() => {
-    // Try enhancing with live API data in the background (silently ignored if offline)
+    // Try enhancing with live API data in the background (silently ignored if offline/unconfigured)
     const fetchFeatured = async () => {
+      if (!process.env.NEXT_PUBLIC_API_URL) return;
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/properties?limit=3&sort=newest`,
+          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/properties?limit=3&sort=newest`,
           { signal: AbortSignal.timeout(4000) }
         );
         const data = await res.json();

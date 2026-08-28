@@ -5,7 +5,7 @@ import SearchClient from './SearchClient';
 const canonicalUrl = `${getSiteUrl()}/search`;
 
 export const metadata: Metadata = {
-  title: 'Search Properties | BOAM Real Estates',
+  title: 'Search Properties',
   description:
     'Search and filter houses, apartments, commercial properties, and land for sale and rent in Sri Lanka.',
   alternates: {
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     url: canonicalUrl,
-    title: 'Search Properties | BOAM Real Estates',
+    title: 'Search Properties',
     description:
       'Search and filter houses, apartments, commercial properties, and land for sale and rent in Sri Lanka.',
     siteName: SITE_SEO.siteName,
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Search Properties | BOAM Real Estates',
+    title: 'Search Properties',
     description:
       'Search and filter houses, apartments, commercial properties, and land for sale and rent in Sri Lanka.',
     images: [getOgImageUrl('/images/hero-bg.jpg')],
