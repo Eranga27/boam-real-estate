@@ -20,6 +20,8 @@ export interface Property {
   parking: number;
   /** perches (Sri Lankan land unit) */
   landSize: number;
+  /** 'perches' or 'acres' */
+  landUnit?: 'perches' | 'acres' | string;
   /** square feet */
   houseSize: number;
   yearBuilt: number;
