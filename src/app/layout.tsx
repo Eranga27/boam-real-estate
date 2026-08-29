@@ -71,6 +71,8 @@ export const metadata: Metadata = {
   },
 };
 
+import { PagePreloader } from '@/components/ui/PagePreloader';
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -107,7 +109,9 @@ export default function RootLayout({
         <AuthProvider>
           <div className="flex flex-col min-h-screen">
             <Navbar />
-            <main className="flex-grow">{children}</main>
+            <main className="flex-grow">
+              <PagePreloader>{children}</PagePreloader>
+            </main>
             <Footer />
           </div>
           <BackToTop />
