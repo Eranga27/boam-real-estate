@@ -91,8 +91,20 @@ export default function PropertySearch({
     if (filters.maxPrice) list = list.filter((p) => p.price <= Number(filters.maxPrice));
     if (filters.bedrooms) list = list.filter((p) => p.bedrooms && p.bedrooms >= Number(filters.bedrooms));
 
-    if (filters.sort === 'price_asc') list.sort((a, b) => a.price - b.price);
-    else if (filters.sort === 'price_desc') list.sort((a, b) => b.price - a.price);
+    if (filters.sort === 'price_asc') {
+      list.sort((a, b) => a.price - b.price);
+    } else if (filters.sort === 'price_desc') {
+      list.sort((a, b) => b.price - a.price);
+    } else {
+      // Default sort: Houses / Residential buildings first, then Land
+      list.sort((a, b) => {
+        const typeOrder = (type: string) => (type.toLowerCase() === 'land' || type.toLowerCase() === 'commercial' ? 2 : 1);
+        const orderA = typeOrder(a.propertyType);
+        const orderB = typeOrder(b.propertyType);
+        if (orderA !== orderB) return orderA - orderB;
+        return 0;
+      });
+    }
 
     return list;
   }, [filters]);

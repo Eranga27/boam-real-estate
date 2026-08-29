@@ -16,7 +16,6 @@ export function Navbar() {
   const links = [
     { to: '/', label: 'Home' },
     { to: '/search', label: 'Properties' },
-    { to: getPhoneHref(), label: 'Contact', isExternal: true },
   ];
 
   useEffect(() => {
@@ -54,21 +53,6 @@ export function Navbar() {
             const isPropertiesActive = link.to === '/search' && (pathname.startsWith('/search') || pathname.startsWith('/properties'));
             const isHomeActive = link.to === '/' && pathname === '/';
             const isActive = isHomeActive || isPropertiesActive;
-
-            if (link.isExternal) {
-              return (
-                <a
-                  key={link.label}
-                  href={link.to}
-                  className={`group relative py-1 text-sm font-bold tracking-wide transition-colors ${
-                    solid ? 'text-navy-800/80 hover:text-navy-950' : 'text-white/80 hover:text-white'
-                  }`}
-                >
-                  {link.label}
-                  <span className="absolute inset-x-0 -bottom-1 h-0.5 scale-x-0 rounded-full bg-amber-500 transition-transform duration-200 ease-out group-hover:scale-x-100" />
-                </a>
-              );
-            }
 
             return (
               <Link
@@ -132,19 +116,6 @@ export function Navbar() {
               const isPropertiesActive = link.to === '/search' && (pathname.startsWith('/search') || pathname.startsWith('/properties'));
               const isHomeActive = link.to === '/' && pathname === '/';
               const isActive = isHomeActive || isPropertiesActive;
-
-              if (link.isExternal) {
-                return (
-                  <a
-                    key={link.label}
-                    href={link.to}
-                    className="flex items-center justify-between rounded-2xl px-4 py-3.5 text-base font-bold text-navy-900 hover:bg-navy-50 transition-colors"
-                  >
-                    <span>{link.label}</span>
-                    <PhoneIcon className="h-4 w-4 text-amber-500" aria-hidden="true" />
-                  </a>
-                );
-              }
 
               return (
                 <Link
