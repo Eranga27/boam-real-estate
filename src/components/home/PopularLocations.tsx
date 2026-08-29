@@ -32,6 +32,7 @@ function assignCoords(city: string, title: string, id?: string) {
   if (id === 'katugastota-land' || t.includes('kahalla')) return { lat: 7.3275, lng: 80.6219 };
   if (t.includes('udathalawinna') || c.includes('udathalawinna') || t.includes('thungadhura') || c.includes('thungadhura')) return { lat: 7.3385, lng: 80.6480 };
   if (t.includes('amunugama') || c.includes('amunugama')) return { lat: 7.3050, lng: 80.6720 };
+  if (t.includes('nugegoda') || c.includes('nugegoda') || c.includes('thalapathpitiya')) return { lat: 6.8625, lng: 79.9125 };
   if (t.includes('upkot') || c.includes('maskeliya')) return { lat: 6.8347, lng: 80.5732 };
   if (t.includes('three-storey') || t.includes('george e')) return { lat: 7.2783, lng: 80.6321 };
   if (c.includes('nillamba')) return { lat: 7.1850, lng: 80.6025 };
