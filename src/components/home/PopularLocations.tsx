@@ -28,6 +28,8 @@ function assignCoords(city: string, title: string, id?: string) {
   const t = title.toLowerCase();
   const c = city.toLowerCase();
 
+  if (id === 'polgolla-house' || t.includes('polgolla') || c.includes('polgolla')) return { lat: 7.3210, lng: 80.6410 };
+  if (id === 'katugastota-double-storey-house' || t.includes('balangoda road') || t.includes('double-storey')) return { lat: 7.3310, lng: 80.6250 };
   if (id === 'katugastota-station-road-land' || t.includes('station road')) return { lat: 7.3310, lng: 80.6240 };
   if (id === 'katugastota-land' || t.includes('kahalla')) return { lat: 7.3275, lng: 80.6219 };
   if (t.includes('udathalawinna') || c.includes('udathalawinna') || t.includes('thungadhura') || c.includes('thungadhura')) return { lat: 7.3385, lng: 80.6480 };

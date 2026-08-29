@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     siteName: SITE_SEO.siteName,
     images: [
       {
-        url: getOgImageUrl('/images/hero-bg.jpg'),
+        url: getOgImageUrl('/images/boamnormallogo.png'),
         width: 1200,
         height: 630,
         alt: 'BOAM Real Estates — Premium Property Listings in Sri Lanka',
@@ -56,7 +56,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: SITE_SEO.defaultTitle,
     description: SITE_SEO.description,
-    images: [getOgImageUrl('/images/hero-bg.jpg')],
+    images: [getOgImageUrl('/images/boamnormallogo.png')],
   },
   robots: {
     index: true,
