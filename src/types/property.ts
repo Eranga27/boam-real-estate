@@ -23,7 +23,7 @@ export interface Property {
   /** perches or acres — see landUnit */
   landSize: number;
   /** unit for landSize: 'perches' (default) or 'acres' */
-  landUnit: LandUnit;
+  landUnit?: LandUnit | string;
   /** square feet */
   houseSize: number;
   yearBuilt: number;
