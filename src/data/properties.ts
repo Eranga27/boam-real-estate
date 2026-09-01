@@ -690,6 +690,105 @@ Suitable for eco-tourism, agro-tourism, wellness retreats, boutique villas, glam
     listedDaysAgo: 0,
     featured: true,
   },
+  {
+    id: 'wattegama-land',
+    title: 'Prime 130-Perch Scenic Property in Wattegama, Kandy',
+    type: 'Land',
+    listingType: 'sale',
+    price: 15000000,
+    negotiable: false,
+    city: 'Wattegama',
+    district: 'Kandy',
+    address: 'Wattegama, Kandy',
+    lat: 7.3502,
+    lng: 80.7015,
+    beds: 0,
+    baths: 0,
+    parking: 0,
+    landSize: 130,
+    landUnit: 'perches',
+    houseSize: 0,
+    yearBuilt: 0,
+    description: `Looking for the ultimate location for a luxury boutique hotel, eco-resort, or your dream private sanctuary? Look no further!
+
+Located just 15 minutes (12.5 km) from Kandy via the scenic Polgolla Dam along a fully carpeted main road, this breathtaking property sits at an elevation of ~1,700 ft, offering a cool, refreshing climate and tranquil village surroundings.
+
+✨ Key Features & Highlights:
+📐 Land Extent: 130 Perches
+🏔️ Unmatched Views: Breathtaking, unobstructed panoramic views of the Hunnasgiriya Mountain Range & surrounding tea estates.
+💧 Natural Water Features: Features an overflowing natural spring well and a gentle stream running along the property boundary.
+🌿 Earning & Bearing Crop: Richly planted with income-generating nutmeg, coffee, coconut, and arecanut, alongside Jak, Mango, Rambutan, Mangosteen, Clove, Mahogany, and more!
+🥾 Adventure Ready: Situated along the primary tourist route to the UNESCO World Heritage Knuckles Mountain Range — start nature trails right from your doorstep!
+🏥 Convenience & Safety: Located just 100 meters from a fully equipped government hospital and a quick 5-minute drive to the historic Wattegama Railway Station.`,
+    amenities: [],
+    nearby: ['Wattegama Government Hospital', 'Wattegama Railway Station', 'Knuckles Mountain Range'],
+    images: [
+      '/uploads/wattegama1.jpg',
+      '/uploads/wattegama2.jpg',
+      '/uploads/wattegama3.jpg',
+      '/uploads/wattegama4.jpg',
+      '/uploads/wattegama5.jpg',
+      '/uploads/wattegama6.jpg',
+      '/uploads/wattegama7.jpg',
+      '/uploads/wattegama8.jpg',
+      '/uploads/wattegama9.jpg',
+      '/uploads/wattegama10.jpg',
+    ],
+    listedDaysAgo: 0,
+    featured: true,
+  },
+  {
+    id: 'hikkaduwa-house',
+    title: 'Rare Property for Sale – Hikkaduwa',
+    type: 'House',
+    listingType: 'sale',
+    price: 70000000,
+    negotiable: true,
+    city: 'Hikkaduwa',
+    district: 'Galle',
+    address: 'Hikkaduwa–Baddegama Road, Hikkaduwa',
+    lat: 6.1395,
+    lng: 80.1063,
+    beds: 4,
+    baths: 0,
+    parking: 0,
+    landSize: 17.3,
+    landUnit: 'perches',
+    houseSize: 0,
+    yearBuilt: 0,
+    description: `A unique opportunity to own a charming ancestral/traditional house situated on 17.3 perches of valuable land along Hikkaduwa–Baddegama Road, in an exceptionally convenient location.
+
+📍 Prime Location:
+• 🏖️ Only 100 metres to the Beach
+• 🏙️ Only 75 metres to Hikkaduwa Town
+• 🚆 Only 30 metres to the Railway Station
+• Easy access to all essential facilities and tourist attractions
+
+🏠 Property Details:
+• Single-storey traditional/ancestral house
+• 17.3 perches of land
+• 4 Bedrooms
+• 1 Air-Conditioned Bedroom
+• Excellent potential for a private residence, holiday home, guesthouse, boutique villa, or investment property
+
+A highly valuable property in one of Hikkaduwa's most sought-after locations — ideal for both living and investment.`,
+    amenities: [],
+    nearby: ['Hikkaduwa Beach', 'Hikkaduwa Town', 'Hikkaduwa Railway Station'],
+    images: [
+      '/uploads/hikkaduwa1.jpeg',
+      '/uploads/hikkaduwa2.jpeg',
+      '/uploads/hikkaduwa3.jpeg',
+      '/uploads/hikkaduwa4.jpeg',
+      '/uploads/hikkaduwa5.jpeg',
+      '/uploads/hikkaduwa6.jpeg',
+      '/uploads/hikkaduwa7.jpeg',
+      '/uploads/hikkaduwa8.jpeg',
+      '/uploads/hikkaduwa9.jpeg',
+      '/uploads/hikkaduwa10.jpeg',
+    ],
+    listedDaysAgo: 0,
+    featured: true,
+  },
 ];
 
 export function getProperty(id: string): Property | undefined {
