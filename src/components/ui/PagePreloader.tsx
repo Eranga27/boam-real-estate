@@ -84,8 +84,8 @@ export function PagePreloader({ children }: { children: React.ReactNode }) {
             className="fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-navy-950 overflow-hidden select-none"
           >
             {/* Ambient Gold Radial Glow */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="w-[450px] h-[450px] rounded-full bg-gradient-to-tr from-amber-600/15 via-amber-500/25 to-amber-400/10 blur-[100px] animate-pulse duration-1000" />
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
+              <div className="w-[85vw] max-w-[450px] aspect-square rounded-full bg-gradient-to-tr from-amber-600/15 via-amber-500/25 to-amber-400/10 blur-[75px] sm:blur-[100px] animate-pulse duration-1000" />
             </div>
 
             {/* Subtle Luxury Pattern / Grid */}

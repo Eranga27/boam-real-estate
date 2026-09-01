@@ -128,7 +128,7 @@ export function PopularLocations() {
   const landCount = properties.filter((p) => p.propertyType.toLowerCase() === 'land').length;
 
   return (
-    <section className="bg-navy-50/60 py-16 lg:py-24">
+    <section className="relative overflow-hidden bg-navy-50/60 py-16 lg:py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -145,10 +145,10 @@ export function PopularLocations() {
           </div>
 
           {/* Filter Tabs */}
-          <div className="flex items-center gap-2 rounded-2xl bg-white p-1.5 shadow-sm border border-navy-100">
+          <div className="flex max-w-full items-center gap-2 overflow-x-auto rounded-2xl bg-white p-1.5 shadow-sm border border-navy-100 no-scrollbar">
             <button
               onClick={() => setFilter('All')}
-              className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
+              className={`flex shrink-0 items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
                 filter === 'All'
                   ? 'bg-navy-900 text-white shadow-sm'
                   : 'text-navy-700 hover:bg-navy-50'
@@ -160,7 +160,7 @@ export function PopularLocations() {
 
             <button
               onClick={() => setFilter('House')}
-              className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
+              className={`flex shrink-0 items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
                 filter === 'House'
                   ? 'bg-amber-500 text-navy-950 shadow-sm'
                   : 'text-navy-700 hover:bg-navy-50'
@@ -172,7 +172,7 @@ export function PopularLocations() {
 
             <button
               onClick={() => setFilter('Land')}
-              className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
+              className={`flex shrink-0 items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
                 filter === 'Land'
                   ? 'bg-emerald-600 text-white shadow-sm'
                   : 'text-navy-700 hover:bg-navy-50'

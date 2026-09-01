@@ -227,7 +227,7 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
   return (
     <div className="relative w-full overflow-hidden rounded-3xl bg-[#f8fafc] shadow-2xl ring-1 ring-navy-100/10">
       {/* Map Layer Mode Controls */}
-      <div className="absolute top-4 left-4 z-20 flex flex-wrap items-center gap-1.5 rounded-2xl bg-white/95 p-1.5 shadow-lg backdrop-blur-md ring-1 ring-navy-900/10">
+      <div className="absolute top-4 left-4 z-20 flex max-w-[calc(100%-2rem)] flex-wrap items-center gap-1.5 rounded-2xl bg-white/95 p-1.5 shadow-lg backdrop-blur-md ring-1 ring-navy-900/10">
         <button
           onClick={() => handleMapStyleChange('road')}
           className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
@@ -288,7 +288,7 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
-            className="absolute bottom-6 left-6 right-6 md:left-6 md:right-auto md:max-w-md z-30 overflow-hidden rounded-2xl bg-white/95 p-4 shadow-2xl backdrop-blur-md ring-1 ring-navy-900/10"
+            className="absolute bottom-6 left-4 right-4 sm:left-6 sm:right-6 md:left-6 md:right-auto md:max-w-md z-30 overflow-hidden rounded-2xl bg-white/95 p-4 shadow-2xl backdrop-blur-md ring-1 ring-navy-900/10"
           >
             {/* Close Button */}
             <button
