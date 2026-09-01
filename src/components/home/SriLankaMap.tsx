@@ -278,7 +278,7 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
       </div>
 
       {/* Map Canvas Container */}
-      <div ref={mapContainerRef} className="h-[580px] w-full z-0 min-h-[580px] bg-[#f8fafc]" />
+      <div ref={mapContainerRef} className="h-[380px] min-h-[380px] sm:h-[480px] sm:min-h-[480px] lg:h-[580px] lg:min-h-[580px] w-full z-0 bg-[#f8fafc]" />
 
       {/* Floating Active Mini Card Popup */}
       <AnimatePresence>

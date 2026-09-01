@@ -26,7 +26,7 @@ export function PagePreloader({ children }: { children: React.ReactNode }) {
 
     let mounted = true;
     const startTime = Date.now();
-    const MIN_DURATION = 1300; // 1.3 seconds for smooth, responsive luxury feel
+    const MIN_DURATION = 800; // 0.8 seconds for fast, smooth luxury feel
 
     // Ramp progress from 0% to 90%
     const interval = setInterval(() => {

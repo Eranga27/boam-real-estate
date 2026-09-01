@@ -193,7 +193,7 @@ export function Hero() {
 
                 {/* Suggestions Popover */}
                 {focused && suggestions.length > 0 && (
-                  <ul className="absolute left-0 top-full z-30 mt-2.5 w-full overflow-hidden rounded-2xl bg-white py-2 text-left shadow-2xl border border-navy-100">
+                  <ul className="absolute left-0 top-full z-30 mt-2.5 w-full max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl bg-white py-2 text-left shadow-2xl border border-navy-100">
                     {suggestions.map((city) => (
                       <li key={city}>
                         <button
