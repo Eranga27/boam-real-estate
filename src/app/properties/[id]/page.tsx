@@ -43,7 +43,27 @@ function staticToApi(p: any): any {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = params;
-  const localMatch = staticProperties.find((p) => p.id === id);
+  let localMatch: any = staticProperties.find((p) => p.id === id);
+
+  if (!localMatch) {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://boam-real-estate.onrender.com';
+      const res = await fetch(`${apiUrl}/api/v1/properties/${id}`, { cache: 'no-store' });
+      const data = await res.json();
+      if (data.success && data.data) {
+        const p = data.data;
+        localMatch = {
+          id: p.id,
+          title: p.title,
+          city: p.city,
+          district: p.district,
+          images: p.images || [],
+        };
+      }
+    } catch (err) {
+      console.error('Failed fetching dynamic metadata from API:', err);
+    }
+  }
 
   if (!localMatch) {
     return {
