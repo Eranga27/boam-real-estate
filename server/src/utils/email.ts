@@ -111,3 +111,104 @@ export const sendEmail = async (opts: SendEmailOptions): Promise<void> => {
     text: opts.message,
   });
 };
+
+export interface PropertyRequestEmailOptions {
+  lookingFor: string;
+  district: string;
+  customArea?: string;
+  minBudget?: number;
+  maxBudget?: number;
+  sizeInPerches?: number;
+  name: string;
+  email: string;
+  phone: string;
+  note?: string;
+}
+
+export const sendPropertyRequestNotificationEmail = async (opts: PropertyRequestEmailOptions): Promise<boolean> => {
+  try {
+    const recipients = ['anilbwt26@yahoo.com', 'erangabowatte@gmail.com'];
+    const budgetStr = opts.minBudget || opts.maxBudget
+      ? `${opts.minBudget ? `Min: LKR ${opts.minBudget.toLocaleString()}` : ''} ${opts.maxBudget ? `Max: LKR ${opts.maxBudget.toLocaleString()}` : ''}`
+      : 'Not specified';
+
+    await transporter.sendMail({
+      from: `"Boam Real-Estates" <${process.env.EMAIL_USER}>`,
+      to: recipients.join(', '),
+      subject: `New Property Request: ${opts.lookingFor} in ${opts.district}${opts.customArea ? ` (${opts.customArea})` : ''}`,
+      html: `
+        <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:600px;margin:0 auto;background:#f9fafb;border-radius:16px;overflow:hidden;border:1px solid #e5e7eb;">
+          <div style="background:linear-gradient(135deg,#0e2a49 0%,#1e3a5f 100%);padding:32px 40px;text-align:center;">
+            <h1 style="color:#f59e0b;margin:0;font-size:24px;font-weight:800;">BOAM Real-Estates</h1>
+            <p style="color:rgba(255,255,255,0.85);margin:8px 0 0;font-size:15px;font-weight:600;">New Buyer Property Request</p>
+          </div>
+          <div style="padding:32px;background:white;">
+            <div style="background:#fffbe6;border-left:4px solid #f59e0b;border-radius:8px;padding:16px 20px;margin-bottom:24px;">
+              <p style="margin:0;color:#92400e;font-size:15px;font-weight:700;">
+                Looking for: ${opts.lookingFor}
+              </p>
+              <p style="margin:4px 0 0;color:#b45309;font-size:14px;">
+                Location: ${opts.district} ${opts.customArea ? `(${opts.customArea})` : ''}
+              </p>
+            </div>
+
+            <h3 style="color:#0f172a;font-size:16px;margin-bottom:12px;border-bottom:2px solid #f1f5f9;padding-bottom:8px;">Request Summary</h3>
+            <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
+              <tr>
+                <td style="padding:10px 0;color:#64748b;font-size:14px;width:140px;font-weight:600;">Looking For</td>
+                <td style="padding:10px 0;color:#0f172a;font-size:14px;font-weight:700;">${opts.lookingFor}</td>
+              </tr>
+              <tr>
+                <td style="padding:10px 0;color:#64748b;font-size:14px;font-weight:600;">District / Area</td>
+                <td style="padding:10px 0;color:#0f172a;font-size:14px;">${opts.district} ${opts.customArea ? `— ${opts.customArea}` : ''}</td>
+              </tr>
+              <tr>
+                <td style="padding:10px 0;color:#64748b;font-size:14px;font-weight:600;">Budget Range</td>
+                <td style="padding:10px 0;color:#0f172a;font-size:14px;">${budgetStr}</td>
+              </tr>
+              <tr>
+                <td style="padding:10px 0;color:#64748b;font-size:14px;font-weight:600;">Size Needed</td>
+                <td style="padding:10px 0;color:#0f172a;font-size:14px;">${opts.sizeInPerches ? `${opts.sizeInPerches} perches` : 'Not specified'}</td>
+              </tr>
+            </table>
+
+            <h3 style="color:#0f172a;font-size:16px;margin-bottom:12px;border-bottom:2px solid #f1f5f9;padding-bottom:8px;">Visitor Contact Information</h3>
+            <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
+              <tr>
+                <td style="padding:10px 0;color:#64748b;font-size:14px;width:140px;font-weight:600;">Name</td>
+                <td style="padding:10px 0;color:#0f172a;font-size:14px;font-weight:700;">${opts.name}</td>
+              </tr>
+              <tr>
+                <td style="padding:10px 0;color:#64748b;font-size:14px;font-weight:600;">Email</td>
+                <td style="padding:10px 0;color:#0f172a;font-size:14px;"><a href="mailto:${opts.email}" style="color:#2563eb;text-decoration:none;">${opts.email}</a></td>
+              </tr>
+              <tr>
+                <td style="padding:10px 0;color:#64748b;font-size:14px;font-weight:600;">Phone</td>
+                <td style="padding:10px 0;color:#0f172a;font-size:14px;"><a href="tel:${opts.phone}" style="color:#2563eb;text-decoration:none;">${opts.phone}</a></td>
+              </tr>
+            </table>
+
+            ${opts.note ? `
+              <h3 style="color:#0f172a;font-size:16px;margin-bottom:12px;border-bottom:2px solid #f1f5f9;padding-bottom:8px;">Additional Notes</h3>
+              <div style="background:#f8fafc;border-radius:8px;padding:16px;color:#334155;font-size:14px;line-height:1.7;">
+                ${opts.note.replace(/\n/g, '<br>')}
+              </div>
+            ` : ''}
+
+            <div style="text-align:center;margin-top:32px;">
+              <a href="mailto:${opts.email}" style="display:inline-block;background:#0e2a49;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:10px;font-size:15px;font-weight:700;">Contact ${opts.name}</a>
+            </div>
+          </div>
+          <div style="padding:20px;text-align:center;background:#f8fafc;border-top:1px solid #e2e8f0;">
+            <p style="color:#94a3b8;font-size:12px;margin:0;">Submitted via BOAM Real-Estates Request Portal</p>
+          </div>
+        </div>
+      `,
+    });
+    return true;
+  } catch (error) {
+    console.error('Failed to send property request email:', error);
+    return false;
+  }
+};
+

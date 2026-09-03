@@ -13,6 +13,7 @@ import inquiryRoutes from './routes/inquiryRoutes';
 import favoriteRoutes from './routes/favoriteRoutes';
 import dashboardRoutes from './routes/dashboardRoutes';
 import adminRoutes from './routes/adminRoutes';
+import requestRoutes from './routes/requestRoutes';
 
 dotenv.config();
 
@@ -56,6 +57,7 @@ app.use('/api/v1/inquiries', inquiryRoutes);
 app.use('/api/v1/favorites', favoriteRoutes);
 app.use('/api/v1/dashboard', dashboardRoutes);
 app.use('/api/v1/admin', adminRoutes);
+app.use('/api/v1/requests', requestRoutes);
 
 const PORT = process.env.PORT || 5000;
 

@@ -16,6 +16,7 @@ export function Navbar() {
   const links = [
     { to: '/', label: 'Home' },
     { to: '/search', label: 'Properties' },
+    { to: '/request', label: 'Request a Property' },
   ];
 
   useEffect(() => {
@@ -50,9 +51,12 @@ export function Navbar() {
         {/* Desktop Primary Navigation */}
         <nav className="hidden items-center gap-8 md:flex" aria-label="Main Navigation">
           {links.map((link) => {
-            const isPropertiesActive = link.to === '/search' && (pathname.startsWith('/search') || pathname.startsWith('/properties'));
-            const isHomeActive = link.to === '/' && pathname === '/';
-            const isActive = isHomeActive || isPropertiesActive;
+            const isActive =
+              link.to === '/'
+                ? pathname === '/'
+                : link.to === '/search'
+                ? pathname.startsWith('/search') || pathname.startsWith('/properties')
+                : pathname.startsWith(link.to);
 
             return (
               <Link
@@ -113,9 +117,12 @@ export function Navbar() {
         <div className="border-b border-navy-100 bg-white px-6 pb-8 pt-5 md:hidden shadow-xl animate-in slide-in-from-top-2 duration-200">
           <nav className="flex flex-col gap-3" aria-label="Mobile Navigation">
             {links.map((link) => {
-              const isPropertiesActive = link.to === '/search' && (pathname.startsWith('/search') || pathname.startsWith('/properties'));
-              const isHomeActive = link.to === '/' && pathname === '/';
-              const isActive = isHomeActive || isPropertiesActive;
+              const isActive =
+                link.to === '/'
+                  ? pathname === '/'
+                  : link.to === '/search'
+                  ? pathname.startsWith('/search') || pathname.startsWith('/properties')
+                  : pathname.startsWith(link.to);
 
               return (
                 <Link

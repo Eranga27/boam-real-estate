@@ -365,18 +365,26 @@ export default function PropertySearch({
             <div className="w-16 h-16 bg-navy-50 rounded-full flex items-center justify-center mx-auto mb-4">
               <Search className="w-8 h-8 text-navy-300" aria-hidden="true" />
             </div>
-            <h3 className="text-xl sm:text-2xl font-extrabold text-navy-950 mb-1.5">No properties found</h3>
-            <p className="text-navy-800/60 max-w-sm mx-auto mb-6 text-xs sm:text-sm leading-relaxed">
-              Try adjusting your search criteria or explore our entire portfolio.
+            <h3 className="text-xl sm:text-2xl font-extrabold text-navy-950 mb-1.5">No properties match your search</h3>
+            <p className="text-navy-800/60 max-w-md mx-auto mb-6 text-xs sm:text-sm leading-relaxed">
+              We couldn't find any listings matching your criteria. Try clearing your filters or submit a request and we'll source a property for you.
             </p>
-            <button
-              type="button"
-              onClick={clearFilters}
-              className="inline-flex items-center gap-2 rounded-full bg-amber-500 px-6 py-2.5 text-xs sm:text-sm font-bold text-navy-950 transition-all hover:bg-amber-400 shadow-sm"
-            >
-              <RotateCcw className="w-4 h-4" aria-hidden="true" />
-              Browse All Properties
-            </button>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="inline-flex items-center gap-2 rounded-full border border-navy-200 bg-white px-6 py-2.5 text-xs sm:text-sm font-bold text-navy-800 transition-all hover:bg-navy-50 shadow-sm"
+              >
+                <RotateCcw className="w-4 h-4 text-navy-500" aria-hidden="true" />
+                Browse All Properties
+              </button>
+              <Link
+                href="/request"
+                className="inline-flex items-center gap-2 rounded-full bg-amber-500 px-6 py-2.5 text-xs sm:text-sm font-bold text-navy-950 transition-all hover:bg-amber-400 shadow-sm"
+              >
+                Request a Property
+              </Link>
+            </div>
           </div>
         ) : (
           <div className={`grid gap-4 sm:gap-6 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>

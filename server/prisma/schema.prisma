@@ -126,3 +126,27 @@ model AuditLog {
   targetId  String?  // ID of the user or property affected
   createdAt DateTime @default(now())
 }
+
+enum RequestStatus {
+  NEW
+  CONTACTED
+  CLOSED
+}
+
+model PropertyRequest {
+  id            String        @id @default(uuid())
+  lookingFor    String
+  district      String
+  customArea    String?
+  minBudget     Float?
+  maxBudget     Float?
+  sizeInPerches Float?
+  name          String
+  email         String
+  phone         String
+  note          String?
+  status        RequestStatus @default(NEW)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+

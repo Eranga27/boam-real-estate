@@ -7,11 +7,12 @@ import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Users, Building2, FileText, Settings, ShieldAlert,
-  ChevronRight, LogOut, Menu, X, ArrowLeft
+  ChevronRight, LogOut, Menu, X, ArrowLeft, ClipboardList
 } from 'lucide-react';
 
 const navItems = [
   { href: '/admin', label: 'Analytics Overview', icon: LayoutDashboard, exact: true },
+  { href: '/admin/requests', label: 'Property Requests', icon: ClipboardList },
   { href: '/admin/listings', label: 'Manage Listings', icon: Building2 },
   { href: '/admin/users', label: 'Manage Users', icon: Users },
   { href: '/admin/audit-logs', label: 'Audit Logs', icon: FileText },
