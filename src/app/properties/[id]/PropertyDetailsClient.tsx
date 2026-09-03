@@ -34,7 +34,7 @@ export default function PropertyDetailsClient({
 
   React.useEffect(() => {
     if (!currentProperty && propertyId) {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' ? '' : 'http://localhost:5000');
       fetch(`${apiUrl}/api/v1/properties/${propertyId}`)
         .then((res) => res.json())
         .then((data) => {

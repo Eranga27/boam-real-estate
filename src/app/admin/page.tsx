@@ -18,11 +18,18 @@ export default function AdminDashboardPage() {
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const getApiUrl = () => {
+    if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, '');
+    if (typeof window !== 'undefined') return '';
+    return 'http://localhost:5000';
+  };
+
   useEffect(() => {
     const fetchStats = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}`}/api/v1/admin/stats`, {
+        const apiUrl = getApiUrl();
+        const res = await fetch(`${apiUrl}/api/v1/admin/stats`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         const data = await res.json();
@@ -39,16 +46,16 @@ export default function AdminDashboardPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-10 h-10 border-4 border-red-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   const statCards = [
     { label: 'Total Users', value: stats?.totalUsers || 0, icon: Users, color: 'text-blue-600 bg-blue-50 border-blue-100', href: '/admin/users' },
-    { label: 'Total Listings', value: stats?.totalListings || 0, icon: Building2, color: 'text-indigo-600 bg-indigo-50 border-indigo-100', href: '/admin/properties' },
+    { label: 'Total Listings', value: stats?.totalListings || 0, icon: Building2, color: 'text-indigo-600 bg-indigo-50 border-indigo-100', href: '/admin/listings' },
     { label: 'Total Inquiries', value: stats?.totalInquiries || 0, icon: MessageSquare, color: 'text-purple-600 bg-purple-50 border-purple-100', href: '#' },
-    { label: 'Pending Approvals', value: stats?.pendingListings || 0, icon: AlertTriangle, color: 'text-amber-600 bg-amber-50 border-amber-100', href: '/admin/properties?status=PENDING_APPROVAL' },
+    { label: 'Pending Approvals', value: stats?.pendingListings || 0, icon: AlertTriangle, color: 'text-amber-600 bg-amber-50 border-amber-100', href: '/admin/listings?status=PENDING_APPROVAL' },
   ];
 
   return (
@@ -127,7 +134,7 @@ export default function AdminDashboardPage() {
             <h3 className="font-bold text-gray-900 flex items-center gap-2">
               <Building2 className="w-5 h-5 text-gray-400" /> Latest Properties
             </h3>
-            <Link href="/admin/properties" className="text-sm font-medium text-red-600 hover:underline">View All</Link>
+            <Link href="/admin/listings" className="text-sm font-medium text-amber-600 hover:underline">View All</Link>
           </div>
           <div className="p-6 flex-1">
             {!stats?.recentListings?.length ? (

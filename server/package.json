@@ -9,7 +9,8 @@
     "start": "node dist/index.js",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
-    "seed:admin": "ts-node src/seedAdmin.ts"
+    "seed:admin": "ts-node src/seedAdmin.ts",
+    "seed:listings": "ts-node src/seedAllListings.ts"
   },
   "keywords": [],
   "author": "",

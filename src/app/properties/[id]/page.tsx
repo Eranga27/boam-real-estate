@@ -99,7 +99,7 @@ export default async function PropertyDetailsPage({ params }: Props) {
     similar = getSimilarProperties(localMatch, 4).map(staticToApi);
   } else {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://boam-real-estate.onrender.com';
       const res = await fetch(`${apiUrl}/api/v1/properties/${id}`, { cache: 'no-store' });
       const data = await res.json();
       if (data.success && data.data) {

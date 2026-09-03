@@ -85,10 +85,10 @@ export default function PropertySearch({
 
   useEffect(() => {
     const fetchLiveProperties = async () => {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' ? '' : 'http://localhost:5000');
       try {
-        const res = await fetch(`${apiUrl}/api/v1/properties?limit=50`, {
-          signal: AbortSignal.timeout(4000),
+        const res = await fetch(`${apiUrl}/api/v1/properties?limit=100`, {
+          signal: AbortSignal.timeout(6000),
         });
         const data = await res.json();
         if (data.success && data.data && data.data.length > 0) {
