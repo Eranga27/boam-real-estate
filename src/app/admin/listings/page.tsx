@@ -52,11 +52,19 @@ export default function AdminListingsPage() {
   const [thumbnailIndex, setThumbnailIndex] = useState<number>(0);
   const [videoFile, setVideoFile] = useState<File | null>(null);
 
+  const getApiUrl = () => {
+    if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, '');
+    if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+      return 'https://boam-real-estate.onrender.com';
+    }
+    return 'http://localhost:5000';
+  };
+
   const fetchProperties = async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiUrl = getApiUrl();
       const res = await fetch(
         `${apiUrl}/api/v1/admin/properties?page=${page}&limit=12&search=${encodeURIComponent(search)}&status=${statusFilter}`,
         {
@@ -167,7 +175,7 @@ export default function AdminListingsPage() {
 
     try {
       const token = localStorage.getItem('token');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiUrl = getApiUrl();
 
       const formData = new FormData();
       formData.append('title', title);
@@ -239,7 +247,7 @@ export default function AdminListingsPage() {
     if (!confirm('Are you sure you want to delete this listing from the live site?')) return;
     try {
       const token = localStorage.getItem('token');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiUrl = getApiUrl();
       const res = await fetch(`${apiUrl}/api/v1/admin/properties/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
@@ -256,7 +264,7 @@ export default function AdminListingsPage() {
   const handleStatusToggle = async (id: string, status: string, isFeatured: boolean) => {
     try {
       const token = localStorage.getItem('token');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiUrl = getApiUrl();
       await fetch(`${apiUrl}/api/v1/admin/properties/${id}`, {
         method: 'PUT',
         headers: {
