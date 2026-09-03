@@ -1,14 +1,26 @@
 import nodemailer from 'nodemailer';
 
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST || 'smtp.ethereal.email',
-  port: parseInt(process.env.EMAIL_PORT || '587'),
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+const getTransporter = () => {
+  const host = process.env.EMAIL_HOST || '';
+  const user = process.env.EMAIL_USER || '';
+  const pass = process.env.EMAIL_PASS || '';
+
+  if (host.includes('gmail') || user.endsWith('@gmail.com')) {
+    return nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user, pass },
+      tls: { rejectUnauthorized: false },
+    });
+  }
+
+  return nodemailer.createTransport({
+    host: host || 'smtp.ethereal.email',
+    port: parseInt(process.env.EMAIL_PORT || '587'),
+    secure: process.env.EMAIL_PORT === '465',
+    auth: { user, pass },
+    tls: { rejectUnauthorized: false },
+  });
+};
 
 export interface InquiryEmailOptions {
   sellerEmail: string;
@@ -24,6 +36,7 @@ export interface InquiryEmailOptions {
 export const sendInquiryEmail = async (opts: InquiryEmailOptions): Promise<boolean> => {
   try {
     const propertyUrl = `${process.env.FRONTEND_URL}/properties/${opts.propertyId}`;
+    const transporter = getTransporter();
     await transporter.sendMail({
       from: `"Boam Real-Estates" <${process.env.EMAIL_USER}>`,
       to: opts.sellerEmail,
@@ -59,8 +72,14 @@ export const sendInquiryEmail = async (opts: InquiryEmailOptions): Promise<boole
         </div>`,
     });
     return true;
-  } catch (error) {
-    console.error('Failed to send inquiry email:', error);
+  } catch (error: any) {
+    if (error?.code === 'EAUTH' || error?.responseCode === 535) {
+      console.error(
+        'CRITICAL EMAIL AUTH ERROR (EAUTH): Gmail rejected the credentials. Ensure EMAIL_PASS is set to a 16-character Google App Password (https://myaccount.google.com/apppasswords).'
+      );
+    } else {
+      console.error('Failed to send inquiry email:', error);
+    }
     return false;
   }
 };
@@ -73,6 +92,7 @@ export const sendInquiryConfirmationEmail = async (opts: {
 }): Promise<void> => {
   try {
     const propertyUrl = `${process.env.FRONTEND_URL}/properties/${opts.propertyId}`;
+    const transporter = getTransporter();
     await transporter.sendMail({
       from: `"Boam Real-Estates" <${process.env.EMAIL_USER}>`,
       to: opts.buyerEmail,
@@ -92,7 +112,7 @@ export const sendInquiryConfirmationEmail = async (opts: {
           </div>
         </div>`,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to send confirmation email:', error);
   }
 };
@@ -104,6 +124,7 @@ export interface SendEmailOptions {
 }
 
 export const sendEmail = async (opts: SendEmailOptions): Promise<void> => {
+  const transporter = getTransporter();
   await transporter.sendMail({
     from: `"Boam Real-Estates" <${process.env.EMAIL_USER}>`,
     to: opts.email,
@@ -132,6 +153,7 @@ export const sendPropertyRequestNotificationEmail = async (opts: PropertyRequest
       ? `${opts.minBudget ? `Min: LKR ${opts.minBudget.toLocaleString()}` : ''} ${opts.maxBudget ? `Max: LKR ${opts.maxBudget.toLocaleString()}` : ''}`
       : 'Not specified';
 
+    const transporter = getTransporter();
     await transporter.sendMail({
       from: `"Boam Real-Estates" <${process.env.EMAIL_USER}>`,
       to: recipients.join(', '),
@@ -206,9 +228,16 @@ export const sendPropertyRequestNotificationEmail = async (opts: PropertyRequest
       `,
     });
     return true;
-  } catch (error) {
-    console.error('Failed to send property request email:', error);
+  } catch (error: any) {
+    if (error?.code === 'EAUTH' || error?.responseCode === 535) {
+      console.error(
+        'CRITICAL EMAIL AUTH ERROR (EAUTH): Gmail rejected the password. Please set EMAIL_PASS in your environment variables to a 16-character Google App Password (https://myaccount.google.com/apppasswords).'
+      );
+    } else {
+      console.error('Failed to send property request email:', error);
+    }
     return false;
   }
 };
+
 
