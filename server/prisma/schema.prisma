@@ -49,11 +49,13 @@ model Property {
   propertyType     String
   saleOrRent       String
   price            Float
+  pricePerPerch    String?
+  landSize         Float?
+  landUnit         String?        @default("perches")
   negotiable       Boolean        @default(false)
   bedrooms         Int?
   bathrooms        Int?
   parking          Int?
-  landSize         Float?
   houseSize        Float?
   yearBuilt        Int?
 

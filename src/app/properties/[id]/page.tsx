@@ -87,85 +87,66 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default function PropertyDetailsPage({ params }: Props) {
+export default async function PropertyDetailsPage({ params }: Props) {
   const { id } = params;
+  let propertyData = null;
+  let similar: any[] = [];
+
   const localMatch = staticProperties.find((p) => p.id === id);
 
-  if (!localMatch) {
-    return <PropertyDetailsClient property={null} relatedProperties={[]} />;
+  if (localMatch) {
+    propertyData = staticToApi(localMatch);
+    similar = getSimilarProperties(localMatch, 4).map(staticToApi);
+  } else {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const res = await fetch(`${apiUrl}/api/v1/properties/${id}`, { cache: 'no-store' });
+      const data = await res.json();
+      if (data.success && data.data) {
+        const p = data.data;
+        propertyData = {
+          id: p.id,
+          title: p.title,
+          propertyType: p.propertyType,
+          saleOrRent: p.saleOrRent || 'Sale',
+          price: p.price,
+          pricePerPerch: p.pricePerPerch,
+          video: p.video,
+          negotiable: p.negotiable,
+          city: p.city,
+          district: p.district,
+          address: p.address,
+          latitude: p.latitude,
+          longitude: p.longitude,
+          bedrooms: p.bedrooms || null,
+          bathrooms: p.bathrooms || null,
+          beds: p.bedrooms || 0,
+          baths: p.bathrooms || 0,
+          parking: p.parking || null,
+          landSize: p.landSize || null,
+          landUnit: p.landUnit || 'perches',
+          houseSize: p.houseSize || null,
+          yearBuilt: p.yearBuilt || null,
+          description: p.description,
+          amenities: p.amenities || [],
+          nearbyFacilities: p.nearbyFacilities || [],
+          images: p.images || [],
+          listedDaysAgo: 'Recently',
+          featured: p.isFeatured || false,
+          user: p.user || { fullName: 'BOAM Real Estates' },
+        };
+      }
+    } catch (err) {
+      console.error('Failed fetching dynamic property details from API', err);
+    }
   }
 
-  const propertyData = staticToApi(localMatch);
-  const similar = getSimilarProperties(localMatch, 4).map(staticToApi);
-
-  const siteUrl = getSiteUrl();
-  const canonicalUrl = getPropertyUrl(localMatch.id);
-  const mainImage = getOgImageUrl(localMatch.images?.[0]);
-
-  // Structured Data (JSON-LD) for Property & Breadcrumbs
-  const breadcrumbJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      {
-        '@type': 'ListItem',
-        position: 1,
-        name: 'Home',
-        item: siteUrl,
-      },
-      {
-        '@type': 'ListItem',
-        position: 2,
-        name: 'Properties',
-        item: `${siteUrl}/search`,
-      },
-      {
-        '@type': 'ListItem',
-        position: 3,
-        name: localMatch.type,
-        item: `${siteUrl}/search?type=${encodeURIComponent(localMatch.type)}`,
-      },
-      {
-        '@type': 'ListItem',
-        position: 4,
-        name: localMatch.title,
-        item: canonicalUrl,
-      },
-    ],
-  };
-
-  const propertyJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'RealEstateListing',
-    name: localMatch.title,
-    description: localMatch.description,
-    url: canonicalUrl,
-    image: mainImage,
-    offers: {
-      '@type': 'Offer',
-      price: localMatch.price,
-      priceCurrency: 'LKR',
-      availability: 'https://schema.org/InStock',
-    },
-    address: {
-      '@type': 'PostalAddress',
-      streetAddress: localMatch.address,
-      addressLocality: localMatch.city,
-      addressRegion: localMatch.district,
-      addressCountry: 'LK',
-    },
-  };
+  if (!propertyData) {
+    return <PropertyDetailsClient property={null} relatedProperties={[]} propertyId={id} />;
+  }
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(propertyJsonLd) }}
-      />
       <PropertyDetailsClient property={propertyData} relatedProperties={similar} />
     </>
   );

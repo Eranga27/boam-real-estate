@@ -81,8 +81,49 @@ export default function PropertySearch({
     return CITIES.filter((c) => c.toLowerCase().includes(filters.city.trim().toLowerCase()));
   }, [filters.city]);
 
+  const [dbListings, setDbListings] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchLiveProperties = async () => {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      try {
+        const res = await fetch(`${apiUrl}/api/v1/properties?limit=50`, {
+          signal: AbortSignal.timeout(4000),
+        });
+        const data = await res.json();
+        if (data.success && data.data && data.data.length > 0) {
+          const mapped = data.data.map((p: any) => ({
+            id: p.id,
+            title: p.title,
+            propertyType: p.propertyType,
+            saleOrRent: p.saleOrRent || 'Sale',
+            price: p.price,
+            pricePerPerch: p.pricePerPerch,
+            city: p.city,
+            district: p.district,
+            bedrooms: p.bedrooms || null,
+            bathrooms: p.bathrooms || null,
+            houseSize: p.houseSize || null,
+            landSize: p.landSize || null,
+            landUnit: p.landUnit || 'perches',
+            images: p.images || [],
+            video: p.video || null,
+            negotiable: p.negotiable || false,
+            featured: p.isFeatured || false,
+          }));
+          setDbListings(mapped);
+        }
+      } catch {
+        // Backend offline or empty
+      }
+    };
+    fetchLiveProperties();
+  }, []);
+
   const filtered = useMemo(() => {
-    let list = [...STATIC_LISTINGS];
+    const dbIds = new Set(dbListings.map(p => p.id));
+    const combined = [...dbListings, ...STATIC_LISTINGS.filter(p => !dbIds.has(p.id))];
+    let list = combined;
     if (filters.saleOrRent) list = list.filter((p) => p.saleOrRent === filters.saleOrRent);
     if (filters.propertyType) list = list.filter((p) => p.propertyType.toLowerCase() === filters.propertyType.toLowerCase());
     if (filters.city) list = list.filter((p) => p.city.toLowerCase().includes(filters.city.trim().toLowerCase()) || p.district.toLowerCase().includes(filters.city.trim().toLowerCase()));
@@ -96,7 +137,7 @@ export default function PropertySearch({
     } else if (filters.sort === 'price_desc') {
       list.sort((a, b) => b.price - a.price);
     } else {
-      // Default sort: Houses / Residential buildings first, then Land
+      // Default sort: DB listings & Houses first, then Land
       list.sort((a, b) => {
         const typeOrder = (type: string) => (type.toLowerCase() === 'land' || type.toLowerCase() === 'commercial' ? 2 : 1);
         const orderA = typeOrder(a.propertyType);
@@ -107,7 +148,7 @@ export default function PropertySearch({
     }
 
     return list;
-  }, [filters]);
+  }, [filters, dbListings]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);

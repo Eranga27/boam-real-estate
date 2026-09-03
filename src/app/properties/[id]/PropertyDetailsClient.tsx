@@ -18,15 +18,64 @@ import MobileContactBar from '@/components/detail/MobileContactBar';
 interface PropertyDetailsClientProps {
   property: any;
   relatedProperties: any[];
+  propertyId?: string;
 }
 
 export default function PropertyDetailsClient({
   property,
   relatedProperties,
+  propertyId,
 }: PropertyDetailsClientProps) {
+  const [currentProperty, setCurrentProperty] = useState(property);
+  const activeProperty = currentProperty || property;
   const [activeImage, setActiveImage] = useState(0);
   const [showShareToast, setShowShareToast] = useState(false);
   const [isDescExpanded, setIsDescExpanded] = useState(false);
+
+  React.useEffect(() => {
+    if (!currentProperty && propertyId) {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      fetch(`${apiUrl}/api/v1/properties/${propertyId}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && data.data) {
+            const p = data.data;
+            setCurrentProperty({
+              id: p.id,
+              title: p.title,
+              propertyType: p.propertyType,
+              saleOrRent: p.saleOrRent || 'Sale',
+              price: p.price,
+              pricePerPerch: p.pricePerPerch,
+              video: p.video,
+              negotiable: p.negotiable,
+              city: p.city,
+              district: p.district,
+              address: p.address,
+              latitude: p.latitude,
+              longitude: p.longitude,
+              bedrooms: p.bedrooms || null,
+              bathrooms: p.bathrooms || null,
+              beds: p.bedrooms || 0,
+              baths: p.bathrooms || 0,
+              parking: p.parking || null,
+              landSize: p.landSize || null,
+              landUnit: p.landUnit || 'perches',
+              houseSize: p.houseSize || null,
+              yearBuilt: p.yearBuilt || null,
+              description: p.description,
+              amenities: p.amenities || [],
+              nearbyFacilities: p.nearbyFacilities || [],
+              images: p.images || [],
+              listedDaysAgo: 'Recently',
+              featured: p.isFeatured || false,
+              user: p.user || { fullName: 'BOAM Real Estates' },
+            });
+          }
+        })
+        .catch(() => {});
+    }
+  }, [currentProperty, propertyId]);
 
   /** Native Web Share API + Clipboard Fallback using canonical production URL */
   const handleShare = async () => {

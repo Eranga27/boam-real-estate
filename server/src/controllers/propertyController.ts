@@ -6,10 +6,10 @@ import { uploadOnCloudinary } from '../utils/cloudinary';
 export const addProperty = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const {
-      title, description, propertyType, saleOrRent, price, negotiable,
+      title, description, propertyType, saleOrRent, price, pricePerPerch, landUnit, negotiable,
       bedrooms, bathrooms, parking, landSize, houseSize, yearBuilt,
       address, district, city, latitude, longitude,
-      contactPhone, contactEmail, whatsappNumber, isDraft
+      contactPhone, contactEmail, whatsappNumber, isDraft, thumbnailIndex
     } = req.body;
 
     // Parse arrays correctly if they come as stringified JSON or comma separated
@@ -40,15 +40,29 @@ export const addProperty = async (req: AuthRequest, res: Response): Promise<void
       if (url) videoUrl = url;
     }
 
-    const status = isDraft === 'true' || isDraft === true ? 'DRAFT' : 'PENDING_APPROVAL';
+    // Handle thumbnail ordering if designated
+    if (thumbnailIndex !== undefined && thumbnailIndex !== null) {
+      const idx = parseInt(thumbnailIndex.toString());
+      if (!isNaN(idx) && idx > 0 && idx < imagesUrls.length) {
+        const selectedThumb = imagesUrls.splice(idx, 1)[0];
+        imagesUrls.unshift(selectedThumb);
+      }
+    }
+
+    // ADMIN created listings are published immediately
+    const status = req.user.role === 'ADMIN'
+      ? 'PUBLISHED'
+      : (isDraft === 'true' || isDraft === true ? 'DRAFT' : 'PENDING_APPROVAL');
 
     const property = await prisma.property.create({
       data: {
         title,
         description,
         propertyType,
-        saleOrRent,
+        saleOrRent: saleOrRent || 'Sale',
         price: parseFloat(price),
+        pricePerPerch: pricePerPerch || null,
+        landUnit: landUnit || 'perches',
         negotiable: negotiable === 'true' || negotiable === true,
         bedrooms: bedrooms ? parseInt(bedrooms) : null,
         bathrooms: bathrooms ? parseInt(bathrooms) : null,
@@ -56,16 +70,16 @@ export const addProperty = async (req: AuthRequest, res: Response): Promise<void
         landSize: landSize ? parseFloat(landSize) : null,
         houseSize: houseSize ? parseFloat(houseSize) : null,
         yearBuilt: yearBuilt ? parseInt(yearBuilt) : null,
-        address,
+        address: address || city || district || 'Sri Lanka',
         district,
         city,
         latitude: latitude ? parseFloat(latitude) : null,
         longitude: longitude ? parseFloat(longitude) : null,
         amenities: parsedAmenities,
         nearbyFacilities: parsedFacilities,
-        contactPhone,
-        contactEmail,
-        whatsappNumber,
+        contactPhone: contactPhone || '0777123456',
+        contactEmail: contactEmail || 'info@boam.lk',
+        whatsappNumber: whatsappNumber || contactPhone || null,
         images: imagesUrls,
         video: videoUrl,
         status,
@@ -96,7 +110,7 @@ export const editProperty = async (req: AuthRequest, res: Response): Promise<voi
 
     // Process basic fields and media similar to addProperty
     const {
-      title, description, propertyType, saleOrRent, price, negotiable,
+      title, description, propertyType, saleOrRent, price, pricePerPerch, landUnit, negotiable,
       bedrooms, bathrooms, parking, landSize, houseSize, yearBuilt,
       address, district, city, latitude, longitude,
       contactPhone, contactEmail, whatsappNumber, isDraft
@@ -108,6 +122,8 @@ export const editProperty = async (req: AuthRequest, res: Response): Promise<voi
     if (propertyType) updateData.propertyType = propertyType;
     if (saleOrRent) updateData.saleOrRent = saleOrRent;
     if (price) updateData.price = parseFloat(price);
+    if (pricePerPerch !== undefined) updateData.pricePerPerch = pricePerPerch;
+    if (landUnit) updateData.landUnit = landUnit;
     if (negotiable !== undefined) updateData.negotiable = negotiable === 'true' || negotiable === true;
     if (bedrooms) updateData.bedrooms = parseInt(bedrooms);
     if (bathrooms) updateData.bathrooms = parseInt(bathrooms);

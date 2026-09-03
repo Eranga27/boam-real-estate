@@ -12,8 +12,8 @@ import {
 
 const navItems = [
   { href: '/admin', label: 'Analytics Overview', icon: LayoutDashboard, exact: true },
+  { href: '/admin/listings', label: 'Manage Listings', icon: Building2 },
   { href: '/admin/users', label: 'Manage Users', icon: Users },
-  { href: '/admin/properties', label: 'Manage Listings', icon: Building2 },
   { href: '/admin/audit-logs', label: 'Audit Logs', icon: FileText },
 ];
 
@@ -23,24 +23,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
+  // If viewing the standalone login page, render children without admin layout
+  if (pathname === '/admin/login') {
+    return <>{children}</>;
+  }
+
   useEffect(() => {
     if (!isLoading) {
-      if (!isAuthenticated) router.push('/login');
-      else if (user?.role !== 'ADMIN') router.push('/dashboard');
+      if (!isAuthenticated) router.push('/admin/login');
+      else if (user?.role !== 'ADMIN') router.push('/');
     }
-  }, [isAuthenticated, isLoading, user, router]);
+  }, [isAuthenticated, isLoading, user, router, pathname]);
 
   if (isLoading || !isAuthenticated || user?.role !== 'ADMIN') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="w-10 h-10 border-4 border-red-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   const handleLogout = () => {
     logout();
-    router.push('/');
+    document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
+    router.push('/admin/login');
   };
 
   const isActive = (item: typeof navItems[0]) => {
