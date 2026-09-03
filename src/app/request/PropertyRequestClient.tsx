@@ -11,7 +11,6 @@ import {
   CheckCircle2,
   Send,
   MapPin,
-  DollarSign,
   Ruler,
   User,
   Mail,
@@ -253,7 +252,7 @@ export default function PropertyRequestClient() {
                     Min Budget (LKR) <span className="text-navy-400 font-normal">(Optional)</span>
                   </label>
                   <div className="relative">
-                    <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-navy-400" />
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-extrabold text-navy-500">Rs.</span>
                     <input
                       type="number"
                       id="minBudget"
@@ -261,7 +260,7 @@ export default function PropertyRequestClient() {
                       value={formData.minBudget}
                       onChange={handleChange}
                       placeholder="e.g. 10000000"
-                      className="w-full h-12 pl-10 pr-4 rounded-2xl border border-navy-200 bg-white text-sm text-navy-900 placeholder:text-navy-300 focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500"
+                      className="w-full h-12 pl-11 pr-4 rounded-2xl border border-navy-200 bg-white text-sm text-navy-900 placeholder:text-navy-300 focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500"
                     />
                   </div>
                 </div>
@@ -271,7 +270,7 @@ export default function PropertyRequestClient() {
                     Max Budget (LKR) <span className="text-navy-400 font-normal">(Optional)</span>
                   </label>
                   <div className="relative">
-                    <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-navy-400" />
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-extrabold text-navy-500">Rs.</span>
                     <input
                       type="number"
                       id="maxBudget"
@@ -279,7 +278,7 @@ export default function PropertyRequestClient() {
                       value={formData.maxBudget}
                       onChange={handleChange}
                       placeholder="e.g. 50000000"
-                      className="w-full h-12 pl-10 pr-4 rounded-2xl border border-navy-200 bg-white text-sm text-navy-900 placeholder:text-navy-300 focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500"
+                      className="w-full h-12 pl-11 pr-4 rounded-2xl border border-navy-200 bg-white text-sm text-navy-900 placeholder:text-navy-300 focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500"
                     />
                   </div>
                 </div>
