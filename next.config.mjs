@@ -17,7 +17,16 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react', 'framer-motion'],
   },
+  async rewrites() {
+    const targetBackend = process.env.NEXT_PUBLIC_API_URL || 'https://boam-real-estate.onrender.com';
+    const cleanBackend = targetBackend.replace(/\/$/, '');
+    return [
+      {
+        source: '/api/v1/:path*',
+        destination: `${cleanBackend}/api/v1/:path*`,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
-

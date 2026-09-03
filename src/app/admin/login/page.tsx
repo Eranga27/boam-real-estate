@@ -18,8 +18,8 @@ export default function AdminLoginPage() {
 
   const getApiUrl = () => {
     if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, '');
-    if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
-      return 'https://boam-real-estate.onrender.com';
+    if (typeof window !== 'undefined') {
+      return '';
     }
     return 'http://localhost:5000';
   };

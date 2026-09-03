@@ -19,11 +19,20 @@ dotenv.config();
 const app = express();
 
 // Security Hardening
-app.use(helmet());
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true,
-}));
+app.use(
+  helmet({
+    crossOriginResourcePolicy: false,
+  })
+);
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Echo requesting origin to support credentials across vercel/production domains
+      callback(null, origin || true);
+    },
+    credentials: true,
+  })
+);
 
 // Rate Limiting (100 requests per 15 minutes)
 const limiter = rateLimit({
