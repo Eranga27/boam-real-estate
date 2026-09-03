@@ -24,7 +24,7 @@ const initialListings = [
     houseSize: 2500,
     description: `40 perches with a 2,500 sq. ft. luxury house for sale in a high-class residential environment. Only 20 houses remain available out of 70.`,
     images: [
-      '/uploads/upkotmaskeliya1(main).jpeg',
+      '/uploads/upkotmaskeliya1.jpeg',
       '/uploads/upkotmaskeliya2.jpeg',
       '/uploads/upkotmaskeliya3.jpeg',
       '/uploads/upkotmaskeliya4.jpeg',
@@ -64,7 +64,7 @@ const initialListings = [
     houseSize: 9589,
     description: `A three-storey house (80% complete – custom-finish ready) for sale at No. 326, George E. De Silva Mawatha, Kandy. Situated on 30 perches of land with a built-up area of approximately 9,589.2 sq. ft.`,
     images: [
-      '/uploads/kandy4(main).jpeg',
+      '/uploads/kandy4.jpeg',
       '/uploads/kandy1.jpeg',
       '/uploads/kandy2.jpeg',
       '/uploads/kandy3.jpeg',
@@ -98,7 +98,7 @@ const initialListings = [
     landUnit: 'perches',
     description: `Four-bedroom house (each bedroom features a private balcony), three bathrooms, living room, main kitchen, and separate servant's kitchen/room/toilet. Situated on 14 perches of land. Includes access to Millennium City resident amenities such as the swimming pool and gym facilities.`,
     images: [
-      '/uploads/ekala1(main).jpeg',
+      '/uploads/ekala1.jpeg',
     ],
     video: '/uploads/ekala1vid.mp4',
     contactPhone: '0777801470',
@@ -126,7 +126,7 @@ const initialListings = [
     houseSize: 3500,
     description: `Newly built 3,500 sq. ft. single-storey house on 36 perches of land, located along Kirindiwela Road at Araliya Junction, Ambaruluwa (8 km from Kadawatha).`,
     images: [
-      '/uploads/kadawatha12(main).jpeg',
+      '/uploads/kadawatha12.jpeg',
       '/uploads/kadawatha1.jpeg',
       '/uploads/kadawatha2.jpeg',
       '/uploads/kadawatha3.jpeg',
@@ -164,7 +164,7 @@ const initialListings = [
     houseSize: 3800,
     description: `20 perch 3800 sqft building space with 3 bedrooms and attached bathrooms, separate kitchenette with TV room larger living and dining area one visitor wash room and servants room and wash room. Kandy Amunugama 8km from Kandy Town.`,
     images: [
-      '/uploads/amunugama1(main).jpeg',
+      '/uploads/amunugama1.jpeg',
       '/uploads/amunugama2.jpeg',
       '/uploads/amunugama3.jpeg',
       '/uploads/amunugama4.jpeg',
@@ -198,7 +198,7 @@ const initialListings = [
     houseSize: 1700,
     description: `3 Bedroom House with Land for Sale in Thalapathpitiya, Nugegoda. A great opportunity to purchase a valuable property in a highly convenient and peaceful residential area.`,
     images: [
-      '/uploads/nugegoda7(main).jpeg',
+      '/uploads/nugegoda7.jpeg',
       '/uploads/nugegoda1.jpeg',
       '/uploads/nugegoda2.jpeg',
       '/uploads/nugegoda3.jpeg',
@@ -236,7 +236,7 @@ const initialListings = [
     landUnit: 'perches',
     description: `Katugastota, Polgolla house for sale with 3 Bedrooms. 10 Perches in total and the total amount is 30 Million.`,
     images: [
-      '/uploads/polgolla1(main).jpeg',
+      '/uploads/polgolla1.jpeg',
       '/uploads/polgolla2.jpeg',
       '/uploads/polgolla3.jpeg',
       '/uploads/polgolla4.jpeg',
@@ -274,7 +274,7 @@ const initialListings = [
     landUnit: 'perches',
     description: `Double storey house for sale on 18.5p at Balanagala road, Katugastota. 3 bedrooms, 2 bathrooms, 3 balconies, living area on both floors, electricity, and water. Located about 150 meters from the main road.`,
     images: [
-      '/uploads/broad4(main).jpeg',
+      '/uploads/broad4.jpeg',
       '/uploads/broad1.jpeg',
       '/uploads/broad2.jpeg',
       '/uploads/broad3.jpeg',
@@ -305,7 +305,7 @@ const initialListings = [
     landUnit: 'perches',
     description: `17.5 perches of land for sale at Kalapuwawa, Rajagiriya. Located 100 meters from the main road in a quiet residential neighborhood.`,
     images: [
-      '/uploads/rajagiriya2(main).jpg',
+      '/uploads/rajagiriya2.jpg',
       '/uploads/rajagiriya1.jpg',
       '/uploads/rajagiriya3.jpg',
       '/uploads/rajagiriya4.jpg',
@@ -376,7 +376,7 @@ const initialListings = [
     landUnit: 'perches',
     description: `21 perches of land for sale on Peradeniya Road, Kandy, near the new Damro outlet. High-visibility location suitable for commercial development.`,
     images: [
-      '/uploads/pera1(main).jpg',
+      '/uploads/pera1.jpg',
       '/uploads/pera2.jpg',
       '/uploads/pera3.jpg',
       '/uploads/pera4.jpg',
@@ -490,7 +490,7 @@ const initialListings = [
     landUnit: 'perches',
     description: `Prime 140-perch land located at Udathalawinna, Thungadhura, facing the Doragamuwa Main Road, just 8 km from Kandy town.`,
     images: [
-      '/uploads/thungadhura13(main).jpeg',
+      '/uploads/thungadhura13.jpeg',
       '/uploads/thungadhura1.jpeg',
       '/uploads/thungadhura2.jpeg',
       '/uploads/thungadhura3.jpeg',
@@ -527,7 +527,7 @@ const initialListings = [
     landUnit: 'acres',
     description: `14.5-acre scenic agricultural estate located in Bulathsinhala, Kalutara. 8.5 acres tea, 2.5 acres rubber, 100+ mature coconut trees.`,
     images: [
-      '/uploads/kaluthara1(main).jpeg',
+      '/uploads/kaluthara1.jpeg',
       '/uploads/kaluthara2.jpeg',
       '/uploads/kaluthara3.jpeg',
       '/uploads/kaluthara4.jpeg',
@@ -564,7 +564,7 @@ const initialListings = [
     landUnit: 'perches',
     description: `27.5 perches of land located in Nillamba, 17 km from Peradeniya town, situated below Hotel Club Lespri. Includes clear deeds.`,
     images: [
-      '/uploads/nillamba1(main).jpeg',
+      '/uploads/nillamba1.jpeg',
       '/uploads/nillamba2.jpeg',
       '/uploads/nillamba3.jpeg',
       '/uploads/nillamba4.jpeg',
@@ -593,7 +593,7 @@ const initialListings = [
     landUnit: 'perches',
     description: `4 blocks, Each 10 perches, Station road katugastota, kandy. 600 meters from the main road.`,
     images: [
-      '/uploads/katugastota7(main).jpeg',
+      '/uploads/katugastota7.jpeg',
       '/uploads/katugastota1.jpeg',
       '/uploads/katugastota2.jpeg',
       '/uploads/katugastota3.jpeg',
@@ -622,7 +622,7 @@ const initialListings = [
     landUnit: 'perches',
     description: `Looking for the ultimate location for a luxury boutique hotel, eco-resort, or your dream private sanctuary? 130 Perches with panoramic Hunnasgiriya views.`,
     images: [
-      '/uploads/wattegama9(main).jpg',
+      '/uploads/wattegama9.jpg',
       '/uploads/wattegama1.jpg',
       '/uploads/wattegama2.jpg',
       '/uploads/wattegama3.jpg',
@@ -657,7 +657,7 @@ const initialListings = [
     landUnit: 'perches',
     description: `A unique opportunity to own a charming ancestral/traditional house situated on 17.3 perches of valuable land along Hikkaduwa–Baddegama Road. 100 meters to Beach.`,
     images: [
-      '/uploads/hikkaduwa3(main).jpeg',
+      '/uploads/hikkaduwa3.jpeg',
       '/uploads/hikkaduwa1.jpeg',
       '/uploads/hikkaduwa2.jpeg',
       '/uploads/hikkaduwa4.jpeg',
@@ -748,7 +748,19 @@ async function main() {
   });
 
   console.log(`✅ Admin account confirmed (ID: ${admin.id})`);
-  console.log(`⏳ Seeding all 23 listings into PostgreSQL...`);
+
+  // Clean up any old dummy or test properties whose IDs are not in official list
+  const validIds = initialListings.map((l) => l.id);
+  const deleteResult = await prisma.property.deleteMany({
+    where: {
+      id: {
+        notIn: validIds,
+      },
+    },
+  });
+  console.log(`🧹 Cleaned up ${deleteResult.count} old/duplicate test listings from Database.`);
+
+  console.log(`⏳ Seeding/Updating the 24 official listings into PostgreSQL...`);
 
   let seededCount = 0;
   for (const item of initialListings) {
@@ -768,7 +780,7 @@ async function main() {
     seededCount++;
   }
 
-  console.log(`🎉 Successfully seeded ${seededCount} listings into the database!`);
+  console.log(`🎉 Successfully seeded ${seededCount} official listings into PostgreSQL!`);
   const totalInDb = await prisma.property.count();
   console.log(`📊 Total listings in Database now: ${totalInDb}`);
 }
