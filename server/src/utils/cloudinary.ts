@@ -2,6 +2,7 @@ import { v2 as cloudinary } from 'cloudinary';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
+import sharp from 'sharp';
 
 dotenv.config();
 
@@ -18,6 +19,7 @@ export const uploadOnCloudinary = async (localFilePath: string, resourceType: "a
     const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
     const apiKey = process.env.CLOUDINARY_API_KEY;
 
+    // If valid Cloudinary credentials exist, upload to Cloudinary CDN
     if (cloudName && apiKey && cloudName !== 'your-cloud-name' && apiKey !== 'your-api-key') {
       const response = await cloudinary.uploader.upload(localFilePath, {
         resource_type: resourceType
@@ -31,25 +33,32 @@ export const uploadOnCloudinary = async (localFilePath: string, resourceType: "a
     console.error('Cloudinary upload error:', error);
   }
 
-  // Fallback: Save local relative path when Cloudinary is unconfigured or fails
-  const fileName = path.basename(localFilePath);
-
-  // Copy to public/uploads directory for Next.js static asset resolution
-  const publicUploadsDir = path.join(__dirname, '../../../public/uploads');
-  if (!fs.existsSync(publicUploadsDir)) {
-    try {
-      fs.mkdirSync(publicUploadsDir, { recursive: true });
-    } catch (e) {}
-  }
-
-  const rootUploadPath = path.join(publicUploadsDir, fileName);
+  // Fallback for production (Vercel/Render): Convert image to compressed Base64 Data URI
+  // This ensures images render reliably across domains without needing separate cloud storage
   try {
-    if (fs.existsSync(localFilePath) && !fs.existsSync(rootUploadPath)) {
-      fs.copyFileSync(localFilePath, rootUploadPath);
+    if (fs.existsSync(localFilePath)) {
+      if (resourceType === 'image' || resourceType === 'auto') {
+        const compressedBuffer = await sharp(localFilePath)
+          .resize({ width: 1200, withoutEnlargement: true })
+          .jpeg({ quality: 80 })
+          .toBuffer();
+
+        fs.unlinkSync(localFilePath);
+        return `data:image/jpeg;base64,${compressedBuffer.toString('base64')}`;
+      } else {
+        // For video files or fallback
+        const fileBuffer = fs.readFileSync(localFilePath);
+        fs.unlinkSync(localFilePath);
+        const fileName = path.basename(localFilePath);
+        return `/uploads/${fileName}`;
+      }
     }
-  } catch (e) {
-    console.error('Local upload copy error:', e);
+  } catch (err) {
+    console.error('Base64 image conversion error:', err);
+    if (fs.existsSync(localFilePath)) {
+      fs.unlinkSync(localFilePath);
+    }
   }
 
-  return `/uploads/${fileName}`;
+  return null;
 };

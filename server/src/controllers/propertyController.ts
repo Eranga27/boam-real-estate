@@ -140,8 +140,35 @@ export const editProperty = async (req: AuthRequest, res: Response): Promise<voi
     if (contactEmail) updateData.contactEmail = contactEmail;
     if (whatsappNumber !== undefined) updateData.whatsappNumber = whatsappNumber;
     
+    // Media upload for edits
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+    if (files && files['images'] && files['images'].length > 0) {
+      const newImageUrls: string[] = [];
+      for (const file of files['images']) {
+        const url = await uploadOnCloudinary(file.path, 'image');
+        if (url) newImageUrls.push(url);
+      }
+      if (newImageUrls.length > 0) {
+        updateData.images = newImageUrls;
+      }
+    }
+
+    if (files && files['video'] && files['video'].length > 0) {
+      const url = await uploadOnCloudinary(files['video'][0].path, 'video');
+      if (url) updateData.video = url;
+    }
+
+    const thumbnailIndex = req.body.thumbnailIndex;
+    if (updateData.images && thumbnailIndex !== undefined && thumbnailIndex !== null) {
+      const idx = parseInt(thumbnailIndex.toString());
+      if (!isNaN(idx) && idx > 0 && idx < updateData.images.length) {
+        const selectedThumb = updateData.images.splice(idx, 1)[0];
+        updateData.images.unshift(selectedThumb);
+      }
+    }
+
     if (isDraft !== undefined) {
-      updateData.status = (isDraft === 'true' || isDraft === true) ? 'DRAFT' : 'PENDING_APPROVAL';
+      updateData.status = (isDraft === 'true' || isDraft === true) ? 'DRAFT' : (req.user.role === 'ADMIN' ? 'PUBLISHED' : 'PENDING_APPROVAL');
     }
 
     const updatedProperty = await prisma.property.update({
