@@ -27,6 +27,7 @@ function toCardShape(p: typeof staticProperties[0]): any {
     houseSize: p.houseSize,
     landSize: p.landSize,
     images: p.images,
+    video: p.video,
     listedDaysAgo: p.listedDaysAgo,
     negotiable: p.negotiable,
   };

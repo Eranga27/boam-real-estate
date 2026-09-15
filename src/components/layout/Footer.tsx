@@ -45,11 +45,17 @@ export function Footer() {
               agents before it goes live.
             </p>
             <div className="mt-6 flex gap-2">
-              {[FacebookIcon, InstagramIcon, LinkedinIcon].map((Icon, i) => (
+              {[
+                { Icon: FacebookIcon, label: 'Facebook', href: 'https://web.facebook.com/profile.php?id=61594265795138' },
+                { Icon: InstagramIcon, label: 'Instagram', href: '#' },
+                { Icon: LinkedinIcon, label: 'LinkedIn', href: '#' },
+              ].map(({ Icon, label, href }) => (
                 <a
-                  key={i}
-                  href="#"
-                  aria-label={['Facebook', 'Instagram', 'LinkedIn'][i]}
+                  key={label}
+                  href={href}
+                  target={href !== '#' ? '_blank' : undefined}
+                  rel={href !== '#' ? 'noopener noreferrer' : undefined}
+                  aria-label={label}
                   className="grid h-9 w-9 place-items-center rounded-full bg-white/10 text-white/80 transition-all hover:-translate-y-0.5 hover:bg-amber-500 hover:text-navy-900"
                 >
                   <Icon className="h-4 w-4" aria-hidden="true" />
@@ -104,9 +110,9 @@ export function Footer() {
               <li className="flex gap-3">
                 <MapPinIcon className="mt-0.5 h-4 w-4 shrink-0 text-white/40" aria-hidden="true" />
                 <span>
-                  No. 42, Duplication Road,
+                  No. 67/40, Ellehiwatte Road,
                   <br />
-                  Colombo 04, Sri Lanka
+                  Welisara, Sri Lanka
                 </span>
               </li>
               <li className="flex gap-3">

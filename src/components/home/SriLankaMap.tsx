@@ -93,11 +93,11 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
         shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
       });
 
-      // Center map on Sri Lanka
+      // Center map on Sri Lanka — zoom 7 fits the whole island including south (Hikkaduwa)
       const map = Leaflet.map(mapContainerRef.current!, {
         center: [7.8731, 80.7718],
-        zoom: 8,
-        minZoom: 7,
+        zoom: 7,
+        minZoom: 6,
         maxZoom: 18,
         zoomControl: true,
         scrollWheelZoom: false,

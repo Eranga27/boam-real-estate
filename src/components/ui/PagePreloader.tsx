@@ -25,10 +25,10 @@ export function PagePreloader({ children }: { children: React.ReactNode }) {
     setProgress(0);
 
     let mounted = true;
-    const startTime = Date.now();
-    const MIN_DURATION = 1300; // 1.3 seconds for smooth, responsive luxury feel
+    const MIN_DURATION = 1300; // minimum display time (ms)
+    const MAX_DURATION = 3500; // hard cap — never block longer than this
 
-    // Ramp progress from 0% to 90%
+    // Ramp progress 0% → 90% over MIN_DURATION
     const interval = setInterval(() => {
       if (!mounted) return;
       setProgress((prev) => {
@@ -36,37 +36,35 @@ export function PagePreloader({ children }: { children: React.ReactNode }) {
           clearInterval(interval);
           return 90;
         }
-        // Smooth logarithmic step
         const increment = Math.max(2, Math.floor((95 - prev) / 4));
         return Math.min(90, prev + increment);
       });
     }, 60);
 
+    // Finish: jump to 100% then unmount after a brief hold
     const finishLoading = () => {
-      const elapsed = Date.now() - startTime;
-      const remainingTime = Math.max(0, MIN_DURATION - elapsed);
-
+      if (!mounted) return;
+      clearInterval(interval);
+      setProgress(100);
       setTimeout(() => {
-        if (!mounted) return;
-        setProgress(100);
-        setTimeout(() => {
-          if (mounted) setLoading(false);
-        }, 320); // Hold at 100% briefly before curtain transition
-      }, remainingTime);
+        if (mounted) setLoading(false);
+      }, 320);
     };
 
-    if (document.readyState === 'complete') {
-      finishLoading();
-    } else {
-      window.addEventListener('load', finishLoading);
-    }
+    // Primary: complete after MIN_DURATION (fast path)
+    const minTimer = setTimeout(finishLoading, MIN_DURATION);
+
+    // Safety: absolute hard cap so preloader NEVER gets stuck
+    const maxTimer = setTimeout(finishLoading, MAX_DURATION);
 
     return () => {
       mounted = false;
       clearInterval(interval);
-      window.removeEventListener('load', finishLoading);
+      clearTimeout(minTimer);
+      clearTimeout(maxTimer);
     };
   }, [pathname, isTargetRoute]);
+
 
   return (
     <>

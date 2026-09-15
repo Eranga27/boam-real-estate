@@ -49,7 +49,7 @@ export const SITE_SEO = {
   description:
     'Discover luxury houses, apartments, villas and prime land opportunities across Sri Lanka with BOAM Real Estates.',
   contactPhone: '+94 777 80 1470',
-  contactEmail: 'anilbwt26@yahoo.com',
+  contactEmail: 'boamrealestate@gmail.com',
   whatsappNumber: '94777801470',
-  address: 'No. 326, George E. De Silva Mawatha, Kandy, Sri Lanka',
+  address: 'No. 67/40, Ellehiwatte Road, Welisara, Sri Lanka',
 };

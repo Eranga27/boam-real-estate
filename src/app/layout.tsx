@@ -88,9 +88,9 @@ export default function RootLayout({
     email: SITE_SEO.contactEmail,
     address: {
       '@type': 'PostalAddress',
-      streetAddress: 'No. 326, George E. De Silva Mawatha',
-      addressLocality: 'Kandy',
-      addressRegion: 'Central Province',
+      streetAddress: 'No. 67/40, Ellehiwatte Road',
+      addressLocality: 'Welisara',
+      addressRegion: 'Western Province',
       addressCountry: 'LK',
     },
     areaServed: 'Sri Lanka',

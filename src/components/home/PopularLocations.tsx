@@ -24,10 +24,21 @@ const SriLankaMap = dynamic(() => import('./SriLankaMap').then((m) => m.SriLanka
 
 import { properties as staticProperties } from '@/data/properties';
 
-function assignCoords(city: string, title: string, id?: string) {
+function assignCoords(city: string, title: string, id?: string, district?: string) {
   const t = title.toLowerCase();
   const c = city.toLowerCase();
+  const d = (district || '').toLowerCase();
 
+  // Hikkaduwa / Galle district
+  if (c.includes('hikkaduwa') || c.includes('galle') || d === 'galle') return { lat: 6.1395, lng: 80.1063 };
+  // Wattegama
+  if (c.includes('wattegama')) return { lat: 7.3502, lng: 80.7015 };
+  // Nuwara Eliya / Katukithula
+  if (c.includes('nuwara eliya') || c.includes('katukithula') || d.includes('nuwara eliya')) return { lat: 6.9700, lng: 80.7500 };
+  // Athurugiriya
+  if (c.includes('athurugiriya')) return { lat: 6.8789, lng: 79.9956 };
+  // Matale district
+  if (c.includes('matale') || d.includes('matale')) return { lat: 7.4675, lng: 80.6234 };
   if (id === 'polgolla-house' || t.includes('polgolla') || c.includes('polgolla')) return { lat: 7.3210, lng: 80.6410 };
   if (id === 'katugastota-double-storey-house' || t.includes('balangoda road') || t.includes('double-storey')) return { lat: 7.3310, lng: 80.6250 };
   if (id === 'katugastota-station-road-land' || t.includes('station road')) return { lat: 7.3310, lng: 80.6240 };
@@ -56,7 +67,7 @@ function assignCoords(city: string, title: string, id?: string) {
 }
 
 const INITIAL_PROPERTIES: PropertyMapItem[] = staticProperties.map((p) => {
-  const coords = assignCoords(p.city || p.district || '', p.title || '', p.id);
+  const coords = assignCoords(p.city || p.district || '', p.title || '', p.id, p.district);
   return {
     id: p.id,
     title: p.title,
@@ -87,7 +98,7 @@ export function PopularLocations() {
         const data = await res.json();
         if (data.success && Array.isArray(data.data) && data.data.length > 0) {
           const apiProperties: PropertyMapItem[] = data.data.map((p: any) => {
-            const coords = assignCoords(p.city || p.district || '', p.title || '', p.id);
+            const coords = assignCoords(p.city || p.district || '', p.title || '', p.id, p.district);
             return {
               id: p.id,
               title: p.title,
