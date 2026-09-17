@@ -40,8 +40,8 @@ export function Footer() {
   return (
     <footer className="bg-navy-900 text-white">
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-16">
-        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-4">
-          <div>
+        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-12">
+          <div className="lg:col-span-4">
             <Logo variant="light" />
             <p className="mt-5 max-w-xs text-sm leading-relaxed text-white/60">
               A Sri Lankan brokerage with an exclusive, personally verified portfolio across
@@ -68,7 +68,7 @@ export function Footer() {
             </div>
           </div>
 
-          <div>
+          <div className="lg:col-span-2">
             <h2 className="text-xs font-bold uppercase tracking-[0.18em] text-amber-500">
               Quick Links
             </h2>
@@ -95,7 +95,7 @@ export function Footer() {
             </ul>
           </div>
 
-          <div>
+          <div className="lg:col-span-2">
             <h2 className="text-xs font-bold uppercase tracking-[0.18em] text-amber-500">
               Services
             </h2>
@@ -106,7 +106,7 @@ export function Footer() {
             </ul>
           </div>
 
-          <div>
+          <div className="lg:col-span-4">
             <h2 className="text-xs font-bold uppercase tracking-[0.18em] text-amber-500">
               Contact
             </h2>
@@ -120,13 +120,29 @@ export function Footer() {
                 </span>
               </li>
               <li className="flex gap-3">
-                <PhoneIcon className="mt-0.5 h-4 w-4 shrink-0 text-white/40" aria-hidden="true" />
-                <div className="flex flex-col gap-1.5">
-                  <a href={getPhoneHref()} className="transition-colors hover:text-white font-medium text-white/90">
-                    {BROKER_NAME} - {BROKER_PHONE_DISPLAY}
+                <PhoneIcon className="mt-1 h-4 w-4 shrink-0 text-white/40" aria-hidden="true" />
+                <div className="space-y-2.5">
+                  <a
+                    href={getPhoneHref()}
+                    className="group block transition-colors"
+                  >
+                    <span className="block text-xs font-medium text-white/50 group-hover:text-amber-400 transition-colors">
+                      {BROKER_NAME}
+                    </span>
+                    <span className="font-semibold text-white/90 group-hover:text-white transition-colors whitespace-nowrap">
+                      {BROKER_PHONE_DISPLAY}
+                    </span>
                   </a>
-                  <a href={getSecondaryPhoneHref()} className="transition-colors hover:text-white font-medium text-white/90">
-                    {BROKER_NAME_SECONDARY} - {BROKER_PHONE_SECONDARY_DISPLAY}
+                  <a
+                    href={getSecondaryPhoneHref()}
+                    className="group block transition-colors"
+                  >
+                    <span className="block text-xs font-medium text-white/50 group-hover:text-amber-400 transition-colors">
+                      {BROKER_NAME_SECONDARY}
+                    </span>
+                    <span className="font-semibold text-white/90 group-hover:text-white transition-colors whitespace-nowrap">
+                      {BROKER_PHONE_SECONDARY_DISPLAY}
+                    </span>
                   </a>
                 </div>
               </li>
