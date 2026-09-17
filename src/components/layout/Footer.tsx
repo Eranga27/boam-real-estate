@@ -13,8 +13,10 @@ import {
 import { Logo } from '../brand/Logo';
 import {
   getPhoneHref,
+  getSecondaryPhoneHref,
   getEmailHref,
   BROKER_PHONE_DISPLAY,
+  BROKER_PHONE_SECONDARY_DISPLAY,
   BROKER_EMAIL_DISPLAY,
 } from '@/lib/contact';
 
@@ -117,9 +119,14 @@ export function Footer() {
               </li>
               <li className="flex gap-3">
                 <PhoneIcon className="mt-0.5 h-4 w-4 shrink-0 text-white/40" aria-hidden="true" />
-                <a href={getPhoneHref()} className="transition-colors hover:text-white font-semibold text-white/90">
-                  {BROKER_PHONE_DISPLAY}
-                </a>
+                <div className="flex flex-col gap-1">
+                  <a href={getPhoneHref()} className="transition-colors hover:text-white font-semibold text-white/90">
+                    {BROKER_PHONE_DISPLAY}
+                  </a>
+                  <a href={getSecondaryPhoneHref()} className="transition-colors hover:text-white font-semibold text-white/90">
+                    {BROKER_PHONE_SECONDARY_DISPLAY}
+                  </a>
+                </div>
               </li>
               <li className="flex gap-3">
                 <MailIcon className="mt-0.5 h-4 w-4 shrink-0 text-white/40" aria-hidden="true" />

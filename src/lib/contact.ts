@@ -42,9 +42,14 @@ function getCanonicalPropertyUrl(propertyId: string): string {
 // ---------------------------------------------------------------------------
 
 /** tel: href — e.g. href={getPhoneHref()} */
-export function getPhoneHref(): string {
-  const digits = SITE_SEO.contactPhone.replace(/[^0-9+]/g, '');
+export function getPhoneHref(phone: string = SITE_SEO.contactPhone): string {
+  const digits = phone.replace(/[^0-9+]/g, '');
   return `tel:${digits}`;
+}
+
+/** tel: href for secondary contact phone */
+export function getSecondaryPhoneHref(): string {
+  return getPhoneHref(SITE_SEO.contactPhoneSecondary);
 }
 
 /** mailto: href without property context */
@@ -119,6 +124,9 @@ export function getPropertyEmailHref(propertyId: string, propertyTitle: string):
 
 /** Formatted phone number for display, e.g. "+94 777 80 1470" */
 export const BROKER_PHONE_DISPLAY = SITE_SEO.contactPhone;
+
+/** Formatted secondary phone number for display, e.g. "+94 711 38 3478" */
+export const BROKER_PHONE_SECONDARY_DISPLAY = SITE_SEO.contactPhoneSecondary;
 
 /** Email address for display */
 export const BROKER_EMAIL_DISPLAY = SITE_SEO.contactEmail;

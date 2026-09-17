@@ -84,7 +84,7 @@ export default function RootLayout({
     '@type': 'RealEstateAgent',
     name: 'BOAM Real Estates',
     url: siteUrl,
-    telephone: SITE_SEO.contactPhone,
+    telephone: [SITE_SEO.contactPhone, SITE_SEO.contactPhoneSecondary],
     email: SITE_SEO.contactEmail,
     address: {
       '@type': 'PostalAddress',
