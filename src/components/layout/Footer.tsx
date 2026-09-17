@@ -15,6 +15,8 @@ import {
   getPhoneHref,
   getSecondaryPhoneHref,
   getEmailHref,
+  BROKER_NAME,
+  BROKER_NAME_SECONDARY,
   BROKER_PHONE_DISPLAY,
   BROKER_PHONE_SECONDARY_DISPLAY,
   BROKER_EMAIL_DISPLAY,
@@ -119,12 +121,12 @@ export function Footer() {
               </li>
               <li className="flex gap-3">
                 <PhoneIcon className="mt-0.5 h-4 w-4 shrink-0 text-white/40" aria-hidden="true" />
-                <div className="flex flex-col gap-1">
-                  <a href={getPhoneHref()} className="transition-colors hover:text-white font-semibold text-white/90">
-                    {BROKER_PHONE_DISPLAY}
+                <div className="flex flex-col gap-1.5">
+                  <a href={getPhoneHref()} className="transition-colors hover:text-white font-medium text-white/90">
+                    {BROKER_NAME} - {BROKER_PHONE_DISPLAY}
                   </a>
-                  <a href={getSecondaryPhoneHref()} className="transition-colors hover:text-white font-semibold text-white/90">
-                    {BROKER_PHONE_SECONDARY_DISPLAY}
+                  <a href={getSecondaryPhoneHref()} className="transition-colors hover:text-white font-medium text-white/90">
+                    {BROKER_NAME_SECONDARY} - {BROKER_PHONE_SECONDARY_DISPLAY}
                   </a>
                 </div>
               </li>

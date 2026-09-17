@@ -122,6 +122,12 @@ export function getPropertyEmailHref(propertyId: string, propertyTitle: string):
 // Display strings (for UI labels — not for href)
 // ---------------------------------------------------------------------------
 
+/** Primary broker name */
+export const BROKER_NAME = SITE_SEO.contactPerson;
+
+/** Secondary broker name */
+export const BROKER_NAME_SECONDARY = SITE_SEO.contactPersonSecondary;
+
 /** Formatted phone number for display, e.g. "+94 777 80 1470" */
 export const BROKER_PHONE_DISPLAY = SITE_SEO.contactPhone;
 
