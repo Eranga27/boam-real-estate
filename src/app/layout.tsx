@@ -88,8 +88,8 @@ export default function RootLayout({
     email: SITE_SEO.contactEmail,
     address: {
       '@type': 'PostalAddress',
-      streetAddress: 'No. 67/40, Ellehiwatte Road',
-      addressLocality: 'Welisara',
+      streetAddress: 'No. 8, Kuda Edanda Road',
+      addressLocality: 'Wattala',
       addressRegion: 'Western Province',
       addressCountry: 'LK',
     },

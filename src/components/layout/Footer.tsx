@@ -112,9 +112,9 @@ export function Footer() {
               <li className="flex gap-3">
                 <MapPinIcon className="mt-0.5 h-4 w-4 shrink-0 text-white/40" aria-hidden="true" />
                 <span>
-                  No. 67/40, Ellehiwatte Road,
+                  No. 8, Kuda Edanda Road,
                   <br />
-                  Welisara, Sri Lanka
+                  Wattala, Sri Lanka.
                 </span>
               </li>
               <li className="flex gap-3">

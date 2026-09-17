@@ -52,5 +52,5 @@ export const SITE_SEO = {
   contactPhoneSecondary: '+94 711 38 3478',
   contactEmail: 'boamrealestate@gmail.com',
   whatsappNumber: '94777801470',
-  address: 'No. 67/40, Ellehiwatte Road, Welisara, Sri Lanka',
+  address: 'No. 8, Kuda Edanda Road, Wattala, Sri Lanka.',
 };
