@@ -99,7 +99,7 @@ async function fetchWithTimeout(url: string, timeoutMs: number, init: RequestIni
  * if the primary fails, returns a non-200 status, or times out.
  */
 export async function fetchLivePropertiesList(limit = 100): Promise<any[]> {
-  const query = `limit=${limit}&sort=newest`;
+  const query = `limit=${limit}&sort=newest&_t=${Date.now()}`;
   const primaryBase = getBaseApiUrl();
 
   const candidates: string[] = [];
@@ -121,6 +121,7 @@ export async function fetchLivePropertiesList(limit = 100): Promise<any[]> {
       // 25-second timeout to allow Render container to wake up from cold sleep
       const res = await fetchWithTimeout(url, 25000, {
         headers: { 'Accept': 'application/json' },
+        cache: 'no-store',
       });
 
       if (res.ok) {

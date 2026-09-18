@@ -88,10 +88,17 @@ export default function HomePage() {
     const handleInvalidate = () => {
       fetchFeatured();
     };
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'boam_properties_cache_time_v2') {
+        fetchFeatured();
+      }
+    };
     window.addEventListener('boam:properties_invalidated', handleInvalidate);
+    window.addEventListener('storage', handleStorage);
     return () => {
       isMounted = false;
       window.removeEventListener('boam:properties_invalidated', handleInvalidate);
+      window.removeEventListener('storage', handleStorage);
     };
   }, []);
 
