@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { formatPrice, getImageUrl } from '@/lib/format';
 import { properties as staticProperties } from '@/data/properties';
+import { fetchLivePropertiesList, getCachedProperties } from '@/lib/api';
 
 interface PropertySearchProps {
   initialType: 'Sale' | 'Rent' | '';
@@ -22,6 +23,7 @@ interface PropertySearchProps {
 const CITIES = ['Colombo', 'Kandy', 'Galle', 'Negombo', 'Jaffna', 'Nugegoda', 'Mount Lavinia', 'Matara'];
 
 function toApiShape(p: typeof staticProperties[0]): any {
+  const estimatedDate = new Date(Date.now() - (p.listedDaysAgo || 30) * 86400000).toISOString();
   return {
     id: p.id,
     title: p.title,
@@ -30,14 +32,55 @@ function toApiShape(p: typeof staticProperties[0]): any {
     price: p.price,
     city: p.city,
     district: p.district,
+    address: p.address || p.city,
     bedrooms: p.beds || null,
     bathrooms: p.baths || null,
+    beds: p.beds || 0,
+    baths: p.baths || 0,
     houseSize: p.houseSize || null,
     landSize: p.landSize || null,
+    landUnit: p.landUnit || 'perches',
     images: p.images,
     video: p.video,
     negotiable: p.negotiable,
     featured: p.featured,
+    createdAt: estimatedDate,
+    updatedAt: estimatedDate,
+    isNewListing: false,
+  };
+}
+
+function mapDbListing(p: any): any {
+  const createdTime = p.createdAt ? new Date(p.createdAt).getTime() : 0;
+  const updatedTime = p.updatedAt ? new Date(p.updatedAt).getTime() : createdTime;
+  const mostRecentTime = Math.max(createdTime, updatedTime);
+  // Highlight properties created or updated within the last 14 days
+  const isRecent = Date.now() - mostRecentTime < 14 * 24 * 3600 * 1000;
+
+  return {
+    id: p.id,
+    title: p.title,
+    propertyType: p.propertyType,
+    saleOrRent: p.saleOrRent || 'Sale',
+    price: p.price,
+    pricePerPerch: p.pricePerPerch,
+    city: p.city,
+    district: p.district,
+    address: p.address || p.city,
+    bedrooms: p.bedrooms || p.beds || null,
+    bathrooms: p.bathrooms || p.baths || null,
+    beds: p.bedrooms || p.beds || 0,
+    baths: p.bathrooms || p.baths || 0,
+    houseSize: p.houseSize || null,
+    landSize: p.landSize || null,
+    landUnit: p.landUnit || 'perches',
+    images: p.images || [],
+    video: p.video || null,
+    negotiable: p.negotiable || false,
+    featured: p.isFeatured || p.featured || false,
+    createdAt: p.createdAt || new Date().toISOString(),
+    updatedAt: p.updatedAt || p.createdAt || new Date().toISOString(),
+    isNewListing: isRecent,
   };
 }
 
@@ -81,52 +124,55 @@ export default function PropertySearch({
     return CITIES.filter((c) => c.toLowerCase().includes(filters.city.trim().toLowerCase()));
   }, [filters.city]);
 
-  const [dbListings, setDbListings] = useState<any[]>([]);
+  // Instant render from cache if available, with background revalidation
+  const [dbListings, setDbListings] = useState<any[]>(() => {
+    const cached = getCachedProperties();
+    return cached && cached.length > 0 ? cached.map(mapDbListing) : [];
+  });
 
   useEffect(() => {
-    const fetchLiveProperties = async () => {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' ? '' : 'http://localhost:5000');
+    let isMounted = true;
+
+    const fetchProperties = async () => {
       try {
-        const res = await fetch(`${apiUrl}/api/v1/properties?limit=100`, {
-          signal: AbortSignal.timeout(6000),
-        });
-        const data = await res.json();
-        if (data.success && data.data && data.data.length > 0) {
-          const mapped = data.data.map((p: any) => ({
-            id: p.id,
-            title: p.title,
-            propertyType: p.propertyType,
-            saleOrRent: p.saleOrRent || 'Sale',
-            price: p.price,
-            pricePerPerch: p.pricePerPerch,
-            city: p.city,
-            district: p.district,
-            bedrooms: p.bedrooms || null,
-            bathrooms: p.bathrooms || null,
-            houseSize: p.houseSize || null,
-            landSize: p.landSize || null,
-            landUnit: p.landUnit || 'perches',
-            images: p.images || [],
-            video: p.video || null,
-            negotiable: p.negotiable || false,
-            featured: p.isFeatured || false,
-          }));
-          setDbListings(mapped);
+        const liveData = await fetchLivePropertiesList(100);
+        if (isMounted && Array.isArray(liveData) && liveData.length > 0) {
+          setDbListings(liveData.map(mapDbListing));
         }
       } catch {
-        // Backend offline or empty
+        // Cached or static listings already in view
       }
     };
-    fetchLiveProperties();
+
+    fetchProperties();
+
+    // Revalidate on admin change events or storage sync
+    const handleInvalidation = () => {
+      fetchProperties();
+    };
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'boam_properties_cache_time_v2') {
+        fetchProperties();
+      }
+    };
+    window.addEventListener('boam:properties_invalidated', handleInvalidation);
+    window.addEventListener('storage', handleStorage);
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener('boam:properties_invalidated', handleInvalidation);
+      window.removeEventListener('storage', handleStorage);
+    };
   }, []);
 
   const filtered = useMemo(() => {
-    const dbIds = new Set(dbListings.map(p => p.id));
-    const combined = [...dbListings, ...STATIC_LISTINGS.filter(p => !dbIds.has(p.id))];
-    let list = combined;
+    // When live database listings are loaded, they are the authoritative source of truth.
+    // Fall back to STATIC_LISTINGS only if DB has not yet resolved and cache is empty.
+    let list = dbListings.length > 0 ? [...dbListings] : [...STATIC_LISTINGS];
+
     if (filters.saleOrRent) list = list.filter((p) => p.saleOrRent === filters.saleOrRent);
     if (filters.propertyType) list = list.filter((p) => p.propertyType.toLowerCase() === filters.propertyType.toLowerCase());
-    if (filters.city) list = list.filter((p) => p.city.toLowerCase().includes(filters.city.trim().toLowerCase()) || p.district.toLowerCase().includes(filters.city.trim().toLowerCase()));
+    if (filters.city) list = list.filter((p) => p.city.toLowerCase().includes(filters.city.trim().toLowerCase()) || (p.district && p.district.toLowerCase().includes(filters.city.trim().toLowerCase())));
     if (filters.district) list = list.filter((p) => p.district.toLowerCase().includes(filters.district.toLowerCase()));
     if (filters.minPrice) list = list.filter((p) => p.price >= Number(filters.minPrice));
     if (filters.maxPrice) list = list.filter((p) => p.price <= Number(filters.maxPrice));
@@ -137,9 +183,20 @@ export default function PropertySearch({
     } else if (filters.sort === 'price_desc') {
       list.sort((a, b) => b.price - a.price);
     } else {
-      // Default sort: DB listings & Houses first, then Land
+      // Default: Newest First — Sort by latest modified or created timestamp descending
       list.sort((a, b) => {
-        const typeOrder = (type: string) => (type.toLowerCase() === 'land' || type.toLowerCase() === 'commercial' ? 2 : 1);
+        const timeA = Math.max(
+          a.updatedAt ? new Date(a.updatedAt).getTime() : 0,
+          a.createdAt ? new Date(a.createdAt).getTime() : 0
+        );
+        const timeB = Math.max(
+          b.updatedAt ? new Date(b.updatedAt).getTime() : 0,
+          b.createdAt ? new Date(b.createdAt).getTime() : 0
+        );
+        if (timeA !== timeB) return timeB - timeA;
+
+        // Secondary tie-breaker: Houses before Land
+        const typeOrder = (type: string) => (type?.toLowerCase() === 'land' || type?.toLowerCase() === 'commercial' ? 2 : 1);
         const orderA = typeOrder(a.propertyType);
         const orderB = typeOrder(b.propertyType);
         if (orderA !== orderB) return orderA - orderB;
@@ -417,10 +474,15 @@ export default function PropertySearch({
                   </Link>
 
                   {/* Badge */}
-                  <div className="absolute top-3 left-3 pointer-events-none">
+                  <div className="absolute top-3 left-3 pointer-events-none flex items-center gap-1.5">
                     <span className={`rounded-full px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider shadow-sm ${property.saleOrRent === 'Sale' ? 'bg-amber-500 text-navy-950' : 'bg-sea-400 text-navy-950'}`}>
                       For {property.saleOrRent}
                     </span>
+                    {property.isNewListing && (
+                      <span className="rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider bg-emerald-500 text-white shadow-md">
+                        New
+                      </span>
+                    )}
                   </div>
 
                   {/* Price */}

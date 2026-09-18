@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { properties as staticProperties, getSimilarProperties } from '@/data/properties';
 import { getPropertyUrl, getOgImageUrl, SITE_SEO, getSiteUrl } from '@/lib/site';
+import { fetchLivePropertyById } from '@/lib/api';
 import PropertyDetailsClient from './PropertyDetailsClient';
 
 interface Props {
@@ -43,25 +44,35 @@ function staticToApi(p: any): any {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = params;
-  let localMatch: any = staticProperties.find((p) => p.id === id);
+  let localMatch: any = null;
 
+  // 1. Prioritize live database details so amended titles, images and details appear
+  try {
+    const liveProperty = await fetchLivePropertyById(id);
+    if (liveProperty) {
+      localMatch = {
+        id: liveProperty.id,
+        title: liveProperty.title,
+        city: liveProperty.city,
+        district: liveProperty.district,
+        images: liveProperty.images || [],
+      };
+    }
+  } catch (err) {
+    console.error('Failed fetching dynamic metadata from API:', err);
+  }
+
+  // 2. Fall back to static dataset only if live API returns nothing / offline
   if (!localMatch) {
-    try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://boam-real-estate.onrender.com';
-      const res = await fetch(`${apiUrl}/api/v1/properties/${id}`, { cache: 'no-store' });
-      const data = await res.json();
-      if (data.success && data.data) {
-        const p = data.data;
-        localMatch = {
-          id: p.id,
-          title: p.title,
-          city: p.city,
-          district: p.district,
-          images: p.images || [],
-        };
-      }
-    } catch (err) {
-      console.error('Failed fetching dynamic metadata from API:', err);
+    const staticMatch = staticProperties.find((p) => p.id === id);
+    if (staticMatch) {
+      localMatch = {
+        id: staticMatch.id,
+        title: staticMatch.title,
+        city: staticMatch.city,
+        district: staticMatch.district,
+        images: staticMatch.images || [],
+      };
     }
   }
 
@@ -112,53 +123,63 @@ export default async function PropertyDetailsPage({ params }: Props) {
   let propertyData = null;
   let similar: any[] = [];
 
-  const localMatch = staticProperties.find((p) => p.id === id);
-
-  if (localMatch) {
-    propertyData = staticToApi(localMatch);
-    similar = getSimilarProperties(localMatch, 4).map(staticToApi);
-  } else {
-    try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://boam-real-estate.onrender.com';
-      const res = await fetch(`${apiUrl}/api/v1/properties/${id}`, { cache: 'no-store' });
-      const data = await res.json();
-      if (data.success && data.data) {
-        const p = data.data;
-        propertyData = {
-          id: p.id,
-          title: p.title,
-          propertyType: p.propertyType,
-          saleOrRent: p.saleOrRent || 'Sale',
-          price: p.price,
-          pricePerPerch: p.pricePerPerch,
-          video: p.video,
-          negotiable: p.negotiable,
-          city: p.city,
-          district: p.district,
-          address: p.address,
-          latitude: p.latitude,
-          longitude: p.longitude,
-          bedrooms: p.bedrooms || null,
-          bathrooms: p.bathrooms || null,
-          beds: p.bedrooms || 0,
-          baths: p.bathrooms || 0,
-          parking: p.parking || null,
-          landSize: p.landSize || null,
-          landUnit: p.landUnit || 'perches',
-          houseSize: p.houseSize || null,
-          yearBuilt: p.yearBuilt || null,
-          description: p.description,
-          amenities: p.amenities || [],
-          nearbyFacilities: p.nearbyFacilities || [],
-          images: p.images || [],
-          listedDaysAgo: 'Recently',
-          featured: p.isFeatured || false,
-          user: p.user || { fullName: 'BOAM Real Estates' },
-        };
-      }
-    } catch (err) {
-      console.error('Failed fetching dynamic property details from API', err);
+  // 1. Check live API first so that any amended property displays live database content
+  try {
+    const p = await fetchLivePropertyById(id);
+    if (p) {
+      propertyData = {
+        id: p.id,
+        title: p.title,
+        propertyType: p.propertyType,
+        saleOrRent: p.saleOrRent || 'Sale',
+        price: p.price,
+        pricePerPerch: p.pricePerPerch,
+        video: p.video,
+        negotiable: p.negotiable,
+        city: p.city,
+        district: p.district,
+        address: p.address,
+        latitude: p.latitude,
+        longitude: p.longitude,
+        bedrooms: p.bedrooms || null,
+        bathrooms: p.bathrooms || null,
+        beds: p.bedrooms || 0,
+        baths: p.bathrooms || 0,
+        parking: p.parking || null,
+        landSize: p.landSize || null,
+        landUnit: p.landUnit || 'perches',
+        houseSize: p.houseSize || null,
+        yearBuilt: p.yearBuilt || null,
+        description: p.description,
+        amenities: p.amenities || [],
+        nearbyFacilities: p.nearbyFacilities || [],
+        images: p.images || [],
+        listedDaysAgo: 'Recently',
+        featured: p.isFeatured || false,
+        user: p.user || { fullName: 'BOAM Real Estates' },
+      };
     }
+  } catch (err) {
+    console.error('Failed fetching dynamic property details from API', err);
+  }
+
+  // 2. Fall back to static dataset if live API does not find the property
+  const staticMatch = staticProperties.find((p) => p.id === id);
+  if (!propertyData && staticMatch) {
+    propertyData = staticToApi(staticMatch);
+  }
+
+  // Calculate similar properties
+  if (staticMatch) {
+    similar = getSimilarProperties(staticMatch, 4).map(staticToApi);
+  } else if (propertyData) {
+    const dummyRef = {
+      id: propertyData.id,
+      type: propertyData.propertyType,
+      district: propertyData.district,
+      price: propertyData.price,
+    };
+    similar = getSimilarProperties(dummyRef as any, 4).map(staticToApi);
   }
 
   if (!propertyData) {

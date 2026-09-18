@@ -23,6 +23,7 @@ const SriLankaMap = dynamic(() => import('./SriLankaMap').then((m) => m.SriLanka
 });
 
 import { properties as staticProperties } from '@/data/properties';
+import { fetchLivePropertiesList, getCachedProperties } from '@/lib/api';
 
 function assignCoords(city: string, title: string, id?: string, district?: string) {
   const t = title.toLowerCase();
@@ -66,6 +67,22 @@ function assignCoords(city: string, title: string, id?: string, district?: strin
   return { lat: 6.9271, lng: 79.8612 };
 }
 
+function mapToPropertyMapItem(p: any): PropertyMapItem {
+  const coords = assignCoords(p.city || p.district || '', p.title || '', p.id, p.district);
+  return {
+    id: p.id,
+    title: p.title,
+    propertyType: p.propertyType || p.type || 'Land',
+    price: p.price,
+    city: p.city || p.district || 'Sri Lanka',
+    address: p.address,
+    images: p.images || [],
+    lat: typeof p.latitude === 'number' ? p.latitude : (typeof p.lat === 'number' ? p.lat : coords.lat),
+    lng: typeof p.longitude === 'number' ? p.longitude : (typeof p.lng === 'number' ? p.lng : coords.lng),
+    description: p.description,
+  };
+}
+
 const INITIAL_PROPERTIES: PropertyMapItem[] = staticProperties.map((p) => {
   const coords = assignCoords(p.city || p.district || '', p.title || '', p.id, p.district);
   return {
@@ -82,52 +99,47 @@ const INITIAL_PROPERTIES: PropertyMapItem[] = staticProperties.map((p) => {
   };
 });
 
+function mergeProperties(liveList: any[]): PropertyMapItem[] {
+  const apiItems = liveList.map(mapToPropertyMapItem);
+  const apiIdSet = new Set(apiItems.map((p) => p.id));
+  // Live items take complete precedence, with non-overlapping static items included as fallback
+  return [...apiItems, ...INITIAL_PROPERTIES.filter((p) => !apiIdSet.has(p.id))];
+}
+
 export function PopularLocations() {
-  const [properties, setProperties] = useState<PropertyMapItem[]>(INITIAL_PROPERTIES);
+  const [properties, setProperties] = useState<PropertyMapItem[]>(() => {
+    const cached = getCachedProperties();
+    if (cached && cached.length > 0) {
+      return mergeProperties(cached);
+    }
+    return INITIAL_PROPERTIES;
+  });
   const [filter, setFilter] = useState<'All' | 'House' | 'Land'>('All');
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   useEffect(() => {
-    // Keep map synced with canonical static catalogue and merge any optional API items
+    let isMounted = true;
     const fetchAll = async () => {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-        if (!apiUrl) return;
-
-        const res = await fetch(`${apiUrl}/api/v1/properties?limit=50`);
-        const data = await res.json();
-        if (data.success && Array.isArray(data.data) && data.data.length > 0) {
-          const apiProperties: PropertyMapItem[] = data.data.map((p: any) => {
-            const coords = assignCoords(p.city || p.district || '', p.title || '', p.id, p.district);
-            return {
-              id: p.id,
-              title: p.title,
-              propertyType: p.propertyType || 'Land',
-              price: p.price,
-              city: p.city || p.district || 'Sri Lanka',
-              address: p.address,
-              images: p.images || [],
-              lat: typeof p.latitude === 'number' ? p.latitude : (p.lat || coords.lat),
-              lng: typeof p.longitude === 'number' ? p.longitude : (p.lng || coords.lng),
-              description: p.description,
-            };
-          });
-
-          // Merge API properties with INITIAL_PROPERTIES, ensuring no duplicates by ID
-          const existingIds = new Set(INITIAL_PROPERTIES.map((p) => p.id));
-          const newApiItems = apiProperties.filter((p) => !existingIds.has(p.id));
-          if (newApiItems.length > 0) {
-            setProperties([...INITIAL_PROPERTIES, ...newApiItems]);
-          }
+        const liveData = await fetchLivePropertiesList(60);
+        if (isMounted && Array.isArray(liveData) && liveData.length > 0) {
+          setProperties(mergeProperties(liveData));
         }
       } catch {
-        // Fall back to INITIAL_PROPERTIES
+        // Fall back to INITIAL_PROPERTIES or cached properties
       }
     };
 
-    // Ensure properties state stays in sync with INITIAL_PROPERTIES
-    setProperties(INITIAL_PROPERTIES);
     fetchAll();
+
+    const handleInvalidate = () => {
+      fetchAll();
+    };
+    window.addEventListener('boam:properties_invalidated', handleInvalidate);
+    return () => {
+      isMounted = false;
+      window.removeEventListener('boam:properties_invalidated', handleInvalidate);
+    };
   }, []);
 
   const filteredProperties = properties.filter((p) => {

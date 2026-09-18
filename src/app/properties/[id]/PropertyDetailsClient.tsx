@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { formatFullPrice, formatPrice, getImageUrl } from '@/lib/format';
 import { getPropertyUrl } from '@/lib/site';
+import { fetchLivePropertyById } from '@/lib/api';
 import MobileContactBar from '@/components/detail/MobileContactBar';
 
 interface PropertyDetailsClientProps {
@@ -34,12 +35,9 @@ export default function PropertyDetailsClient({
 
   React.useEffect(() => {
     if (!currentProperty && propertyId) {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' ? '' : 'http://localhost:5000');
-      fetch(`${apiUrl}/api/v1/properties/${propertyId}`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.success && data.data) {
-            const p = data.data;
+      fetchLivePropertyById(propertyId)
+        .then((p) => {
+          if (p) {
             setCurrentProperty({
               id: p.id,
               title: p.title,

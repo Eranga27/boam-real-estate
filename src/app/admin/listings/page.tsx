@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
+import { invalidatePropertiesCache } from '@/lib/api';
 
 const DISTRICTS = [
   'Colombo', 'Kandy', 'Galle', 'Gampaha', 'Kalutara', 'Matara', 'Hambantota',
@@ -155,12 +156,13 @@ export default function AdminListingsPage() {
 
   const triggerRevalidation = async (id?: string) => {
     try {
+      invalidatePropertiesCache();
       await fetch('/api/revalidate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id,
-          paths: ['/', '/search', '/buy', '/rent']
+          paths: ['/', '/search', '/buy', '/rent', '/properties']
         })
       });
     } catch (err) {
@@ -228,7 +230,8 @@ export default function AdminListingsPage() {
 
       const createdId = data.data?.id || editingId;
 
-      // Immediately call Next.js revalidatePath
+      // Bust client cache and trigger Next.js ISR revalidation
+      invalidatePropertiesCache();
       await triggerRevalidation(createdId);
 
       setSuccessMsg(editingId ? 'Listing updated successfully!' : 'Listing published directly to live site!');
@@ -253,6 +256,7 @@ export default function AdminListingsPage() {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
+        invalidatePropertiesCache();
         await triggerRevalidation(id);
         fetchProperties();
       }
@@ -273,6 +277,7 @@ export default function AdminListingsPage() {
         },
         body: JSON.stringify({ status, isFeatured })
       });
+      invalidatePropertiesCache();
       await triggerRevalidation(id);
       fetchProperties();
     } catch (err) {}
