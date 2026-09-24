@@ -4,7 +4,11 @@ import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import PropertySearch from '@/components/PropertySearch';
 
-function SearchPageInner() {
+interface SearchClientProps {
+  initialProperties?: any[];
+}
+
+function SearchPageInner({ initialProperties }: { initialProperties?: any[] }) {
   const params = useSearchParams();
   const location = params.get('location') || '';
   const type = params.get('type') || '';
@@ -14,13 +18,14 @@ function SearchPageInner() {
       initialType=""
       initialLocation={location}
       initialPropertyType={type}
+      initialProperties={initialProperties}
       title="Property Discovery"
       subtitle="Explore houses, apartments, villas and prime land opportunities across Sri Lanka."
     />
   );
 }
 
-export default function SearchClient() {
+export default function SearchClient({ initialProperties }: SearchClientProps) {
   return (
     <Suspense
       fallback={
@@ -29,7 +34,7 @@ export default function SearchClient() {
         </div>
       }
     >
-      <SearchPageInner />
+      <SearchPageInner initialProperties={initialProperties} />
     </Suspense>
   );
 }

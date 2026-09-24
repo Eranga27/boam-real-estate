@@ -1,17 +1,26 @@
 /**
- * BOAM Real Estates — Resilient Backend API Client
+ * BOAM Real Estates — High-Performance Resilient Backend API Client
  * 
  * Provides fail-safe property data fetching with:
  * 1. Automatic multi-endpoint fallback (Next.js proxy rewrite -> Direct Render backend).
- * 2. Extended timeout (25s) to safely absorb Render free-tier container cold starts.
- * 3. Client-side Stale-While-Revalidate caching (sessionStorage / localStorage) for instant loads.
- * 4. Cache-busting mechanism for instant synchronization when listings are modified via the Admin Portal.
+ * 2. Next.js ISR & edge cache headers for lightning-fast server pre-renders.
+ * 3. In-memory runtime cache for 0ms client-side page transitions.
+ * 4. Storage-safe payload slimming preventing browser localStorage QuotaExceededError.
+ * 5. Concurrent in-flight request deduplication for property detail queries.
+ * 6. Cache-busting mechanism for instant synchronization when listings are modified via the Admin Portal.
  */
 
 export const PRODUCTION_BACKEND_URL = 'https://boam-real-estate.onrender.com';
 
-const CACHE_KEY = 'boam_properties_cache_v2';
-const CACHE_TIMESTAMP_KEY = 'boam_properties_cache_time_v2';
+const CACHE_KEY = 'boam_properties_cache_v3';
+const CACHE_TIMESTAMP_KEY = 'boam_properties_cache_time_v3';
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes freshness window
+
+// In-memory runtime cache for instant zero-latency transitions
+let memoryPropertiesCache: any[] | null = null;
+let memoryCacheTimestamp = 0;
+const memoryDetailCache = new Map<string, { data: any; timestamp: number }>();
+const inFlightDetailRequests = new Map<string, Promise<any | null>>();
 
 export function getBaseApiUrl(): string {
   if (process.env.NEXT_PUBLIC_API_URL) {
@@ -29,6 +38,11 @@ export function getBaseApiUrl(): string {
  * Call this whenever an admin creates, updates, or deletes a property.
  */
 export function invalidatePropertiesCache(): void {
+  memoryPropertiesCache = null;
+  memoryCacheTimestamp = 0;
+  memoryDetailCache.clear();
+  inFlightDetailRequests.clear();
+
   if (typeof window === 'undefined') return;
   try {
     localStorage.removeItem(CACHE_KEY);
@@ -43,15 +57,59 @@ export function invalidatePropertiesCache(): void {
 }
 
 /**
+ * Create a lightweight representation of property listings for client storage.
+ * Keeps all search/filtering/card fields while trimming multi-megabyte payloads
+ * so that localStorage/sessionStorage quotas (~5MB) are never exceeded.
+ */
+function toSlimListing(p: any): any {
+  return {
+    id: p.id,
+    title: p.title,
+    propertyType: p.propertyType || p.type,
+    saleOrRent: p.saleOrRent || 'Sale',
+    price: p.price,
+    pricePerPerch: p.pricePerPerch || null,
+    city: p.city,
+    district: p.district,
+    address: p.address || p.city,
+    latitude: p.latitude || null,
+    longitude: p.longitude || null,
+    bedrooms: p.bedrooms || p.beds || null,
+    bathrooms: p.bathrooms || p.baths || null,
+    beds: p.bedrooms || p.beds || 0,
+    baths: p.bathrooms || p.baths || 0,
+    parking: p.parking || null,
+    landSize: p.landSize || null,
+    landUnit: p.landUnit || 'perches',
+    houseSize: p.houseSize || null,
+    // Keep only the primary thumbnail image for cards to ensure it fits safely in storage
+    images: Array.isArray(p.images) && p.images.length > 0 ? [p.images[0]] : [],
+    video: p.video || null,
+    negotiable: p.negotiable || false,
+    featured: p.isFeatured || p.featured || false,
+    isFeatured: p.isFeatured || p.featured || false,
+    createdAt: p.createdAt || new Date().toISOString(),
+  };
+}
+
+/**
  * Retrieve cached properties if available (for instant first-paint).
  */
 export function getCachedProperties(): any[] | null {
+  // 1. Instant in-memory cache check (0.0ms)
+  if (memoryPropertiesCache && memoryPropertiesCache.length > 0) {
+    return memoryPropertiesCache;
+  }
+
   if (typeof window === 'undefined') return null;
+
+  // 2. Browser storage check
   try {
     const raw = sessionStorage.getItem(CACHE_KEY) || localStorage.getItem(CACHE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0) {
+      memoryPropertiesCache = parsed;
       return parsed;
     }
   } catch {
@@ -64,15 +122,23 @@ export function getCachedProperties(): any[] | null {
  * Save fresh properties to cache.
  */
 export function setCachedProperties(data: any[]): void {
-  if (typeof window === 'undefined' || !Array.isArray(data) || data.length === 0) return;
+  if (!Array.isArray(data) || data.length === 0) return;
+
+  // Save to memory cache immediately
+  memoryPropertiesCache = data;
+  memoryCacheTimestamp = Date.now();
+
+  if (typeof window === 'undefined') return;
+
   try {
-    const serialized = JSON.stringify(data);
+    const slimListings = data.map(toSlimListing);
+    const serialized = JSON.stringify(slimListings);
     sessionStorage.setItem(CACHE_KEY, serialized);
     sessionStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString());
     localStorage.setItem(CACHE_KEY, serialized);
     localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString());
   } catch {
-    // Storage quota or restriction
+    // Gracefully handle storage quota
   }
 }
 
@@ -116,13 +182,18 @@ export async function fetchLivePropertiesList(limit = 100): Promise<any[]> {
     candidates.push(directUrl);
   }
 
+  const isServer = typeof window === 'undefined';
+  const fetchOptions: any = {
+    headers: { Accept: 'application/json' },
+    ...(isServer
+      ? { next: { revalidate: 60, tags: ['properties'] } }
+      : { cache: 'no-store' }),
+  };
+
   for (const url of candidates) {
     try {
       // 25-second timeout to allow Render container to wake up from cold sleep
-      const res = await fetchWithTimeout(url, 25000, {
-        headers: { 'Accept': 'application/json' },
-        cache: 'no-store',
-      });
+      const res = await fetchWithTimeout(url, 25000, fetchOptions);
 
       if (res.ok) {
         const json = await res.json();
@@ -141,40 +212,65 @@ export async function fetchLivePropertiesList(limit = 100): Promise<any[]> {
 }
 
 /**
- * Fetch a single property by ID with live database priority and fallback.
+ * Fetch a single property by ID with live database priority, fallback,
+ * in-memory caching, and request deduplication.
  */
 export async function fetchLivePropertyById(id: string): Promise<any | null> {
-  const primaryBase = getBaseApiUrl();
-  const candidates: string[] = [];
-
-  if (primaryBase) {
-    candidates.push(`${primaryBase}/api/v1/properties/${encodeURIComponent(id)}`);
-  } else {
-    candidates.push(`/api/v1/properties/${encodeURIComponent(id)}`);
+  // 1. Check memory cache for instant response
+  const cached = memoryDetailCache.get(id);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+    return cached.data;
   }
 
-  const directUrl = `${PRODUCTION_BACKEND_URL}/api/v1/properties/${encodeURIComponent(id)}`;
-  if (!candidates.includes(directUrl)) {
-    candidates.push(directUrl);
+  // 2. Deduplicate in-flight requests (prevents duplicate metadata + page fetch)
+  if (inFlightDetailRequests.has(id)) {
+    return inFlightDetailRequests.get(id)!;
   }
 
-  for (const url of candidates) {
-    try {
-      const res = await fetchWithTimeout(url, 20000, {
-        headers: { 'Accept': 'application/json' },
-        cache: 'no-store',
-      });
+  const fetchPromise = (async () => {
+    const primaryBase = getBaseApiUrl();
+    const candidates: string[] = [];
 
-      if (res.ok) {
-        const json = await res.json();
-        if (json.success && json.data) {
-          return json.data;
-        }
-      }
-    } catch {
-      continue;
+    if (primaryBase) {
+      candidates.push(`${primaryBase}/api/v1/properties/${encodeURIComponent(id)}`);
+    } else {
+      candidates.push(`/api/v1/properties/${encodeURIComponent(id)}`);
     }
-  }
 
-  return null;
+    const directUrl = `${PRODUCTION_BACKEND_URL}/api/v1/properties/${encodeURIComponent(id)}`;
+    if (!candidates.includes(directUrl)) {
+      candidates.push(directUrl);
+    }
+
+    const isServer = typeof window === 'undefined';
+    const fetchOptions: any = {
+      headers: { Accept: 'application/json' },
+      ...(isServer
+        ? { next: { revalidate: 60, tags: [`property-${id}`, 'properties'] } }
+        : { cache: 'no-store' }),
+    };
+
+    for (const url of candidates) {
+      try {
+        const res = await fetchWithTimeout(url, 20000, fetchOptions);
+
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data) {
+            memoryDetailCache.set(id, { data: json.data, timestamp: Date.now() });
+            return json.data;
+          }
+        }
+      } catch {
+        continue;
+      }
+    }
+
+    return null;
+  })().finally(() => {
+    inFlightDetailRequests.delete(id);
+  });
+
+  inFlightDetailRequests.set(id, fetchPromise);
+  return fetchPromise;
 }

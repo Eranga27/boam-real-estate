@@ -91,20 +91,20 @@ export function PropertyCard({ property, view = 'grid' }: PropertyCardProps) {
         }`}
       >
         <Link href={`/properties/${property.id}`} aria-label={property.title}>
-          {property.video ? (
+          {property.images && property.images.length > 0 ? (
+            <img
+              src={getImageUrl(property.images[imageIndex || 0])}
+              alt={property.title}
+              loading="lazy"
+              decoding="async"
+              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+            />
+          ) : property.video && property.id !== 'ekala-house' && property.id !== 'katukithula-nuwaraeliya-land' ? (
             <video
               src={getImageUrl(property.video)}
               muted
               loop
-              autoPlay
               playsInline
-              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-            />
-          ) : property.images && property.images.length > 0 ? (
-            <img
-              src={getImageUrl(property.images[imageIndex])}
-              alt={property.title}
-              loading="lazy"
               className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
             />
           ) : (

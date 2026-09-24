@@ -9,12 +9,13 @@ import {
   ChevronLeft, ChevronRight, LandPlot, ImageOff, RotateCcw
 } from 'lucide-react';
 import { formatPrice, getImageUrl } from '@/lib/format';
-import { fetchLivePropertiesList, getCachedProperties } from '@/lib/api';
+import { fetchLivePropertiesList, getCachedProperties, setCachedProperties } from '@/lib/api';
 
 interface PropertySearchProps {
   initialType: 'Sale' | 'Rent' | '';
   initialLocation?: string;
   initialPropertyType?: string;
+  initialProperties?: any[];
   title: string;
   subtitle: string;
 }
@@ -79,6 +80,7 @@ export default function PropertySearch({
   initialType,
   initialLocation = '',
   initialPropertyType = '',
+  initialProperties,
   title,
   subtitle,
 }: PropertySearchProps) {
@@ -112,19 +114,26 @@ export default function PropertySearch({
     return CITIES.filter((c) => c.toLowerCase().includes(filters.city.trim().toLowerCase()));
   }, [filters.city]);
 
-  // Instantly render from cache if available (returning visitors), otherwise
-  // start empty and show a skeleton until the live API responds.
-  const cachedOnInit = typeof window !== 'undefined' ? getCachedProperties() : null;
+  // Instantly render from server-provided initial data or client cache
+  const cachedOnInit = (initialProperties && initialProperties.length > 0)
+    ? initialProperties
+    : (typeof window !== 'undefined' ? getCachedProperties() : null);
+
   const [dbListings, setDbListings] = useState<any[]>(
     cachedOnInit && cachedOnInit.length > 0 ? cachedOnInit.map(mapDbListing) : []
   );
-  // True only while the very first API call is in-flight AND we have no cache
+  // True only while the very first API call is in-flight AND we have no cache or SSR properties
   const [isLoading, setIsLoading] = useState(
     !cachedOnInit || cachedOnInit.length === 0
   );
 
   useEffect(() => {
     let isMounted = true;
+
+    // Cache server initial properties if provided
+    if (initialProperties && initialProperties.length > 0) {
+      setCachedProperties(initialProperties);
+    }
 
     const fetchProperties = async () => {
       try {
@@ -133,7 +142,7 @@ export default function PropertySearch({
           setDbListings(liveData.map(mapDbListing));
         }
       } catch {
-        // If fetch fails and we have no cache, fall back to static listings silently
+        // If fetch fails and we have no cache, fall back gracefully
       } finally {
         if (isMounted) setIsLoading(false);
       }
@@ -456,10 +465,22 @@ export default function PropertySearch({
                 {/* Image Container */}
                 <div className={`relative overflow-hidden bg-navy-900 ${viewMode === 'list' ? 'aspect-[16/10] sm:aspect-auto sm:w-[260px] sm:shrink-0' : 'aspect-[16/10] sm:aspect-[4/3]'}`}>
                   <Link href={`/properties/${property.id}`}>
-                    {property.video ? (
-                      <video src={getImageUrl(property.video)} autoPlay loop muted playsInline className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                    ) : property.images && property.images.length > 0 ? (
-                      <img src={getImageUrl(property.images[0])} alt={property.title} loading="lazy" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                    {property.images && property.images.length > 0 ? (
+                      <img
+                        src={getImageUrl(property.images[0])}
+                        alt={property.title}
+                        loading="lazy"
+                        decoding="async"
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      />
+                    ) : property.video && property.id !== 'ekala-house' && property.id !== 'katukithula-nuwaraeliya-land' ? (
+                      <video
+                        src={getImageUrl(property.video)}
+                        muted
+                        loop
+                        playsInline
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      />
                     ) : (
                       /* BOAM Refined Empty Visual State */
                       <div className="h-full w-full flex flex-col items-center justify-center bg-gradient-to-br from-navy-950 via-navy-900 to-navy-950 p-4 text-center">

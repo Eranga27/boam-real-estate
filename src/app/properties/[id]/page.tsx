@@ -1,12 +1,21 @@
 import type { Metadata } from 'next';
+import { cache } from 'react';
 import { properties as staticProperties, getSimilarProperties } from '@/data/properties';
 import { getPropertyUrl, getOgImageUrl, SITE_SEO, getSiteUrl } from '@/lib/site';
 import { fetchLivePropertyById } from '@/lib/api';
 import PropertyDetailsClient from './PropertyDetailsClient';
 
+// Enable Next.js ISR (Incremental Static Regeneration) for instant edge loading
+export const revalidate = 60;
+
 interface Props {
   params: { id: string };
 }
+
+// Deduplicate server-side fetch calls between generateMetadata and PropertyDetailsPage
+const getCachedPropertyById = cache(async (id: string) => {
+  return fetchLivePropertyById(id);
+});
 
 function staticToApi(p: any): any {
   return {
@@ -48,7 +57,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   // 1. Prioritize live database details so amended titles, images and details appear
   try {
-    const liveProperty = await fetchLivePropertyById(id);
+    const liveProperty = await getCachedPropertyById(id);
     if (liveProperty) {
       localMatch = {
         id: liveProperty.id,
@@ -125,7 +134,7 @@ export default async function PropertyDetailsPage({ params }: Props) {
 
   // 1. Check live API first so that any amended property displays live database content
   try {
-    const p = await fetchLivePropertyById(id);
+    const p = await getCachedPropertyById(id);
     if (p) {
       propertyData = {
         id: p.id,

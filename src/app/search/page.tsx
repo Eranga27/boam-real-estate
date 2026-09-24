@@ -1,6 +1,10 @@
 import type { Metadata } from 'next';
 import { getSiteUrl, SITE_SEO, getOgImageUrl } from '@/lib/site';
+import { fetchLivePropertiesList } from '@/lib/api';
 import SearchClient from './SearchClient';
+
+// Enable Next.js ISR (Incremental Static Regeneration) for instant edge page loads
+export const revalidate = 60;
 
 const canonicalUrl = `${getSiteUrl()}/search`;
 
@@ -36,6 +40,14 @@ export const metadata: Metadata = {
   },
 };
 
-export default function SearchPage() {
-  return <SearchClient />;
+export default async function SearchPage() {
+  let initialProperties: any[] = [];
+  try {
+    initialProperties = await fetchLivePropertiesList(100);
+  } catch (err) {
+    // If server fetch times out or backend is cold, client-side SWR takes over seamlessly
+    console.warn('Server pre-fetch skipped (client SWR will fetch):', err);
+  }
+
+  return <SearchClient initialProperties={initialProperties} />;
 }

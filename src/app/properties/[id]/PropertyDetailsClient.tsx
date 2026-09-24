@@ -9,7 +9,7 @@ import ContactForm from '@/components/ContactForm';
 import {
   MapPin, Bed, Bath, Square, Calendar, CheckCircle2,
   Share2, ChevronLeft, ChevronRight, Car,
-  LandPlot, ExternalLink, ArrowLeft, ImageOff, Check
+  LandPlot, ExternalLink, ArrowLeft, ImageOff, Check, Play
 } from 'lucide-react';
 import { formatFullPrice, formatPrice, getImageUrl } from '@/lib/format';
 import { getPropertyUrl } from '@/lib/site';
@@ -225,19 +225,7 @@ export default function PropertyDetailsClient({
           <div className="lg:col-span-2 space-y-6">
             {/* Gallery / Video */}
             <div className="bg-white rounded-3xl overflow-hidden shadow-sm border border-navy-100/80">
-              {property.video ? (
-                <div className="relative aspect-[16/9] bg-black">
-                  <video
-                    src={getImageUrl(property.video)}
-                    controls
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-              ) : property.images && property.images.length > 0 ? (
+              {property.images && property.images.length > 0 ? (
                 <>
                   <div className="relative aspect-[16/9] bg-navy-950">
                     <motion.img
@@ -290,6 +278,16 @@ export default function PropertyDetailsClient({
                     </div>
                   )}
                 </>
+              ) : property.video && property.id !== 'ekala-house' && property.id !== 'katukithula-nuwaraeliya-land' ? (
+                <div className="relative aspect-[16/9] bg-black">
+                  <video
+                    src={getImageUrl(property.video)}
+                    controls
+                    preload="metadata"
+                    playsInline
+                    className="w-full h-full object-contain"
+                  />
+                </div>
               ) : (
                 <div className="aspect-[16/9] flex flex-col items-center justify-center bg-gradient-to-br from-navy-950 via-navy-900 to-navy-950 p-6 text-center">
                   <div className="w-12 h-12 rounded-full bg-navy-800 flex items-center justify-center mb-3 border border-navy-700">
@@ -405,6 +403,25 @@ export default function PropertyDetailsClient({
                 )}
               </div>
             </div>
+
+            {/* Optional Video Tour for properties that have both images and a video (excluding Ekala and Katukithula) */}
+            {property.video && property.images && property.images.length > 0 && property.id !== 'ekala-house' && property.id !== 'katukithula-nuwaraeliya-land' && (
+              <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-navy-100/80 space-y-4">
+                <h3 className="text-lg font-bold text-navy-950 font-display flex items-center gap-2">
+                  <Play className="w-5 h-5 text-amber-500 fill-amber-500/20" />
+                  Property Video Tour
+                </h3>
+                <div className="relative aspect-[16/9] rounded-2xl overflow-hidden bg-black shadow-inner">
+                  <video
+                    src={getImageUrl(property.video)}
+                    controls
+                    preload="metadata"
+                    playsInline
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Amenities / Nearby */}
             {(property.amenities?.length > 0 || property.nearbyFacilities?.length > 0) && (

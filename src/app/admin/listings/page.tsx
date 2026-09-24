@@ -52,6 +52,8 @@ export default function AdminListingsPage() {
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [thumbnailIndex, setThumbnailIndex] = useState<number>(0);
   const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [existingVideo, setExistingVideo] = useState<string | null>(null);
+  const [removeVideo, setRemoveVideo] = useState(false);
 
   const getApiUrl = () => {
     if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, '');
@@ -126,6 +128,8 @@ export default function AdminListingsPage() {
     setImagePreviews([]);
     setThumbnailIndex(0);
     setVideoFile(null);
+    setExistingVideo(null);
+    setRemoveVideo(false);
     setFormError('');
     setShowModal(true);
   };
@@ -150,6 +154,8 @@ export default function AdminListingsPage() {
     setImagePreviews(p.images || []);
     setThumbnailIndex(0);
     setVideoFile(null);
+    setExistingVideo(p.video || null);
+    setRemoveVideo(false);
     setFormError('');
     setShowModal(true);
   };
@@ -202,9 +208,11 @@ export default function AdminListingsPage() {
         formData.append('images', file);
       });
 
-      // Append video if attached
+      // Append video if attached or flag removal
       if (videoFile) {
         formData.append('video', videoFile);
+      } else if (removeVideo) {
+        formData.append('removeVideo', 'true');
       }
 
       let res: Response;
@@ -719,10 +727,39 @@ export default function AdminListingsPage() {
                   <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
                     Video Upload (Optional)
                   </label>
+                  {existingVideo && !removeVideo && (
+                    <div className="flex items-center justify-between p-2.5 mb-2 bg-navy-50 rounded-xl border border-navy-100 text-xs">
+                      <span className="text-navy-900 font-medium truncate max-w-[240px]">
+                        Attached Video: {existingVideo.split('/').pop()}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setRemoveVideo(true)}
+                        className="text-red-600 hover:text-red-700 font-bold ml-2 underline text-[11px]"
+                      >
+                        Remove Video
+                      </button>
+                    </div>
+                  )}
+                  {removeVideo && (
+                    <div className="flex items-center justify-between p-2.5 mb-2 bg-red-50 text-red-700 rounded-xl border border-red-100 text-xs">
+                      <span>Video will be removed on save</span>
+                      <button
+                        type="button"
+                        onClick={() => setRemoveVideo(false)}
+                        className="text-navy-700 hover:text-navy-900 font-bold ml-2 underline text-[11px]"
+                      >
+                        Undo
+                      </button>
+                    </div>
+                  )}
                   <input
                     type="file"
                     accept="video/*"
-                    onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
+                    onChange={(e) => {
+                      setVideoFile(e.target.files?.[0] || null);
+                      if (e.target.files?.[0]) setRemoveVideo(false);
+                    }}
                     className="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-navy-50 file:text-navy-900 hover:file:bg-navy-100"
                   />
                 </div>

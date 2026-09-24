@@ -1,0 +1,33 @@
+import { NextResponse } from 'next/server';
+import { PRODUCTION_BACKEND_URL } from '@/lib/api';
+
+/**
+ * Lightweight endpoint to keep Render backend container awake and warm.
+ * Can be called by uptime monitors (UptimeRobot, Cron-job.org) or Vercel Cron.
+ */
+export async function GET() {
+  const startTime = Date.now();
+  try {
+    const res = await fetch(`${PRODUCTION_BACKEND_URL}/api/v1/properties?limit=1`, {
+      headers: { Accept: 'application/json' },
+      cache: 'no-store',
+    });
+    const duration = Date.now() - startTime;
+    return NextResponse.json({
+      status: 'ok',
+      backendStatus: res.status,
+      latencyMs: duration,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error: any) {
+    return NextResponse.json(
+      {
+        status: 'error',
+        message: error.message || 'Ping failed',
+        latencyMs: Date.now() - startTime,
+        timestamp: new Date().toISOString(),
+      },
+      { status: 502 }
+    );
+  }
+}

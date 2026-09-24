@@ -39,8 +39,8 @@ export const uploadOnCloudinary = async (localFilePath: string, resourceType: "a
     if (fs.existsSync(localFilePath)) {
       if (resourceType === 'image' || resourceType === 'auto') {
         const compressedBuffer = await sharp(localFilePath)
-          .resize({ width: 1200, withoutEnlargement: true })
-          .jpeg({ quality: 80 })
+          .resize({ width: 1200, height: 1200, fit: 'inside', withoutEnlargement: true })
+          .jpeg({ quality: 72, mozjpeg: true })
           .toBuffer();
 
         fs.unlinkSync(localFilePath);

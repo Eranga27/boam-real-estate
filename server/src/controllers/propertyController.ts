@@ -156,6 +156,8 @@ export const editProperty = async (req: AuthRequest, res: Response): Promise<voi
     if (files && files['video'] && files['video'].length > 0) {
       const url = await uploadOnCloudinary(files['video'][0].path, 'video');
       if (url) updateData.video = url;
+    } else if (req.body.removeVideo === 'true' || req.body.video === '' || req.body.video === 'null') {
+      updateData.video = null;
     }
 
     const thumbnailIndex = req.body.thumbnailIndex;
@@ -293,6 +295,7 @@ export const getAllProperties = async (req: Request, res: Response): Promise<voi
 
     const take = parseInt(limit as string);
     const skip = (parseInt(page as string) - 1) * take;
+    const includeFullImages = req.query.fullImages === 'true';
 
     const [properties, total] = await Promise.all([
       prisma.property.findMany({
@@ -307,13 +310,21 @@ export const getAllProperties = async (req: Request, res: Response): Promise<voi
       prisma.property.count({ where: whereClause })
     ]);
 
+    // Optimize listing payload: return only primary thumbnail for listing cards unless fullImages=true
+    const optimizedProperties = includeFullImages
+      ? properties
+      : properties.map((p: any) => ({
+          ...p,
+          images: Array.isArray(p.images) && p.images.length > 0 ? [p.images[0]] : [],
+        }));
+
     res.status(200).json({ 
       success: true, 
-      count: properties.length,
+      count: optimizedProperties.length,
       total,
       totalPages: Math.ceil(total / take),
       currentPage: parseInt(page as string),
-      data: properties 
+      data: optimizedProperties 
     });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
