@@ -9,7 +9,6 @@ import {
   ChevronLeft, ChevronRight, LandPlot, ImageOff, RotateCcw
 } from 'lucide-react';
 import { formatPrice, getImageUrl } from '@/lib/format';
-import { properties as staticProperties } from '@/data/properties';
 import { fetchLivePropertiesList, getCachedProperties } from '@/lib/api';
 
 interface PropertySearchProps {
@@ -21,34 +20,6 @@ interface PropertySearchProps {
 }
 
 const CITIES = ['Colombo', 'Kandy', 'Galle', 'Negombo', 'Jaffna', 'Nugegoda', 'Mount Lavinia', 'Matara'];
-
-function toApiShape(p: typeof staticProperties[0]): any {
-  const estimatedDate = new Date(Date.now() - (p.listedDaysAgo || 30) * 86400000).toISOString();
-  return {
-    id: p.id,
-    title: p.title,
-    propertyType: p.type,
-    saleOrRent: p.listingType === 'sale' ? 'Sale' : 'Rent',
-    price: p.price,
-    city: p.city,
-    district: p.district,
-    address: p.address || p.city,
-    bedrooms: p.beds || null,
-    bathrooms: p.baths || null,
-    beds: p.beds || 0,
-    baths: p.baths || 0,
-    houseSize: p.houseSize || null,
-    landSize: p.landSize || null,
-    landUnit: p.landUnit || 'perches',
-    images: p.images,
-    video: p.video,
-    negotiable: p.negotiable,
-    featured: p.featured,
-    createdAt: estimatedDate,
-    updatedAt: estimatedDate,
-    isNewListing: false,
-  };
-}
 
 function mapDbListing(p: any): any {
   const createdTime = p.createdAt ? new Date(p.createdAt).getTime() : 0;
@@ -84,8 +55,25 @@ function mapDbListing(p: any): any {
   };
 }
 
-const STATIC_LISTINGS = staticProperties.map(toApiShape);
 const PAGE_SIZE = 12;
+
+// Skeleton card shown while live data loads on first visit
+function SkeletonCard() {
+  return (
+    <div className="bg-white rounded-3xl overflow-hidden shadow-card ring-1 ring-navy-100/90 animate-pulse">
+      <div className="aspect-[16/10] sm:aspect-[4/3] bg-navy-100" />
+      <div className="p-4 sm:p-5 space-y-3">
+        <div className="h-3 w-16 bg-navy-100 rounded-full" />
+        <div className="h-4 w-3/4 bg-navy-100 rounded-full" />
+        <div className="h-3 w-1/2 bg-navy-100 rounded-full" />
+        <div className="border-t border-navy-100 pt-3 flex gap-4">
+          <div className="h-3 w-14 bg-navy-100 rounded-full" />
+          <div className="h-3 w-14 bg-navy-100 rounded-full" />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function PropertySearch({
   initialType,
@@ -124,11 +112,16 @@ export default function PropertySearch({
     return CITIES.filter((c) => c.toLowerCase().includes(filters.city.trim().toLowerCase()));
   }, [filters.city]);
 
-  // Instant render from cache if available, with background revalidation
-  const [dbListings, setDbListings] = useState<any[]>(() => {
-    const cached = getCachedProperties();
-    return cached && cached.length > 0 ? cached.map(mapDbListing) : [];
-  });
+  // Instantly render from cache if available (returning visitors), otherwise
+  // start empty and show a skeleton until the live API responds.
+  const cachedOnInit = typeof window !== 'undefined' ? getCachedProperties() : null;
+  const [dbListings, setDbListings] = useState<any[]>(
+    cachedOnInit && cachedOnInit.length > 0 ? cachedOnInit.map(mapDbListing) : []
+  );
+  // True only while the very first API call is in-flight AND we have no cache
+  const [isLoading, setIsLoading] = useState(
+    !cachedOnInit || cachedOnInit.length === 0
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -140,7 +133,9 @@ export default function PropertySearch({
           setDbListings(liveData.map(mapDbListing));
         }
       } catch {
-        // Cached or static listings already in view
+        // If fetch fails and we have no cache, fall back to static listings silently
+      } finally {
+        if (isMounted) setIsLoading(false);
       }
     };
 
@@ -166,9 +161,9 @@ export default function PropertySearch({
   }, []);
 
   const filtered = useMemo(() => {
-    // When live database listings are loaded, they are the authoritative source of truth.
-    // Fall back to STATIC_LISTINGS only if DB has not yet resolved and cache is empty.
-    let list = dbListings.length > 0 ? [...dbListings] : [...STATIC_LISTINGS];
+    // Use live DB listings as sole source — never mix with stale static data.
+    // When loading (no cache, API not yet resolved), return empty to show skeleton.
+    let list = dbListings.length > 0 ? [...dbListings] : [];
 
     if (filters.saleOrRent) list = list.filter((p) => p.saleOrRent === filters.saleOrRent);
     if (filters.propertyType) list = list.filter((p) => p.propertyType.toLowerCase() === filters.propertyType.toLowerCase());
@@ -417,7 +412,12 @@ export default function PropertySearch({
         </div>
 
         {/* Properties Grid/List */}
-        {paged.length === 0 ? (
+        {isLoading ? (
+          // Skeleton grid while API loads on first visit
+          <div className={`grid gap-4 sm:gap-6 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
+            {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
+          </div>
+        ) : paged.length === 0 ? (
           <div className="bg-white rounded-3xl p-10 sm:p-14 text-center shadow-sm border border-navy-100">
             <div className="w-16 h-16 bg-navy-50 rounded-full flex items-center justify-center mx-auto mb-4">
               <Search className="w-8 h-8 text-navy-300" aria-hidden="true" />

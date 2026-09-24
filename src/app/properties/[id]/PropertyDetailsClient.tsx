@@ -130,6 +130,13 @@ export default function PropertyDetailsClient({
   }
 
   const locationQuery = `${property.address || ''}, ${property.city || ''}, Sri Lanka`;
+  const hasCoords = property.latitude && property.longitude;
+  const mapEmbedSrc = hasCoords
+    ? `https://maps.google.com/maps?q=${property.latitude},${property.longitude}&t=&z=15&ie=UTF8&iwloc=B&output=embed`
+    : `https://maps.google.com/maps?q=${encodeURIComponent(locationQuery)}&t=&z=14&ie=UTF8&iwloc=&output=embed`;
+  const mapsOpenUrl = hasCoords
+    ? `https://www.google.com/maps/search/?api=1&query=${property.latitude},${property.longitude}`
+    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationQuery)}`;
   const isLongDescription = property.description && property.description.length > 320;
 
   return (
@@ -431,31 +438,40 @@ export default function PropertyDetailsClient({
               </div>
             )}
 
-            {/* Google Map Embed */}
+            {/* Map — coordinate-precise embed */}
             <div className="bg-white rounded-3xl p-5 sm:p-6 shadow-sm border border-navy-100/80">
-              <h3 className="text-lg font-bold text-navy-950 mb-3 flex items-center gap-2">
+              <h3 className="text-lg font-bold text-navy-950 mb-1 flex items-center gap-2">
                 <MapPin className="w-5 h-5 text-amber-500" /> Location
               </h3>
-              <div className="rounded-2xl overflow-hidden aspect-[16/9] bg-navy-100 relative">
+              <p className="text-xs text-navy-800/50 mb-3">
+                {property.address}, {property.city}, {property.district}
+              </p>
+              <div className="rounded-2xl overflow-hidden border border-navy-100/80 relative" style={{ paddingBottom: '56.25%', height: 0 }}>
                 <iframe
                   title={`Map location for ${property.title}`}
+                  src={mapEmbedSrc}
                   width="100%"
                   height="100%"
                   loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
                   className="absolute inset-0 w-full h-full"
-                  src={`https://maps.google.com/maps?q=${encodeURIComponent(locationQuery)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
                   style={{ border: 0 }}
                   allowFullScreen
                 />
               </div>
-              <a
-                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationQuery)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-navy-950 mt-3 hover:text-amber-600 transition-colors"
-              >
-                <ExternalLink className="w-4 h-4" /> View on Google Maps
-              </a>
+              <div className="mt-3 flex items-center justify-between">
+                <span className="text-[11px] text-navy-800/40">
+                  {hasCoords ? 'Exact pin location' : 'Approximate area shown'}
+                </span>
+                <a
+                  href={mapsOpenUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-navy-950 hover:text-amber-600 transition-colors"
+                >
+                  <ExternalLink className="w-4 h-4" /> Open in Google Maps
+                </a>
+              </div>
             </div>
 
             {/* Similar Properties */}

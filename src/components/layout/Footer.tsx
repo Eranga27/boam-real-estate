@@ -15,8 +15,6 @@ import {
   getPhoneHref,
   getSecondaryPhoneHref,
   getEmailHref,
-  BROKER_NAME,
-  BROKER_NAME_SECONDARY,
   BROKER_PHONE_DISPLAY,
   BROKER_PHONE_SECONDARY_DISPLAY,
   BROKER_EMAIL_DISPLAY,
@@ -120,29 +118,19 @@ export function Footer() {
                 </span>
               </li>
               <li className="flex gap-3">
-                <PhoneIcon className="mt-1 h-4 w-4 shrink-0 text-white/40" aria-hidden="true" />
-                <div className="space-y-2.5">
+                <PhoneIcon className="mt-0.5 h-4 w-4 shrink-0 text-white/40" aria-hidden="true" />
+                <div className="flex flex-col gap-1.5">
                   <a
                     href={getPhoneHref()}
-                    className="group block transition-colors"
+                    className="font-semibold text-white/90 hover:text-white transition-colors whitespace-nowrap"
                   >
-                    <span className="block text-xs font-medium text-white/50 group-hover:text-amber-400 transition-colors">
-                      {BROKER_NAME}
-                    </span>
-                    <span className="font-semibold text-white/90 group-hover:text-white transition-colors whitespace-nowrap">
-                      {BROKER_PHONE_DISPLAY}
-                    </span>
+                    {BROKER_PHONE_DISPLAY}
                   </a>
                   <a
                     href={getSecondaryPhoneHref()}
-                    className="group block transition-colors"
+                    className="font-semibold text-white/90 hover:text-white transition-colors whitespace-nowrap"
                   >
-                    <span className="block text-xs font-medium text-white/50 group-hover:text-amber-400 transition-colors">
-                      {BROKER_NAME_SECONDARY}
-                    </span>
-                    <span className="font-semibold text-white/90 group-hover:text-white transition-colors whitespace-nowrap">
-                      {BROKER_PHONE_SECONDARY_DISPLAY}
-                    </span>
+                    {BROKER_PHONE_SECONDARY_DISPLAY}
                   </a>
                 </div>
               </li>
