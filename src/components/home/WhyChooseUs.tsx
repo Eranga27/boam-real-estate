@@ -5,7 +5,6 @@ import {
   AnimatePresence,
   motion,
   useMotionValueEvent,
-  useReducedMotion,
   useScroll,
   useTransform,
 } from 'framer-motion';
@@ -329,22 +328,13 @@ function Viewfinder({ index, children }: { index: number; children: React.ReactN
 // ---------------------------------------------------------------------------------------------
 
 export function WhyChooseUs() {
-  const sectionRef = useRef<HTMLElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
-  const reduceMotion = useReducedMotion();
   const [active, setActive] = useState(0);
-
-  // The heading literally comes into focus as the section arrives
-  const { scrollYProgress: arrival } = useScroll({ target: sectionRef, offset: ['start end', 'start 20%'] });
-  const headingFilter = useTransform(arrival, [0, 1], ['blur(14px)', 'blur(0px)']);
-  const headingOpacity = useTransform(arrival, [0, 0.55, 1], [0.1, 0.65, 1]);
-  const headingSpacing = useTransform(arrival, [0, 1], ['0.03em', '-0.025em']);
 
   // Pinned scroll story: progress through the tall track picks the pillar on stage
   const { scrollYProgress: story } = useScroll({ target: trackRef, offset: ['start start', 'end end'] });
   useMotionValueEvent(story, 'change', (v) => setActive(Math.min(PILLARS.length - 1, Math.max(0, Math.floor(v * PILLARS.length)))));
   const railFill = useTransform(story, [0, 1], [0.05, 1]);
-  const watermarkRotate = useTransform(story, [0, 1], [-4, 6]);
 
   const jumpTo = (i: number) => {
     const track = trackRef.current;
@@ -356,9 +346,14 @@ export function WhyChooseUs() {
 
   const Scene = SCENES[active];
   const heading = (
+    // The heading literally comes into focus as it arrives (a one-time animation, so no blur
+    // is recalculated on every scroll frame)
     <motion.h2
-      className="mt-4 text-4xl font-extrabold leading-[1.06] text-navy-950 sm:text-5xl xl:text-6xl"
-      style={reduceMotion ? undefined : { filter: headingFilter, opacity: headingOpacity, letterSpacing: headingSpacing }}
+      className="mt-4 text-4xl font-extrabold leading-[1.06] tracking-tight text-navy-950 sm:text-5xl xl:text-6xl"
+      initial={{ opacity: 0.15, filter: 'blur(14px)' }}
+      whileInView={{ opacity: 1, filter: 'blur(0px)' }}
+      viewport={{ once: true, margin: '0px 0px -25% 0px' }}
+      transition={{ duration: 1.4, ease: EASE_OUT_EXPO }}
     >
       Good property decisions start with <span className="text-amber-600">clarity.</span>
     </motion.h2>
@@ -366,20 +361,18 @@ export function WhyChooseUs() {
 
   return (
     <section
-      ref={sectionRef}
       className="relative"
       style={{ background: 'linear-gradient(to bottom, #F7F5F0 0%, #F2EFE9 100%)' }}
     >
       {/* ---- Desktop: pinned focus-pull story ---- */}
       <div ref={trackRef} className="relative hidden lg:block" style={{ height: '290vh' }}>
         <div className="sticky top-0 flex h-screen items-center overflow-hidden">
-          {/* Oversized monogram watermark, drifting slowly with the story */}
-          <motion.img
+          {/* Oversized monogram watermark */}
+          <img
             src="/images/boamcompactmonogram.png"
             alt=""
             aria-hidden="true"
-            className="pointer-events-none absolute -right-24 top-1/2 h-[640px] w-auto select-none opacity-[0.035]"
-            style={{ y: '-50%', rotate: reduceMotion ? 0 : watermarkRotate }}
+            className="pointer-events-none absolute -right-24 top-1/2 h-[640px] w-auto -translate-y-1/2 select-none opacity-[0.035]"
           />
 
           <div className="relative mx-auto grid w-full max-w-7xl grid-cols-12 items-center gap-14 px-8 pt-16">
@@ -439,9 +432,9 @@ export function WhyChooseUs() {
                           <AnimatePresence initial={false}>
                             {isActive && (
                               <motion.p
-                                initial={{ height: 0, opacity: 0, filter: 'blur(6px)' }}
-                                animate={{ height: 'auto', opacity: 1, filter: 'blur(0px)' }}
-                                exit={{ height: 0, opacity: 0, filter: 'blur(6px)' }}
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
                                 transition={{ duration: 0.5, ease: EASE_OUT_EXPO }}
                                 className="overflow-hidden pl-[52px] text-sm font-medium leading-relaxed text-navy-700/75"
                               >
@@ -464,9 +457,9 @@ export function WhyChooseUs() {
                   <motion.div
                     key={active}
                     className="absolute inset-0"
-                    initial={{ opacity: 0, scale: 1.05, filter: 'blur(16px)' }}
+                    initial={{ opacity: 0, scale: 1.05, filter: 'blur(10px)' }}
                     animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
-                    exit={{ opacity: 0, scale: 0.97, filter: 'blur(16px)' }}
+                    exit={{ opacity: 0, scale: 0.97, filter: 'blur(10px)' }}
                     transition={{ duration: 0.75, ease: EASE_OUT_EXPO }}
                   >
                     <Scene />

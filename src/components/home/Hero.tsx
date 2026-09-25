@@ -12,7 +12,6 @@ import {
   useScroll,
   useSpring,
   useTransform,
-  type AnimationPlaybackControls,
 } from 'framer-motion';
 import { ArrowUpRight, ChevronDownIcon, MapPinIcon, SearchIcon } from 'lucide-react';
 import { heroImage } from '@/data/locations';
@@ -22,7 +21,15 @@ import { getEntranceDelay, useIntroRevealed } from '@/lib/intro';
 const CITIES = ['Colombo', 'Kandy', 'Galle', 'Negombo', 'Jaffna', 'Nugegoda', 'Mount Lavinia', 'Matara'];
 
 /** Hero scenes: the city at night, then three real BOAM listings */
-const SCENES = [
+const SCENES: Array<{
+  image: string;
+  srcSet?: string;
+  place: string;
+  region: string;
+  title: string;
+  href: string;
+  cta: string;
+}> = [
   {
     image: heroImage,
     place: 'Colombo',
@@ -32,7 +39,16 @@ const SCENES = [
     cta: 'Browse properties',
   },
   {
-    image: '/uploads/upkotmaskeliya1.jpeg',
+    image: '/images/hero/ekala-1920.jpg',
+    srcSet: '/images/hero/ekala-1280.jpg 1280w, /images/hero/ekala-1920.jpg 1920w',
+    place: 'Ekala',
+    region: 'Gampaha District',
+    title: 'House in Ekala',
+    href: '/properties/ekala-house',
+    cta: 'View property',
+  },
+  {
+    image: '/images/hero/maskeliya-1280.jpg',
     place: 'Upkot, Maskeliya',
     region: 'Hill Country',
     title: 'Luxury House in Upkot Maskeliya',
@@ -40,15 +56,7 @@ const SCENES = [
     cta: 'View property',
   },
   {
-    image: '/uploads/kandy1.jpeg',
-    place: 'Kandy',
-    region: 'Central Province',
-    title: 'Three-Storey House in Kandy',
-    href: '/properties/kandy-three-storey-house',
-    cta: 'View property',
-  },
-  {
-    image: '/uploads/kaluthara1.jpeg',
+    image: '/images/hero/bulathsinhala-1600.jpg',
     place: 'Bulathsinhala',
     region: 'Kalutara District',
     title: 'Eco & Agro Tourism Estate',
@@ -66,6 +74,35 @@ const EASE_OUT_EXPO = [0.16, 1, 0.3, 1] as const;
 /** Ken Burns drift direction per scene, so consecutive scenes don't move the same way */
 const DRIFT = ['-1.5%', '1.5%', '-1%', '1.2%'];
 
+/** One chapter bar's fill: full for past scenes, a CSS-animated fill for the current one */
+function ChapterFill({
+  idx,
+  current,
+  autoplay,
+  onDone,
+}: {
+  idx: number;
+  current: number;
+  autoplay: boolean;
+  onDone: () => void;
+}) {
+  if (idx === current && autoplay) {
+    return (
+      <span
+        className="hero-progress absolute inset-0 rounded-full bg-amber-400"
+        style={{ animationDuration: `${SCENE_MS}ms` }}
+        onAnimationEnd={onDone}
+      />
+    );
+  }
+  return (
+    <span
+      className="absolute inset-0 origin-left rounded-full bg-amber-400"
+      style={{ transform: `scaleX(${idx < current || (idx === current && !autoplay) ? 1 : 0})` }}
+    />
+  );
+}
+
 export function Hero() {
   const navigate = useNavigate();
   const reduceMotion = useReducedMotion();
@@ -77,8 +114,7 @@ export function Hero() {
   const [size, setSize] = useState({ w: 1440, h: 900 });
 
   const sectionRef = useRef<HTMLElement>(null);
-  const autoplayRef = useRef<AnimationPlaybackControls | null>(null);
-  const inViewRef = useRef(true);
+
 
   // Entrance and slideshow wait for the homepage intro to open onto the hero
   const revealed = useIntroRevealed();
@@ -90,9 +126,6 @@ export function Hero() {
   const edgeLeft = useTransform(wipe, (w) => `${w - WIPE_SLANT / 2}%`);
   const edgeOpacity = useTransform(wipe, [0, 6, WIPE_DONE - 6, WIPE_DONE], [0, 1, 1, 0]);
   const edgeAngle = (Math.atan(((WIPE_SLANT / 100) * size.w) / size.h) * 180) / Math.PI;
-
-  // ---- Autoplay progress for the chapter bars ----
-  const progress = useMotionValue(0);
 
   // ---- Depth: background drifts against the cursor, content with it ----
   const pointerX = useMotionValue(0);
@@ -124,32 +157,23 @@ export function Hero() {
     [reduceMotion, wipe]
   );
 
-  // Autoplay: each scene's chapter bar fills, then the next scene wipes in
-  useEffect(() => {
-    if (!revealed || reduceMotion) return;
-    progress.set(0);
-    const controls = animate(progress, 1, {
-      duration: SCENE_MS / 1000,
-      ease: 'linear',
-      onComplete: () => goTo((scene.current + 1) % SCENES.length),
-    });
-    autoplayRef.current = controls;
-    if (!inViewRef.current || document.hidden) controls.pause();
-    return () => controls.stop();
-  }, [revealed, reduceMotion, scene.current, goTo, progress]);
+  // Autoplay runs on the compositor: the current chapter bar is a CSS animation, and its
+  // animationend advances to the next scene (no per-frame JavaScript while scrolling)
+  const autoplay = revealed && !reduceMotion;
+  const advance = () => goTo((scene.current + 1) % SCENES.length);
 
   // Pause autoplay while the hero is off screen or the tab is hidden
   useEffect(() => {
     const el = sectionRef.current;
     if (!el) return;
+    let inView = true;
+    // Written straight to the DOM (CSS pauses the chapter bar from it) so scrolling past
+    // the hero never re-renders it
     const sync = () => {
-      const controls = autoplayRef.current;
-      if (!controls) return;
-      if (inViewRef.current && !document.hidden) controls.play();
-      else controls.pause();
+      el.dataset.paused = String(!inView || document.hidden);
     };
     const observer = new IntersectionObserver(([entry]) => {
-      inViewRef.current = entry.isIntersecting;
+      inView = entry.isIntersecting;
       sync();
     });
     observer.observe(el);
@@ -211,8 +235,10 @@ export function Hero() {
       onPointerMove={onPointerMove}
       className="relative flex min-h-[100svh] items-center overflow-hidden bg-navy-950 pt-24 pb-28 lg:py-32"
     >
-      {/* ---- Scenes ---- */}
-      <motion.div className="absolute inset-0" style={{ scale: reduceMotion ? 1 : exitScale }}>
+      {/* ---- Scenes ----
+          isolate: keeps the scenes' z-index stacking inside this layer, so the photos always sit
+          under the contrast overlays below (even when no transform is active) */}
+      <motion.div className="absolute inset-0 isolate" style={{ scale: reduceMotion ? 1 : exitScale }}>
         {/* Settles from a slight zoom as the intro opens onto it */}
         <motion.div
           className="absolute inset-0"
@@ -236,19 +262,18 @@ export function Hero() {
                   }}
                   aria-hidden="true"
                 >
-                  {/* Ken Burns: a slow push and drift while the scene is on */}
-                  <motion.img
+                  {/* Ken Burns as a CSS animation (runs on the compositor): a slow push and drift
+                      while the scene is on, held while the next scene wipes over it */}
+                  <img
                     src={s.image}
+                    srcSet={s.srcSet}
+                    sizes={s.srcSet ? '100vw' : undefined}
                     alt=""
                     draggable={false}
-                    className="h-full w-full object-cover object-center"
-                    initial={{ scale: 1.04, x: '0%' }}
-                    animate={isCurrent && revealed ? { scale: 1.16, x: DRIFT[idx] } : isPrevious ? undefined : { scale: 1.04, x: '0%' }}
-                    transition={
-                      isCurrent
-                        ? { duration: (SCENE_MS + WIPE_MS) / 1000 + 1, ease: 'linear' }
-                        : { duration: 0, delay: WIPE_MS / 1000 }
-                    }
+                    className={`h-full w-full object-cover object-center ${
+                      (isCurrent && revealed) || isPrevious ? 'hero-kenburns' : ''
+                    }`}
+                    style={{ ['--drift' as string]: DRIFT[idx], animationDuration: `${SCENE_MS + WIPE_MS + 1000}ms` }}
                     {...(idx === 0 ? { fetchPriority: 'high' as any, 'data-hero-image': true } : {})}
                   />
                 </motion.div>
@@ -342,7 +367,7 @@ export function Hero() {
 
           {/* Search Panel */}
           <motion.form {...enter(0.48)} onSubmit={submit} className="mt-8 w-full max-w-2xl" role="search">
-            <div className="flex flex-col gap-2.5 rounded-3xl bg-white/95 p-3 shadow-2xl backdrop-blur-md border border-white/20 transition-shadow duration-300 focus-within:shadow-[0_0_0_3px_rgba(244,163,0,0.45),0_25px_50px_-12px_rgba(0,0,0,0.5)] sm:flex-row sm:items-center sm:rounded-full sm:p-2 sm:pr-2.5">
+            <div className="flex flex-col gap-2.5 rounded-3xl bg-white p-3 shadow-2xl border border-white/20 transition-shadow duration-300 focus-within:shadow-[0_0_0_3px_rgba(244,163,0,0.45),0_25px_50px_-12px_rgba(0,0,0,0.5)] sm:flex-row sm:items-center sm:rounded-full sm:p-2 sm:pr-2.5">
               {/* Location Autocomplete Input */}
               <div className="relative flex-1">
                 <label htmlFor="hero-location" className="sr-only">
@@ -434,7 +459,7 @@ export function Hero() {
       >
         <motion.div
           {...enter(0.7)}
-          className="rounded-2xl border border-white/10 bg-navy-950/55 p-4 shadow-2xl backdrop-blur-md"
+          className="rounded-2xl border border-white/10 bg-navy-950/80 p-4 shadow-2xl"
         >
           <div className="flex items-center justify-between">
             <span className="font-mono text-[11px] font-bold tracking-[0.2em] text-amber-400">
@@ -481,10 +506,7 @@ export function Hero() {
                 className="group flex h-6 items-center"
               >
                 <span className="relative block h-[3px] w-full overflow-hidden rounded-full bg-white/20 transition-colors group-hover:bg-white/35">
-                  <motion.span
-                    className="absolute inset-0 origin-left rounded-full bg-amber-400"
-                    style={{ scaleX: idx === scene.current ? (reduceMotion ? 1 : progress) : idx < scene.current ? 1 : 0 }}
-                  />
+                  <ChapterFill idx={idx} current={scene.current} autoplay={autoplay} onDone={advance} />
                 </span>
               </button>
             ))}
@@ -514,10 +536,7 @@ export function Hero() {
                 className="flex h-8 items-center"
               >
                 <span className="relative block h-[3px] w-full overflow-hidden rounded-full bg-white/25">
-                  <motion.span
-                    className="absolute inset-0 origin-left rounded-full bg-amber-400"
-                    style={{ scaleX: idx === scene.current ? (reduceMotion ? 1 : progress) : idx < scene.current ? 1 : 0 }}
-                  />
+                  <ChapterFill idx={idx} current={scene.current} autoplay={autoplay} onDone={advance} />
                 </span>
               </button>
             ))}

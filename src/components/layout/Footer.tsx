@@ -2,7 +2,6 @@ import React from 'react';
 import Link from 'next/link';
 
 import {
-  ClockIcon,
   FacebookIcon,
   InstagramIcon,
   LinkedinIcon,
@@ -13,10 +12,8 @@ import {
 import { Logo } from '../brand/Logo';
 import {
   getPhoneHref,
-  getSecondaryPhoneHref,
   getEmailHref,
   BROKER_PHONE_DISPLAY,
-  BROKER_PHONE_SECONDARY_DISPLAY,
   BROKER_EMAIL_DISPLAY,
 } from '@/lib/contact';
 
@@ -112,37 +109,25 @@ export function Footer() {
               <li className="flex gap-3">
                 <MapPinIcon className="mt-0.5 h-4 w-4 shrink-0 text-white/40" aria-hidden="true" />
                 <span>
-                  No. 8, Kuda Edanda Road,
+                  No.67/40, Alehiwatte Road,
                   <br />
-                  Wattala, Sri Lanka.
+                  Welisara, Sri Lanka.
                 </span>
               </li>
               <li className="flex gap-3">
                 <PhoneIcon className="mt-0.5 h-4 w-4 shrink-0 text-white/40" aria-hidden="true" />
-                <div className="flex flex-col gap-1.5">
-                  <a
-                    href={getPhoneHref()}
-                    className="font-semibold text-white/90 hover:text-white transition-colors whitespace-nowrap"
-                  >
-                    {BROKER_PHONE_DISPLAY}
-                  </a>
-                  <a
-                    href={getSecondaryPhoneHref()}
-                    className="font-semibold text-white/90 hover:text-white transition-colors whitespace-nowrap"
-                  >
-                    {BROKER_PHONE_SECONDARY_DISPLAY}
-                  </a>
-                </div>
+                <a
+                  href={getPhoneHref()}
+                  className="font-semibold text-white/90 hover:text-white transition-colors whitespace-nowrap"
+                >
+                  {BROKER_PHONE_DISPLAY}
+                </a>
               </li>
               <li className="flex gap-3">
                 <MailIcon className="mt-0.5 h-4 w-4 shrink-0 text-white/40" aria-hidden="true" />
                 <a href={getEmailHref()} className="transition-colors hover:text-white">
                   {BROKER_EMAIL_DISPLAY}
                 </a>
-              </li>
-              <li className="flex gap-3">
-                <ClockIcon className="mt-0.5 h-4 w-4 shrink-0 text-white/40" aria-hidden="true" />
-                <span>Mon – Sat, 9.00 am – 6.30 pm</span>
               </li>
             </ul>
           </div>

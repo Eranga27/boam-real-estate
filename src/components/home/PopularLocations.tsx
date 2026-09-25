@@ -221,11 +221,12 @@ export function PopularLocations() {
 
         {/* Map & Listings Sidebar Container */}
         <div className="mt-8 grid gap-6 lg:grid-cols-12">
-          {/* Main Interactive Map: settles up into place */}
+          {/* Main Interactive Map: settles up into place (no scaling: that would rescale every
+              map tile and marker layer during the entrance) */}
           <motion.div
             className="lg:col-span-8"
-            initial={{ opacity: 0, y: 60, scale: 0.97 }}
-            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            initial={{ opacity: 0, y: 60 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '0px 0px -10% 0px' }}
             transition={{ duration: 1.1, ease: EASE_OUT_EXPO }}
           >

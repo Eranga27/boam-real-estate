@@ -47,11 +47,6 @@ export function getPhoneHref(phone: string = SITE_SEO.contactPhone): string {
   return `tel:${digits}`;
 }
 
-/** tel: href for secondary contact phone */
-export function getSecondaryPhoneHref(): string {
-  return getPhoneHref(SITE_SEO.contactPhoneSecondary);
-}
-
 /** mailto: href without property context */
 export function getEmailHref(): string {
   return `mailto:${SITE_SEO.contactEmail}`;
@@ -125,14 +120,8 @@ export function getPropertyEmailHref(propertyId: string, propertyTitle: string):
 /** Primary broker name */
 export const BROKER_NAME = SITE_SEO.contactPerson;
 
-/** Secondary broker name */
-export const BROKER_NAME_SECONDARY = SITE_SEO.contactPersonSecondary;
-
 /** Formatted phone number for display, e.g. "+94 777 80 1470" */
 export const BROKER_PHONE_DISPLAY = SITE_SEO.contactPhone;
-
-/** Formatted secondary phone number for display, e.g. "+94 711 38 3478" */
-export const BROKER_PHONE_SECONDARY_DISPLAY = SITE_SEO.contactPhoneSecondary;
 
 /** Email address for display */
 export const BROKER_EMAIL_DISPLAY = SITE_SEO.contactEmail;

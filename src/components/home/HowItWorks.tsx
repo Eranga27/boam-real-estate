@@ -177,7 +177,16 @@ interface Geometry {
   ys: number[];
 }
 
-function StepCard({ step, index, shown }: { step: (typeof STEPS)[number]; index: number; shown: boolean }) {
+// Memoised: lighting a station re-renders the journey, but only the card whose state changed
+const StepCard = React.memo(function StepCard({
+  step,
+  index,
+  shown,
+}: {
+  step: (typeof STEPS)[number];
+  index: number;
+  shown: boolean;
+}) {
   const fromRight = index % 2 === 1;
   const { Scene } = step;
   return (
@@ -195,9 +204,9 @@ function StepCard({ step, index, shown }: { step: (typeof STEPS)[number]; index:
       <div className="mt-5">{shown && <Scene />}</div>
     </motion.div>
   );
-}
+});
 
-function StationNode({ lit, icon: Icon }: { lit: boolean; icon: React.ElementType }) {
+const StationNode = React.memo(function StationNode({ lit, icon: Icon }: { lit: boolean; icon: React.ElementType }) {
   return (
     <div className="relative flex h-12 w-12 items-center justify-center">
       <motion.span
@@ -217,7 +226,7 @@ function StationNode({ lit, icon: Icon }: { lit: boolean; icon: React.ElementTyp
       </span>
     </div>
   );
-}
+});
 
 function Journey() {
   const reduceMotion = useReducedMotion();
@@ -328,13 +337,23 @@ function Journey() {
           aria-hidden="true"
         >
           <path d={geo.d} stroke="rgba(255,255,255,0.12)" strokeWidth={2} strokeDasharray="2 10" strokeLinecap="round" />
+          {/* Glow as a wide, faint underlay stroke: a CSS filter here would be recomputed on
+              every frame as the road grows */}
+          <motion.path
+            d={geo.d}
+            stroke="#F4A300"
+            strokeOpacity={0.22}
+            strokeWidth={12}
+            strokeLinecap="round"
+            style={{ pathLength: reduceMotion ? 1 : (progress as MotionValue<number>) }}
+          />
           <motion.path
             ref={pathRef}
             d={geo.d}
             stroke="url(#journey-gold)"
             strokeWidth={3}
             strokeLinecap="round"
-            style={{ pathLength: reduceMotion ? 1 : (progress as MotionValue<number>), filter: 'drop-shadow(0 0 6px rgba(244,163,0,0.65))' }}
+            style={{ pathLength: reduceMotion ? 1 : (progress as MotionValue<number>) }}
           />
           <defs>
             <linearGradient id="journey-gold" x1="0" y1="0" x2="0" y2={geo.h} gradientUnits="userSpaceOnUse">

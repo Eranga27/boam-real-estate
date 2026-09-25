@@ -458,6 +458,40 @@ html.intro-seen [data-intro] {
 }
 
 /* ---- Homepage sections ---- */
+/* Hero Ken Burns and chapter bars run as CSS animations so they stay on the compositor
+   (durations are set inline from the hero's timing constants) */
+.hero-kenburns {
+  animation: hero-kenburns 8.8s linear forwards;
+  will-change: transform;
+}
+@keyframes hero-kenburns {
+  from {
+    transform: scale(1.04) translateX(0);
+  }
+  to {
+    transform: scale(1.16) translateX(var(--drift, 0));
+  }
+}
+.hero-progress {
+  transform-origin: left center;
+  animation: hero-progress 6.5s linear forwards;
+}
+[data-paused='true'] .hero-progress {
+  animation-play-state: paused;
+}
+@keyframes hero-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-kenburns {
+    animation: none;
+  }
+}
 /* Hero scroll cue: a short gold segment sliding down its track */
 .hero-scroll-cue {
   animation: hero-scroll-cue 1.8s cubic-bezier(0.65, 0, 0.35, 1) infinite;

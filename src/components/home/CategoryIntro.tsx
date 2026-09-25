@@ -46,12 +46,7 @@ function CategoryCard({ category, index }: { category: (typeof CATEGORIES)[numbe
   const reduceMotion = useReducedMotion();
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] });
 
-  // The card opens like a curtain as it scrolls in, and its photo drifts at a slower depth
-  const clip = useTransform(
-    scrollYProgress,
-    [0, 0.38],
-    ['inset(14% 7% 0% 7% round 32px)', 'inset(0% 0% 0% 0% round 24px)']
-  );
+  // The photo drifts at a slower depth while scrolling (a cheap transform)
   const imageY = useTransform(scrollYProgress, [0, 1], ['-9%', '9%']);
   const imageScale = useTransform(scrollYProgress, [0, 0.4], [1.18, 1.06]);
   const Icon = category.icon;
@@ -59,7 +54,12 @@ function CategoryCard({ category, index }: { category: (typeof CATEGORIES)[numbe
   return (
     <motion.div
       ref={ref}
-      style={reduceMotion ? undefined : { clipPath: clip }}
+      // Opens like a curtain once as it scrolls in (not tied to every scroll frame, which
+      // would repaint the whole photo card continuously)
+      initial={{ clipPath: 'inset(14% 7% 0% 7% round 32px)' }}
+      whileInView={{ clipPath: 'inset(0% 0% 0% 0% round 24px)' }}
+      viewport={{ once: true, margin: '0px 0px -12% 0px' }}
+      transition={{ duration: 1.2, delay: index * 0.08, ease: EASE_OUT_EXPO }}
       className="group relative flex min-h-[420px] flex-col justify-end overflow-hidden rounded-3xl p-7 shadow-xl sm:min-h-[480px] sm:p-10 lg:min-h-[520px]"
     >
       <div className={`absolute inset-0 overflow-hidden ${category.base}`}>

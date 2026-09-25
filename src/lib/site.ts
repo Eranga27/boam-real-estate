@@ -54,9 +54,7 @@ export const SITE_SEO = {
     'Discover luxury houses, apartments, villas and prime land opportunities across Sri Lanka with BOAM Real Estates.',
   contactPerson: 'Anil Bowatte',
   contactPhone: '+94 777 80 1470',
-  contactPersonSecondary: 'Renuka Amarasinghe',
-  contactPhoneSecondary: '+94 711 38 3478',
   contactEmail: 'boamrealestate@gmail.com',
   whatsappNumber: '94777801470',
-  address: 'No. 8, Kuda Edanda Road, Wattala, Sri Lanka.',
+  address: 'No.67/40, Alehiwatte Road, Welisara, Sri Lanka.',
 };

@@ -558,21 +558,35 @@ export function SriLankaMap({ properties, selectedId, hoveredId, onSelectPropert
     };
   }, []);
 
-  // Pins cascade in when the map first scrolls into view, not while it's off-screen
+  // Pins cascade in when the map is well on screen, and only once scrolling pauses: the fly-in
+  // redraws tiles and markers, which would otherwise compete with the page scroll
   useEffect(() => {
     const el = mapContainerRef.current;
     if (!el || inView) return;
+    let idleTimer: ReturnType<typeof setTimeout> | undefined;
+    const start = () => {
+      window.removeEventListener('scroll', onScroll);
+      setInView(true);
+    };
+    const onScroll = () => {
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(start, 180);
+    };
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries.some((e) => e.isIntersecting)) {
-          setInView(true);
-          observer.disconnect();
-        }
+        if (!entries.some((e) => e.isIntersecting)) return;
+        observer.disconnect();
+        window.addEventListener('scroll', onScroll, { passive: true });
+        onScroll();
       },
-      { threshold: 0.25 }
+      { threshold: 0.5 }
     );
     observer.observe(el);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      clearTimeout(idleTimer);
+      window.removeEventListener('scroll', onScroll);
+    };
   }, [inView]);
 
   // 2. First time on screen: swoop from the island to the listings (markers pop in on landing).
