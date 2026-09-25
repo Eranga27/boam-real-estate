@@ -119,3 +119,340 @@ html.intro-seen [data-intro] {
     animation: none;
   }
 }
+
+/* ---- Property map markers (src/components/home/SriLankaMap.tsx) ---- */
+.boam-marker {
+  background: none;
+  border: none;
+}
+.boam-marker:focus {
+  outline: none;
+}
+.boam-marker.is-leaving {
+  opacity: 0;
+  transition: opacity 200ms ease;
+  pointer-events: none;
+}
+/* Only while listings burst out of (or back into) a group: animate marker positions */
+.boam-map--bursting .leaflet-marker-icon.boam-marker {
+  transition: transform 620ms cubic-bezier(0.2, 1.25, 0.35, 1), opacity 200ms ease;
+}
+
+/* Single listing: a price tag whose tail tip sits exactly on the location */
+.boam-pin {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -100%);
+  cursor: pointer;
+}
+.boam-pin__inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform-origin: 50% 100%;
+  animation: boam-marker-pop 520ms cubic-bezier(0.2, 1.35, 0.35, 1) backwards;
+  animation-delay: var(--d, 0ms);
+  transition: transform 220ms cubic-bezier(0.2, 0.9, 0.3, 1.25);
+}
+/* Invisible padding so the tap target is at least 44px tall */
+.boam-pin__inner::before {
+  content: '';
+  position: absolute;
+  inset: -6px -6px -4px;
+}
+.boam-pin__body {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 12px 0 5px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #0e2a49;
+  font: 800 12.5px/1 'Inter', system-ui, sans-serif;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  box-shadow: 0 8px 20px -8px rgba(8, 26, 46, 0.55), 0 0 0 1px rgba(14, 42, 73, 0.08);
+  transition: background-color 220ms ease, color 220ms ease, box-shadow 220ms ease;
+}
+.boam-pin__icon {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: #f4a300;
+  color: #081a2e;
+}
+.boam-pin--land .boam-pin__icon {
+  background: #2e8b57;
+  color: #ffffff;
+}
+.boam-pin__icon svg {
+  width: 13px;
+  height: 13px;
+}
+.boam-pin__tail {
+  width: 12px;
+  height: 12px;
+  margin-top: -7px;
+  border-radius: 2px;
+  background: #ffffff;
+  transform: rotate(45deg);
+  box-shadow: 3px 3px 6px -3px rgba(8, 26, 46, 0.45);
+  transition: background-color 220ms ease;
+}
+.boam-marker:hover .boam-pin__inner,
+.boam-marker:focus-visible .boam-pin__inner,
+.boam-pin.is-hovered .boam-pin__inner {
+  transform: translateY(-4px) scale(1.08);
+}
+.boam-marker:focus-visible .boam-pin__body {
+  box-shadow: 0 0 0 3px #f4a300, 0 10px 24px -8px rgba(8, 26, 46, 0.6);
+}
+.boam-pin.is-hovered .boam-pin__body {
+  box-shadow: 0 0 0 2px #f4a300, 0 12px 26px -8px rgba(8, 26, 46, 0.6);
+}
+/* Selected: navy and gold, with a sonar ripple on the exact spot */
+.boam-pin.is-selected .boam-pin__body {
+  background: #0e2a49;
+  color: #fdad2f;
+  box-shadow: 0 0 0 2px #f4a300, 0 14px 30px -10px rgba(8, 26, 46, 0.7);
+}
+.boam-pin.is-selected .boam-pin__tail {
+  background: #0e2a49;
+}
+.boam-pin.is-selected::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #f4a300;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: boam-sonar 1.8s cubic-bezier(0.2, 0.6, 0.35, 1) infinite;
+}
+
+/* Hover preview card above a pin (filled with the listing photo on first hover) */
+.boam-pin__preview {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 12px);
+  width: 210px;
+  overflow: hidden;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 22px 44px -16px rgba(8, 26, 46, 0.55), 0 0 0 1px rgba(14, 42, 73, 0.08);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 10px) scale(0.94);
+  transform-origin: 50% 100%;
+  transition: opacity 180ms ease, transform 240ms cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+.boam-pin__preview:empty {
+  display: none;
+}
+@media (hover: hover) {
+  .boam-marker:hover .boam-pin__preview {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+.boam-pin__preview-media {
+  height: 112px;
+  background: linear-gradient(135deg, #0e2a49, #12355b);
+}
+.boam-pin__preview-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.boam-pin__preview-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 9px 12px 11px;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+.boam-pin__preview-text span {
+  color: #d88600;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.boam-pin__preview-text strong {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  color: #0e2a49;
+  font-size: 12.5px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+/* Group bubble: count, town, and a ring showing the houses (gold) / land (green) mix */
+.boam-cluster {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--size);
+  height: var(--size);
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+}
+.boam-cluster__inner {
+  position: absolute;
+  inset: 0;
+  animation: boam-marker-pop 560ms cubic-bezier(0.2, 1.35, 0.35, 1) backwards;
+  animation-delay: var(--d, 0ms);
+  transition: transform 260ms cubic-bezier(0.2, 0.9, 0.3, 1.25), opacity 260ms ease;
+}
+.boam-cluster__halo {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(244, 163, 0, 0.45) 0%, rgba(244, 163, 0, 0) 70%);
+  animation: boam-halo 2.8s ease-out infinite;
+  pointer-events: none;
+}
+.boam-cluster__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(#f4a300 0 var(--house), #2e8b57 var(--house) 100%);
+  box-shadow: 0 12px 30px -10px rgba(8, 26, 46, 0.7);
+}
+.boam-cluster__core {
+  position: absolute;
+  inset: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #1b416c, #0e2a49 70%);
+  transition: border-color 220ms ease;
+}
+.boam-cluster__count {
+  color: #fdad2f;
+  font: 800 19px/1 'Inter', system-ui, sans-serif;
+}
+.boam-cluster__unit {
+  margin-top: 3px;
+  color: rgba(255, 255, 255, 0.72);
+  font: 700 8px/1 'Inter', system-ui, sans-serif;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.boam-cluster__label {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.96);
+  color: #0e2a49;
+  font: 800 10.5px/1.2 'Inter', system-ui, sans-serif;
+  white-space: nowrap;
+  box-shadow: 0 6px 14px -6px rgba(8, 26, 46, 0.45);
+  transform: translateX(-50%);
+  transition: opacity 200ms ease;
+}
+.boam-cluster__hint {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  padding: 6px 11px;
+  border-radius: 10px;
+  background: rgba(8, 26, 46, 0.94);
+  color: #ffffff;
+  font: 700 11px/1.2 'Inter', system-ui, sans-serif;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 6px);
+  transition: opacity 180ms ease, transform 220ms ease;
+}
+@media (hover: hover) {
+  .boam-marker:hover .boam-cluster__hint {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+.boam-marker:hover .boam-cluster__inner,
+.boam-marker:focus-visible .boam-cluster__inner,
+.boam-cluster.is-hovered .boam-cluster__inner {
+  transform: scale(1.1);
+}
+.boam-cluster.is-hovered .boam-cluster__core,
+.boam-cluster.has-selected .boam-cluster__core,
+.boam-marker:focus-visible .boam-cluster__core {
+  border-color: #f4a300;
+}
+/* Fanned out: the bubble shrinks into the hub the leader lines grow from */
+.boam-cluster.is-spidered .boam-cluster__inner {
+  transform: scale(0.42);
+}
+.boam-cluster.is-spidered .boam-cluster__label,
+.boam-cluster.is-spidered .boam-cluster__halo,
+.boam-cluster.is-spidered .boam-cluster__hint {
+  opacity: 0;
+}
+.boam-spider-leg {
+  animation: boam-leg-in 420ms ease-out both;
+}
+
+@keyframes boam-marker-pop {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.35);
+  }
+  55% {
+    opacity: 1;
+  }
+}
+@keyframes boam-sonar {
+  from {
+    opacity: 0.95;
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(3.4);
+  }
+}
+@keyframes boam-halo {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.45);
+  }
+}
+@keyframes boam-leg-in {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .boam-pin__inner,
+  .boam-cluster__inner,
+  .boam-cluster__halo,
+  .boam-pin.is-selected::after {
+    animation: none !important;
+  }
+  .boam-map--bursting .leaflet-marker-icon.boam-marker {
+    transition: none;
+  }
+}

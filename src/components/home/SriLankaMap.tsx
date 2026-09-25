@@ -4,8 +4,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import 'leaflet/dist/leaflet.css';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, ArrowRight, X, Home, Trees, Building2, Layers, Map as MapIcon, Globe, Moon } from 'lucide-react';
-import { formatFullPrice, getImageUrl } from '@/lib/format';
+import { MapPin, ArrowRight, X, Home, Trees, Building2, Layers, Map as MapIcon, Globe, Moon, Maximize2 } from 'lucide-react';
+import { formatFullPrice, formatPrice, getImageUrl } from '@/lib/format';
 
 export interface PropertyMapItem {
   id: string;
@@ -18,11 +18,15 @@ export interface PropertyMapItem {
   lat: number;
   lng: number;
   description?: string;
+  saleOrRent?: string;
+  district?: string;
 }
 
 interface SriLankaMapProps {
   properties: PropertyMapItem[];
   selectedId?: string | null;
+  /** Listing hovered in a linked list; its pin (or the group holding it) is highlighted */
+  hoveredId?: string | null;
   onSelectProperty?: (id: string) => void;
 }
 
@@ -52,58 +56,216 @@ const BASE_MAPS = {
 
 type MapStyle = keyof typeof BASE_MAPS;
 
-export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLankaMapProps) {
+const ISLAND_CENTER: [number, number] = [7.8731, 80.7718];
+const ISLAND_ZOOM = 7;
+/** Framing used for "all listings": the island view swoops in to where the listings are */
+const FIT_PADDING: [number, number] = [70, 70];
+const FIT_MAX_ZOOM = 10;
+/** Deepest zoom used to pull a group apart; closer than this they fan out instead */
+const MAX_SPLIT_ZOOM = 16;
+/** Zoom used when a listing is picked from the list */
+const FOCUS_ZOOM = 14;
+/** Matches the .boam-map--bursting transition in globals.css */
+const BURST_MS = 620;
+
+interface Group {
+  key: string;
+  items: PropertyMapItem[];
+  lat: number;
+  lng: number;
+}
+
+interface Spider {
+  key: string;
+  cluster: any;
+  pins: Map<string, any>;
+  legs: any[];
+  center: any;
+}
+
+const HOUSE_SVG =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg>';
+const LAND_SVG =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 10v.2A3 3 0 0 1 8.9 16H5a3 3 0 0 1-1-5.8V10a3 3 0 0 1 6 0Z"/><path d="M7 16v6"/><path d="M13 19v3"/><path d="M12 19h8.3a1 1 0 0 0 .7-1.7L18 14h.3a1 1 0 0 0 .7-1.7L16 9h.2a1 1 0 0 0 .8-1.7L13 3l-1.4 1.5"/></svg>';
+
+const isHouse = (item: PropertyMapItem) => item.propertyType.toLowerCase() === 'house';
+
+const escapeHtml = (s: string) =>
+  s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
+
+const priceLabel = (item: PropertyMapItem) =>
+  formatPrice(item.price, item.saleOrRent?.toLowerCase() === 'rent' ? 'rent' : 'sale');
+
+const mostCommon = (values: string[]) => {
+  const counts = new Map<string, number>();
+  values.forEach((v) => counts.set(v, (counts.get(v) || 0) + 1));
+  return Array.from(counts.entries()).sort((a, b) => b[1] - a[1])[0]?.[0];
+};
+
+/** Name for a group bubble: the town ("Kandy") when all listings share one, otherwise the
+ *  district visitors recognise ("Colombo area") rather than whichever suburb is most common */
+const groupLabel = (items: PropertyMapItem[]) => {
+  if (new Set(items.map((i) => i.city)).size === 1) return items[0].city;
+  const district = mostCommon(items.map((i) => i.district).filter((d): d is string => !!d));
+  return `${district || mostCommon(items.map((i) => i.city)) || 'Sri Lanka'} area`;
+};
+
+const bubbleSize = (n: number) => Math.round(58 + Math.min(n, 10) * 1.8);
+
+/** On-screen box a marker occupies around its anchor: [left, top, right, bottom] in px.
+ *  Pins sit above their point (tail tip on the spot); bubbles are centred with a label below. */
+const footprint = (items: PropertyMapItem[]): [number, number, number, number] => {
+  if (items.length === 1) return [-52, -44, 52, 2];
+  const r = bubbleSize(items.length) / 2;
+  const half = Math.max(r, (groupLabel(items).length * 6.4 + 22) / 2);
+  return [-half, -r, half, r + 28];
+};
+
+/**
+ * Group listings whose markers would collide on screen at `zoom`, using each marker's real
+ * footprint (pin, or bubble + label). Groups keep merging until nothing collides. Keys are
+ * stable for the same listings, so markers that didn't change survive a zoom untouched.
+ */
+function groupListings(map: any, items: PropertyMapItem[], zoom: number): Group[] {
+  const groups = items.map((item) => {
+    const pt = map.project([item.lat, item.lng], zoom);
+    return { items: [item], x: pt.x, y: pt.y };
+  });
+
+  let merged = true;
+  while (merged) {
+    merged = false;
+    outer: for (let i = 0; i < groups.length; i++) {
+      for (let j = i + 1; j < groups.length; j++) {
+        const a = groups[i];
+        const b = groups[j];
+        const fa = footprint(a.items);
+        const fb = footprint(b.items);
+        const collide =
+          a.x + fa[0] < b.x + fb[2] - 2 &&
+          b.x + fb[0] < a.x + fa[2] - 2 &&
+          a.y + fa[1] < b.y + fb[3] - 2 &&
+          b.y + fb[1] < a.y + fa[3] - 2;
+        if (collide) {
+          const n = a.items.length + b.items.length;
+          groups[i] = {
+            items: [...a.items, ...b.items],
+            x: (a.x * a.items.length + b.x * b.items.length) / n,
+            y: (a.y * a.items.length + b.y * b.items.length) / n,
+          };
+          groups.splice(j, 1);
+          merged = true;
+          break outer;
+        }
+      }
+    }
+  }
+
+  return groups.map((g) => {
+    const center = map.unproject([g.x, g.y], zoom);
+    return {
+      key: g.items.map((i) => i.id).sort().join('|'),
+      items: g.items,
+      lat: center.lat,
+      lng: center.lng,
+    };
+  });
+}
+
+function pinHtml(item: PropertyMapItem, delayMs: number) {
+  const house = isHouse(item);
+  return `<div class="boam-pin ${house ? 'boam-pin--house' : 'boam-pin--land'}" style="--d:${delayMs}ms">
+    <div class="boam-pin__preview"></div>
+    <div class="boam-pin__inner">
+      <div class="boam-pin__body">
+        <span class="boam-pin__icon">${house ? HOUSE_SVG : LAND_SVG}</span>
+        <span class="boam-pin__price">${escapeHtml(priceLabel(item))}</span>
+      </div>
+      <span class="boam-pin__tail"></span>
+    </div>
+  </div>`;
+}
+
+function clusterHtml(group: Group, delayMs: number) {
+  const n = group.items.length;
+  const houses = group.items.filter(isHouse).length;
+  const lands = n - houses;
+  const size = bubbleSize(n);
+  const mix = [houses && `${houses} house${houses > 1 ? 's' : ''}`, lands && `${lands} land`].filter(Boolean).join(' · ');
+  return `<div class="boam-cluster" style="--d:${delayMs}ms;--size:${size}px;--house:${((houses / n) * 100).toFixed(1)}%">
+    <span class="boam-cluster__hint">${mix} · tap to explore</span>
+    <div class="boam-cluster__inner">
+      <span class="boam-cluster__halo"></span>
+      <span class="boam-cluster__ring"></span>
+      <span class="boam-cluster__core">
+        <span class="boam-cluster__count">${n}</span>
+        <span class="boam-cluster__unit">listings</span>
+      </span>
+    </div>
+    <span class="boam-cluster__label">${escapeHtml(groupLabel(group.items))}</span>
+  </div>`;
+}
+
+export function SriLankaMap({ properties, selectedId, hoveredId, onSelectProperty }: SriLankaMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const leafletRef = useRef<any>(null);
   const tileLayerRef = useRef<any>(null);
-  const markersGroupRef = useRef<any>(null);
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
 
   const [mapReady, setMapReady] = useState(false);
+  const [inView, setInView] = useState(false);
+  const [zoom, setZoom] = useState(ISLAND_ZOOM);
   const [activeProperty, setActiveProperty] = useState<PropertyMapItem | null>(null);
   const [mapStyle, setMapStyle] = useState<MapStyle>('road');
 
-  // Synchronize internal active state with external selectedId
-  useEffect(() => {
-    if (selectedId) {
-      const found = properties.find((p) => p.id === selectedId);
-      if (found) {
-        setActiveProperty(found);
-        if (mapInstanceRef.current) {
-          mapInstanceRef.current.flyTo([found.lat, found.lng], 12, { animate: true, duration: 1.2 });
-        }
-      }
-    }
-  }, [selectedId, properties]);
+  // Marker state lives outside React: Leaflet owns the DOM for pins and bubbles
+  const markersRef = useRef(new Map<string, { marker: any; group: Group }>());
+  const lastPosRef = useRef(new Map<string, any>());
+  const spiderRef = useRef<Spider | null>(null);
+  const pendingSpiderRef = useRef<string[] | null>(null);
+  const burstTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const localSelectRef = useRef<string | null>(null);
+
+  // Latest props for Leaflet event handlers bound once
+  const propsRef = useRef({ properties, selectedId, hoveredId, onSelectProperty });
+  propsRef.current = { properties, selectedId, hoveredId, onSelectProperty };
+
+  // Stable handles to the marker engine, filled in once the map exists
+  const engineRef = useRef<{
+    render: () => void;
+    applyHighlights: () => void;
+    focusListing: (item: PropertyMapItem) => void;
+    collapseSpider: (animated: boolean) => void;
+    fitListings: (duration: number) => void;
+  } | null>(null);
+  const fittedRef = useRef(false);
+  const [fittedZoom, setFittedZoom] = useState<number | null>(null);
 
   // 1. Initialize Leaflet Map Instance ONCE on mount
   useEffect(() => {
     if (typeof window === 'undefined' || !mapContainerRef.current) return;
     if (mapInstanceRef.current) return;
+    let disposed = false;
 
     import('leaflet').then((L) => {
+      if (disposed || !mapContainerRef.current || mapInstanceRef.current) return;
       const Leaflet = L.default || L;
 
-      // Fix icon URL default issues in Next.js
-      delete (Leaflet.Icon.Default.prototype as any)._getIconUrl;
-      Leaflet.Icon.Default.mergeOptions({
-        iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-        iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-      });
-
       // Center map on Sri Lanka — zoom 7 fits the whole island including south (Hikkaduwa)
-      const map = Leaflet.map(mapContainerRef.current!, {
-        center: [7.8731, 80.7718],
-        zoom: 7,
+      const map = Leaflet.map(mapContainerRef.current, {
+        center: ISLAND_CENTER,
+        zoom: ISLAND_ZOOM,
+        zoomSnap: 0.5,
         minZoom: 6,
         maxZoom: 18,
-        zoomControl: true,
+        zoomControl: false,
         scrollWheelZoom: false,
         fadeAnimation: true,
         zoomAnimation: true,
       });
+      // Bottom-right keeps the zoom buttons clear of the map style switcher
+      Leaflet.control.zoom({ position: 'bottomright' }).addTo(map);
 
       mapInstanceRef.current = map;
       leafletRef.current = Leaflet;
@@ -130,13 +292,261 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
       const resizeObserver = new ResizeObserver(() => {
         invalidate();
       });
-      resizeObserver.observe(mapContainerRef.current!);
+      resizeObserver.observe(mapContainerRef.current);
       resizeObserverRef.current = resizeObserver;
 
+      // ---- Marker engine ----
+
+      /** Move markers with a springy transition (e.g. listings bursting out of a group bubble) */
+      const burst = (moves: Array<[any, any]>) => {
+        if (moves.length === 0) return;
+        const container = map.getContainer();
+        moves.forEach(([m]) => m.getElement()?.getBoundingClientRect());
+        container.classList.add('boam-map--bursting');
+        requestAnimationFrame(() => {
+          moves.forEach(([m, target]) => m.setLatLng(target));
+          clearTimeout(burstTimerRef.current);
+          burstTimerRef.current = setTimeout(() => container.classList.remove('boam-map--bursting'), BURST_MS + 80);
+        });
+      };
+
+      const removeMarker = (marker: any) => {
+        const el = marker.getElement();
+        if (!el) return marker.remove();
+        el.classList.add('is-leaving');
+        setTimeout(() => marker.remove(), 220);
+      };
+
+      /** Photo preview above a pin, built on first hover (images can be large data URIs) */
+      const fillPreview = (marker: any, item: PropertyMapItem) => {
+        const preview = marker.getElement()?.querySelector('.boam-pin__preview');
+        if (!preview || preview.childElementCount > 0) return;
+        const media = document.createElement('div');
+        media.className = 'boam-pin__preview-media';
+        if (item.images?.[0]) {
+          const img = document.createElement('img');
+          img.src = getImageUrl(item.images[0]);
+          img.alt = '';
+          img.decoding = 'async';
+          media.appendChild(img);
+        }
+        const text = document.createElement('div');
+        text.className = 'boam-pin__preview-text';
+        const city = document.createElement('span');
+        city.textContent = item.city;
+        const title = document.createElement('strong');
+        title.textContent = item.title;
+        text.append(city, title);
+        preview.append(media, text);
+      };
+
+      const selectListing = (item: PropertyMapItem) => {
+        localSelectRef.current = item.id;
+        setActiveProperty(item);
+        propsRef.current.onSelectProperty?.(item.id);
+        // Keep the pin clear of the details card along the bottom
+        map.panInside([item.lat, item.lng], { paddingTopLeft: [60, 90], paddingBottomRight: [60, 230] });
+      };
+
+      const createPin = (item: PropertyMapItem, at: any, delayMs: number) => {
+        const icon = Leaflet.divIcon({ className: 'boam-marker', html: pinHtml(item, delayMs), iconSize: [0, 0], iconAnchor: [0, 0] });
+        const marker = Leaflet.marker(at, { icon, keyboard: true, riseOnHover: true, riseOffset: 1000 });
+        marker.on('click', () => selectListing(item));
+        marker.on('mouseover', () => fillPreview(marker, item));
+        marker.addTo(map);
+        const el = marker.getElement();
+        el?.setAttribute('role', 'button');
+        el?.setAttribute('aria-label', `${item.title}, ${item.city}, ${priceLabel(item)}`);
+        return marker;
+      };
+
+      const collapseSpider = (animated: boolean) => {
+        const spider = spiderRef.current;
+        if (!spider) return;
+        spiderRef.current = null;
+        spider.legs.forEach((leg) => leg.remove());
+        spider.cluster.getElement()?.firstElementChild?.classList.remove('is-spidered');
+        const pins = Array.from(spider.pins.values());
+        if (animated) {
+          burst(pins.map((m) => [m, spider.center] as [any, any]));
+          pins.forEach((m) => m.getElement()?.classList.add('is-leaving'));
+          setTimeout(() => pins.forEach((m) => m.remove()), BURST_MS * 0.55);
+        } else {
+          pins.forEach((m) => m.remove());
+        }
+      };
+
+      /** Fan a group out around its bubble, joined by gold leader lines */
+      const spiderfy = (group: Group, cluster: any) => {
+        collapseSpider(false);
+        const center = Leaflet.latLng(group.lat, group.lng);
+        const c = map.latLngToLayerPoint(center);
+        const n = group.items.length;
+        const rx = 64 + n * 13;
+        const ry = 44 + n * 8;
+        const pins = new Map<string, any>();
+        const legs: any[] = [];
+        const moves: Array<[any, any]> = [];
+        const startAngle = n === 2 ? 0 : -Math.PI / 2;
+        group.items.forEach((item, i) => {
+          const angle = startAngle + (2 * Math.PI * i) / n;
+          const target = map.layerPointToLatLng(Leaflet.point(c.x + rx * Math.cos(angle), c.y + ry * Math.sin(angle)));
+          legs.push(
+            Leaflet.polyline([center, target], {
+              className: 'boam-spider-leg',
+              interactive: false,
+              color: '#F4A300',
+              weight: 1.5,
+              opacity: 0.9,
+              dashArray: '4 5',
+            }).addTo(map)
+          );
+          const pin = createPin(item, center, i * 35);
+          pins.set(item.id, pin);
+          moves.push([pin, target]);
+        });
+        cluster.getElement()?.firstElementChild?.classList.add('is-spidered');
+        spiderRef.current = { key: group.key, cluster, pins, legs, center };
+        burst(moves);
+        applyHighlights();
+      };
+
+      /** Bubble tapped: fly in until the group splits, or fan it out if it never will */
+      const openGroup = (group: Group, cluster: any) => {
+        if (spiderRef.current?.key === group.key) {
+          collapseSpider(true);
+          return;
+        }
+        const current = map.getZoom();
+        let splitZoom: number | null = null;
+        for (let z = Math.ceil(current + 0.01); z <= MAX_SPLIT_ZOOM; z++) {
+          if (groupListings(map, group.items, z).length > 1) {
+            splitZoom = z;
+            break;
+          }
+        }
+        const bounds = Leaflet.latLngBounds(group.items.map((i) => [i.lat, i.lng]));
+        if (splitZoom !== null) {
+          const fitZoom = map.getBoundsZoom(bounds, false, Leaflet.point(120, 120));
+          map.flyTo(bounds.getCenter(), Math.min(MAX_SPLIT_ZOOM, Math.max(splitZoom, fitZoom)), { duration: 0.9 });
+        } else if (current < 12) {
+          // Same street or plot: get close first, then fan out on arrival
+          pendingSpiderRef.current = group.items.map((i) => i.id);
+          map.flyTo([group.lat, group.lng], 15, { duration: 0.9 });
+        } else {
+          spiderfy(group, cluster);
+        }
+      };
+
+      const createCluster = (group: Group, at: any, delayMs: number) => {
+        const icon = Leaflet.divIcon({ className: 'boam-marker', html: clusterHtml(group, delayMs), iconSize: [0, 0], iconAnchor: [0, 0] });
+        const marker = Leaflet.marker(at, { icon, keyboard: true, zIndexOffset: 500, riseOnHover: true, riseOffset: 1000 });
+        marker.on('click', () => openGroup(group, marker));
+        marker.addTo(map);
+        const el = marker.getElement();
+        el?.setAttribute('role', 'button');
+        el?.setAttribute('aria-label', `${group.items.length} listings, ${groupLabel(group.items)}. Open to see them`);
+        return marker;
+      };
+
+      /** Highlight the selected / list-hovered listing, or the group bubble that holds it */
+      const applyHighlights = () => {
+        const { selectedId: sel, hoveredId: hov } = propsRef.current;
+        const mark = (marker: any, ids: string[]) => {
+          const root = marker.getElement()?.firstElementChild as HTMLElement | null;
+          if (!root) return;
+          const single = ids.length === 1;
+          root.classList.toggle(single ? 'is-selected' : 'has-selected', !!sel && ids.includes(sel));
+          root.classList.toggle('is-hovered', !!hov && ids.includes(hov));
+          if (single) marker.setZIndexOffset(sel === ids[0] ? 2000 : hov === ids[0] ? 1500 : 0);
+        };
+        markersRef.current.forEach(({ marker, group }) => mark(marker, group.items.map((i) => i.id)));
+        spiderRef.current?.pins.forEach((marker, id) => mark(marker, [id]));
+      };
+
+      /** Diff groups for the current zoom: unchanged markers stay, new ones pop in from where
+       *  their listings were last shown, so zooming in makes bubbles burst into their pins. */
+      const render = () => {
+        const z = map.getZoom();
+        const groups = groupListings(map, propsRef.current.properties, z);
+        const next = new Map(groups.map((g) => [g.key, g]));
+        if (spiderRef.current && !next.has(spiderRef.current.key)) collapseSpider(false);
+
+        markersRef.current.forEach((entry, key) => {
+          if (!next.has(key)) {
+            removeMarker(entry.marker);
+            markersRef.current.delete(key);
+          }
+        });
+
+        const moves: Array<[any, any]> = [];
+        let order = 0;
+        groups.forEach((group) => {
+          if (markersRef.current.has(group.key)) return;
+          const target = Leaflet.latLng(group.lat, group.lng);
+          const previous = group.items.map((i) => lastPosRef.current.get(i.id)).filter(Boolean);
+          const start = previous.length
+            ? Leaflet.latLng(
+                previous.reduce((s: number, p: any) => s + p.lat, 0) / previous.length,
+                previous.reduce((s: number, p: any) => s + p.lng, 0) / previous.length
+              )
+            : target;
+          const delay = Math.min(order++ * 45, 650);
+          const marker =
+            group.items.length === 1 ? createPin(group.items[0], start, delay) : createCluster(group, start, delay);
+          markersRef.current.set(group.key, { marker, group });
+          if (map.latLngToLayerPoint(start).distanceTo(map.latLngToLayerPoint(target)) > 3) {
+            moves.push([marker, target]);
+          }
+        });
+        burst(moves);
+
+        groups.forEach((g) => g.items.forEach((i) => lastPosRef.current.set(i.id, Leaflet.latLng(g.lat, g.lng))));
+        applyHighlights();
+      };
+
+      /** Listing picked from the list: fly to it, fanning out its group if it's still grouped */
+      const focusListing = (item: PropertyMapItem) => {
+        pendingSpiderRef.current = [item.id];
+        map.flyTo([item.lat, item.lng], Math.max(map.getZoom(), FOCUS_ZOOM), { duration: 1.1 });
+      };
+
+      /** Frame every listing; markers (re)group when the flight lands */
+      const fitListings = (duration: number) => {
+        const items = propsRef.current.properties;
+        if (items.length === 0) return;
+        const bounds = Leaflet.latLngBounds(items.map((i) => [i.lat, i.lng]));
+        setFittedZoom(Math.min(FIT_MAX_ZOOM, map.getBoundsZoom(bounds, false, Leaflet.point(FIT_PADDING[0] * 2, FIT_PADDING[1] * 2))));
+        map.flyToBounds(bounds, { padding: FIT_PADDING, maxZoom: FIT_MAX_ZOOM, duration });
+      };
+
+      const onZoomEnd = () => setZoom(map.getZoom());
+      const onMoveEnd = () => {
+        if (fittedRef.current) render();
+        const pending = pendingSpiderRef.current;
+        if (!pending) return;
+        pendingSpiderRef.current = null;
+        const entry = Array.from(markersRef.current.values()).find(
+          ({ group }) => group.items.length > 1 && pending.every((id) => group.items.some((i) => i.id === id))
+        );
+        if (entry) spiderfy(entry.group, entry.marker);
+      };
+      map.on('zoomstart', () => collapseSpider(false));
+      map.on('zoomend', onZoomEnd);
+      map.on('moveend', onMoveEnd);
+      map.on('click', () => collapseSpider(true));
+
+      engineRef.current = { render, applyHighlights, focusListing, collapseSpider, fitListings };
       setMapReady(true);
     });
 
     return () => {
+      disposed = true;
+      clearTimeout(burstTimerRef.current);
+      engineRef.current = null;
+      markersRef.current.clear();
+      lastPosRef.current.clear();
+      spiderRef.current = null;
       if (resizeObserverRef.current) {
         resizeObserverRef.current.disconnect();
         resizeObserverRef.current = null;
@@ -148,73 +558,53 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
     };
   }, []);
 
-  // 2. Render & Update Marker Layer dynamically without destroying map instance
+  // Pins cascade in when the map first scrolls into view, not while it's off-screen
   useEffect(() => {
-    if (!mapReady || !mapInstanceRef.current || !leafletRef.current) return;
-    const Leaflet = leafletRef.current;
-    const map = mapInstanceRef.current;
+    const el = mapContainerRef.current;
+    if (!el || inView) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setInView(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.25 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [inView]);
 
-    // Clear existing markers layer group if it exists
-    if (markersGroupRef.current) {
-      markersGroupRef.current.clearLayers();
+  // 2. First time on screen: swoop from the island to the listings (markers pop in on landing).
+  //    After that, re-group in place when listings or filters change.
+  useEffect(() => {
+    const engine = engineRef.current;
+    if (!mapReady || !inView || !engine || properties.length === 0) return;
+    if (!fittedRef.current) {
+      fittedRef.current = true;
+      engine.fitListings(1.6);
     } else {
-      markersGroupRef.current = Leaflet.layerGroup().addTo(map);
+      engine.render();
     }
+  }, [properties, mapReady, inView]);
 
-    properties.forEach((prop) => {
-      const isHouse = prop.propertyType.toLowerCase() === 'house';
-      const isSelected = selectedId === prop.id;
+  // 3. Highlight follows selection and list hover without rebuilding markers
+  useEffect(() => {
+    engineRef.current?.applyHighlights();
+  }, [selectedId, hoveredId, mapReady]);
 
-      // Sleek animated circular marker node (replaces clustered city text badges)
-      const customHtml = `
-        <div class="relative group cursor-pointer flex items-center justify-center">
-          <!-- Outer subtle pulsing animation ring -->
-          <span class="absolute inline-flex h-8 w-8 rounded-full ${
-            isHouse ? 'bg-amber-400/40' : 'bg-emerald-400/40'
-          } animate-ping opacity-60"></span>
-
-          <!-- Main Pin Node -->
-          <div class="relative flex items-center justify-center h-8 w-8 rounded-full shadow-lg border-2 border-white transition-all duration-300 transform group-hover:scale-125 ${
-            isSelected
-              ? 'scale-125 ring-4 ring-amber-400 bg-navy-950 text-amber-400 z-50'
-              : isHouse
-              ? 'bg-amber-500 text-navy-950 hover:bg-amber-400'
-              : 'bg-emerald-600 text-white hover:bg-emerald-500'
-          }">
-            ${
-              isHouse
-                ? '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>'
-                : '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>'
-            }
-          </div>
-
-          <!-- Hover Tooltip Popup -->
-          <div class="absolute bottom-full mb-2 hidden group-hover:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-navy-950/95 text-white text-xs font-bold whitespace-nowrap shadow-2xl backdrop-blur-md border border-navy-700/60 z-50 pointer-events-none transition-all transform -translate-y-1">
-            <span class="text-amber-400 font-extrabold">${prop.city}</span>
-            <span class="text-navy-300">•</span>
-            <span class="text-white/90 truncate max-w-[160px]">${prop.title}</span>
-          </div>
-        </div>
-      `;
-
-      const icon = Leaflet.divIcon({
-        className: 'bg-transparent border-none',
-        html: customHtml,
-        iconSize: [32, 32],
-        iconAnchor: [16, 16],
-      });
-
-      const marker = Leaflet.marker([prop.lat, prop.lng], { icon });
-
-      marker.on('click', () => {
-        setActiveProperty(prop);
-        if (onSelectProperty) onSelectProperty(prop.id);
-        map.flyTo([prop.lat, prop.lng], 12, { animate: true, duration: 1 });
-      });
-
-      markersGroupRef.current.addLayer(marker);
-    });
-  }, [properties, selectedId, mapReady, onSelectProperty]);
+  // 4. Selection from outside the map (the listing sidebar): show its card and fly to it
+  useEffect(() => {
+    if (!selectedId) return;
+    const found = properties.find((p) => p.id === selectedId);
+    if (!found) return;
+    setActiveProperty(found);
+    // A pin tapped on the map is already in view: only list selections fly the map
+    const fromMap = localSelectRef.current === selectedId;
+    localSelectRef.current = null;
+    if (fromMap) return;
+    if (mapReady && inView) engineRef.current?.focusListing(found);
+  }, [selectedId, properties, mapReady, inView]);
 
   // Handle map style / layer changes
   const handleMapStyleChange = (style: MapStyle) => {
@@ -222,6 +612,12 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
     if (tileLayerRef.current && mapInstanceRef.current) {
       tileLayerRef.current.setUrl(BASE_MAPS[style].url);
     }
+  };
+
+  const showAllListings = () => {
+    engineRef.current?.collapseSpider(true);
+    setActiveProperty(null);
+    engineRef.current?.fitListings(1);
   };
 
   return (
@@ -275,6 +671,38 @@ export function SriLankaMap({ properties, selectedId, onSelectProperty }: SriLan
           <Layers className="h-3.5 w-3.5" />
           <span>Terrain</span>
         </button>
+      </div>
+
+      {/* Legend + back-to-island control */}
+      {/* Sits below the style switcher on phones, where that bar spans the map's width */}
+      <div className="absolute top-[4.25rem] right-4 z-20 flex flex-col items-end gap-2 sm:top-4">
+        <AnimatePresence>
+          {fittedZoom !== null && Math.abs(zoom - fittedZoom) > 0.4 && (
+            <motion.button
+              type="button"
+              onClick={showAllListings}
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.2 }}
+              className="flex items-center gap-1.5 rounded-xl bg-navy-900 px-3 py-2 text-xs font-bold text-white shadow-lg transition-colors hover:bg-amber-500 hover:text-navy-950"
+            >
+              <Maximize2 className="h-3.5 w-3.5" />
+              <span>Show all listings</span>
+            </motion.button>
+          )}
+        </AnimatePresence>
+        <div className="hidden items-center gap-3 rounded-xl bg-white/95 px-3 py-2 text-[11px] font-bold text-navy-800 shadow-lg ring-1 ring-navy-900/10 backdrop-blur-md sm:flex">
+          <span className="flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-amber-500" /> Houses
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-sea-500" /> Land
+          </span>
+          <span className="flex items-center gap-1.5 text-navy-800/60">
+            <span className="h-3 w-3 rounded-full bg-navy-900 ring-2 ring-amber-500" /> Tap a group to explore
+          </span>
+        </div>
       </div>
 
       {/* Map Canvas Container */}

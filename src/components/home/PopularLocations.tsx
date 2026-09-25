@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -88,6 +88,8 @@ function mapToPropertyMapItem(p: any): PropertyMapItem {
     lat: typeof p.latitude === 'number' ? p.latitude : (typeof p.lat === 'number' ? p.lat : coords.lat),
     lng: typeof p.longitude === 'number' ? p.longitude : (typeof p.lng === 'number' ? p.lng : coords.lng),
     description: p.description,
+    saleOrRent: p.saleOrRent,
+    district: p.district,
   };
 }
 
@@ -98,6 +100,10 @@ export function PopularLocations() {
   const [hasLoaded, setHasLoaded] = useState(false);
   const [filter, setFilter] = useState<'All' | 'House' | 'Land'>('All');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Hovering a listing in the sidebar highlights its pin (or its group bubble) on the map
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const itemRefs = useRef(new Map<string, HTMLDivElement>());
 
   useEffect(() => {
     let isMounted = true;
@@ -130,10 +136,26 @@ export function PopularLocations() {
     };
   }, []);
 
-  const filteredProperties = properties.filter((p) => {
-    if (filter === 'All') return true;
-    return p.propertyType.toLowerCase() === filter.toLowerCase();
-  });
+  // Memoized so the map only regroups its markers when the listings or the filter change
+  const filteredProperties = useMemo(
+    () =>
+      properties.filter((p) => {
+        if (filter === 'All') return true;
+        return p.propertyType.toLowerCase() === filter.toLowerCase();
+      }),
+    [properties, filter]
+  );
+
+  // A pin picked on the map scrolls its listing into view (inside the list only, not the page)
+  useEffect(() => {
+    const list = listRef.current;
+    const item = selectedId ? itemRefs.current.get(selectedId) : null;
+    if (!list || !item) return;
+    const top = item.offsetTop - list.offsetTop;
+    if (top < list.scrollTop || top + item.offsetHeight > list.scrollTop + list.clientHeight) {
+      list.scrollTo({ top: Math.max(0, top - 12), behavior: 'smooth' });
+    }
+  }, [selectedId]);
 
   const houseCount = properties.filter((p) => p.propertyType.toLowerCase() === 'house').length;
   const landCount = properties.filter((p) => p.propertyType.toLowerCase() === 'land').length;
@@ -202,6 +224,7 @@ export function PopularLocations() {
             <SriLankaMap
               properties={filteredProperties}
               selectedId={selectedId}
+              hoveredId={hoveredId}
               onSelectProperty={(id) => setSelectedId(id)}
             />
           </div>
@@ -217,7 +240,11 @@ export function PopularLocations() {
               </span>
             </div>
 
-            <div className="mt-3 flex-1 overflow-y-auto space-y-2.5 pr-1 custom-scrollbar">
+            <div
+              ref={listRef}
+              className="mt-3 flex-1 overflow-y-auto space-y-2.5 pr-1 custom-scrollbar"
+              onMouseLeave={() => setHoveredId(null)}
+            >
               {filteredProperties.map((item) => {
                 const isSelected = selectedId === item.id;
                 const isHouse = item.propertyType.toLowerCase() === 'house';
@@ -225,7 +252,12 @@ export function PopularLocations() {
                 return (
                   <div
                     key={item.id}
+                    ref={(el) => {
+                      if (el) itemRefs.current.set(item.id, el);
+                      else itemRefs.current.delete(item.id);
+                    }}
                     onClick={() => setSelectedId(item.id)}
+                    onMouseEnter={() => setHoveredId(item.id)}
                     className={`group relative flex items-center gap-3 rounded-2xl p-2.5 transition-all cursor-pointer border ${
                       isSelected
                         ? 'border-amber-500 bg-amber-50/60 shadow-md ring-2 ring-amber-400/20'
