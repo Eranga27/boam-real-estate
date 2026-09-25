@@ -15,12 +15,15 @@ export const PRODUCTION_BACKEND_URL = 'https://boam-real-estate.onrender.com';
 const CACHE_KEY = 'boam_properties_cache_v3';
 const CACHE_TIMESTAMP_KEY = 'boam_properties_cache_time_v3';
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes freshness window
+// Written only when an admin changes listings; other tabs listen for it to refresh
+const INVALIDATION_KEY = 'boam_properties_invalidated_at';
 
 // In-memory runtime cache for instant zero-latency transitions
 let memoryPropertiesCache: any[] | null = null;
 let memoryCacheTimestamp = 0;
 const memoryDetailCache = new Map<string, { data: any; timestamp: number }>();
 const inFlightDetailRequests = new Map<string, Promise<any | null>>();
+const inFlightListRequests = new Map<number, Promise<any[]>>();
 
 export function getBaseApiUrl(): string {
   if (process.env.NEXT_PUBLIC_API_URL) {
@@ -42,6 +45,7 @@ export function invalidatePropertiesCache(): void {
   memoryCacheTimestamp = 0;
   memoryDetailCache.clear();
   inFlightDetailRequests.clear();
+  inFlightListRequests.clear();
 
   if (typeof window === 'undefined') return;
   try {
@@ -49,11 +53,31 @@ export function invalidatePropertiesCache(): void {
     localStorage.removeItem(CACHE_TIMESTAMP_KEY);
     sessionStorage.removeItem(CACHE_KEY);
     sessionStorage.removeItem(CACHE_TIMESTAMP_KEY);
-    // Dispatch a custom event so any open tabs / listeners update immediately
+    // Other tabs receive a storage event for this key; this tab gets the custom event
+    localStorage.setItem(INVALIDATION_KEY, Date.now().toString());
     window.dispatchEvent(new CustomEvent('boam:properties_invalidated'));
   } catch {
     // Ignore storage restrictions
   }
+}
+
+/**
+ * Run `callback` whenever an admin changes listings, in this tab or any other open tab.
+ * Returns an unsubscribe function for effect cleanup.
+ */
+export function onPropertiesInvalidated(callback: () => void): () => void {
+  if (typeof window === 'undefined') return () => {};
+
+  const handleStorage = (e: StorageEvent) => {
+    if (e.key === INVALIDATION_KEY) callback();
+  };
+  window.addEventListener('boam:properties_invalidated', callback);
+  window.addEventListener('storage', handleStorage);
+
+  return () => {
+    window.removeEventListener('boam:properties_invalidated', callback);
+    window.removeEventListener('storage', handleStorage);
+  };
 }
 
 /**
@@ -89,6 +113,8 @@ function toSlimListing(p: any): any {
     featured: p.isFeatured || p.featured || false,
     isFeatured: p.isFeatured || p.featured || false,
     createdAt: p.createdAt || new Date().toISOString(),
+    // Needed so "Newest First" ordering from cache matches the live list (no reorder on refresh)
+    updatedAt: p.updatedAt || p.createdAt || new Date().toISOString(),
   };
 }
 
@@ -163,8 +189,24 @@ async function fetchWithTimeout(url: string, timeoutMs: number, init: RequestIni
  * Resilient multi-endpoint fetch for properties:
  * Tries the primary configured endpoint, and falls back to direct production backend
  * if the primary fails, returns a non-200 status, or times out.
+ * Concurrent callers (e.g. the homepage's featured and map sections) share one request.
  */
 export async function fetchLivePropertiesList(limit = 100): Promise<any[]> {
+  if (inFlightListRequests.has(limit)) {
+    return inFlightListRequests.get(limit)!;
+  }
+
+  const fetchPromise: Promise<any[]> = requestPropertiesList(limit).finally(() => {
+    // An invalidation may have started a newer request under the same key; keep that one
+    if (inFlightListRequests.get(limit) === fetchPromise) {
+      inFlightListRequests.delete(limit);
+    }
+  });
+  inFlightListRequests.set(limit, fetchPromise);
+  return fetchPromise;
+}
+
+async function requestPropertiesList(limit: number): Promise<any[]> {
   const query = `limit=${limit}&sort=newest&_t=${Date.now()}`;
   const primaryBase = getBaseApiUrl();
 

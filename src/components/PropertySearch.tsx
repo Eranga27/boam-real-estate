@@ -9,7 +9,7 @@ import {
   ChevronLeft, ChevronRight, LandPlot, ImageOff, RotateCcw
 } from 'lucide-react';
 import { formatPrice, getImageUrl } from '@/lib/format';
-import { fetchLivePropertiesList, getCachedProperties, setCachedProperties } from '@/lib/api';
+import { fetchLivePropertiesList, getCachedProperties, onPropertiesInvalidated, setCachedProperties } from '@/lib/api';
 
 interface PropertySearchProps {
   initialType: 'Sale' | 'Rent' | '';
@@ -114,25 +114,28 @@ export default function PropertySearch({
     return CITIES.filter((c) => c.toLowerCase().includes(filters.city.trim().toLowerCase()));
   }, [filters.city]);
 
-  // Instantly render from server-provided initial data or client cache
-  const cachedOnInit = (initialProperties && initialProperties.length > 0)
-    ? initialProperties
-    : (typeof window !== 'undefined' ? getCachedProperties() : null);
+  // Instantly render from server-provided initial data. The browser cache is read after
+  // mount so the first client render matches the server HTML (no hydration mismatch).
+  const hasInitialProperties = !!initialProperties && initialProperties.length > 0;
 
   const [dbListings, setDbListings] = useState<any[]>(
-    cachedOnInit && cachedOnInit.length > 0 ? cachedOnInit.map(mapDbListing) : []
+    hasInitialProperties ? initialProperties.map(mapDbListing) : []
   );
   // True only while the very first API call is in-flight AND we have no cache or SSR properties
-  const [isLoading, setIsLoading] = useState(
-    !cachedOnInit || cachedOnInit.length === 0
-  );
+  const [isLoading, setIsLoading] = useState(!hasInitialProperties);
 
   useEffect(() => {
     let isMounted = true;
 
-    // Cache server initial properties if provided
-    if (initialProperties && initialProperties.length > 0) {
+    if (hasInitialProperties) {
+      // Cache server initial properties for instant loads elsewhere
       setCachedProperties(initialProperties);
+    } else {
+      const cached = getCachedProperties();
+      if (cached && cached.length > 0) {
+        setDbListings(cached.map(mapDbListing));
+        setIsLoading(false);
+      }
     }
 
     const fetchProperties = async () => {
@@ -150,22 +153,12 @@ export default function PropertySearch({
 
     fetchProperties();
 
-    // Revalidate on admin change events or storage sync
-    const handleInvalidation = () => {
-      fetchProperties();
-    };
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key === 'boam_properties_cache_time_v2') {
-        fetchProperties();
-      }
-    };
-    window.addEventListener('boam:properties_invalidated', handleInvalidation);
-    window.addEventListener('storage', handleStorage);
+    // Revalidate when an admin changes listings (this tab or another open tab)
+    const unsubscribe = onPropertiesInvalidated(fetchProperties);
 
     return () => {
       isMounted = false;
-      window.removeEventListener('boam:properties_invalidated', handleInvalidation);
-      window.removeEventListener('storage', handleStorage);
+      unsubscribe();
     };
   }, []);
 

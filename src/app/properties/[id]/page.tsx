@@ -8,6 +8,12 @@ import PropertyDetailsClient from './PropertyDetailsClient';
 // Enable Next.js ISR (Incremental Static Regeneration) for instant edge loading
 export const revalidate = 60;
 
+// No listings are pre-built at deploy time (keeps builds fast when Render is cold);
+// each detail page is rendered on its first visit, then cached and revalidated like ISR
+export async function generateStaticParams() {
+  return [];
+}
+
 interface Props {
   params: { id: string };
 }

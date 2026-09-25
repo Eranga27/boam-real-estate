@@ -3,7 +3,9 @@ import { PRODUCTION_BACKEND_URL } from '@/lib/api';
 
 /**
  * Lightweight endpoint to keep Render backend container awake and warm.
- * Can be called by uptime monitors (UptimeRobot, Cron-job.org) or Vercel Cron.
+ * Can be called by uptime monitors (UptimeRobot, Cron-job.org).
+ * The scheduled keep-alive runs in .github/workflows/keep-backend-awake.yml instead of
+ * Vercel Cron, because the Hobby plan rejects deployments with sub-daily cron jobs.
  */
 export async function GET() {
   const startTime = Date.now();

@@ -23,57 +23,68 @@ interface PropertyDetailsClientProps {
 }
 
 export default function PropertyDetailsClient({
-  property,
+  property: initialProperty,
   relatedProperties,
   propertyId,
 }: PropertyDetailsClientProps) {
-  const [currentProperty, setCurrentProperty] = useState(property);
-  const activeProperty = currentProperty || property;
+  // Server data when available; otherwise filled by the client-side recovery fetch below
+  const [property, setProperty] = useState(initialProperty);
+  // The server fetch can time out while the backend cold-starts; retry from the browser
+  const [isRecovering, setIsRecovering] = useState(!initialProperty && !!propertyId);
   const [activeImage, setActiveImage] = useState(0);
   const [showShareToast, setShowShareToast] = useState(false);
   const [isDescExpanded, setIsDescExpanded] = useState(false);
 
   React.useEffect(() => {
-    if (!currentProperty && propertyId) {
-      fetchLivePropertyById(propertyId)
-        .then((p) => {
-          if (p) {
-            setCurrentProperty({
-              id: p.id,
-              title: p.title,
-              propertyType: p.propertyType,
-              saleOrRent: p.saleOrRent || 'Sale',
-              price: p.price,
-              pricePerPerch: p.pricePerPerch,
-              video: p.video,
-              negotiable: p.negotiable,
-              city: p.city,
-              district: p.district,
-              address: p.address,
-              latitude: p.latitude,
-              longitude: p.longitude,
-              bedrooms: p.bedrooms || null,
-              bathrooms: p.bathrooms || null,
-              beds: p.bedrooms || 0,
-              baths: p.bathrooms || 0,
-              parking: p.parking || null,
-              landSize: p.landSize || null,
-              landUnit: p.landUnit || 'perches',
-              houseSize: p.houseSize || null,
-              yearBuilt: p.yearBuilt || null,
-              description: p.description,
-              amenities: p.amenities || [],
-              nearbyFacilities: p.nearbyFacilities || [],
-              images: p.images || [],
-              listedDaysAgo: 'Recently',
-              featured: p.isFeatured || false,
-              user: p.user || { fullName: 'BOAM Real Estates' },
-            });
-          }
-        })
-        .catch(() => {});
-    }
-  }, [currentProperty, propertyId]);
+    if (initialProperty || !propertyId) return;
+    let isMounted = true;
+
+    fetchLivePropertyById(propertyId)
+      .then((p) => {
+        if (!isMounted) return;
+        if (p) {
+          setProperty({
+            id: p.id,
+            title: p.title,
+            propertyType: p.propertyType,
+            saleOrRent: p.saleOrRent || 'Sale',
+            price: p.price,
+            pricePerPerch: p.pricePerPerch,
+            video: p.video,
+            negotiable: p.negotiable,
+            city: p.city,
+            district: p.district,
+            address: p.address,
+            latitude: p.latitude,
+            longitude: p.longitude,
+            bedrooms: p.bedrooms || null,
+            bathrooms: p.bathrooms || null,
+            beds: p.bedrooms || 0,
+            baths: p.bathrooms || 0,
+            parking: p.parking || null,
+            landSize: p.landSize || null,
+            landUnit: p.landUnit || 'perches',
+            houseSize: p.houseSize || null,
+            yearBuilt: p.yearBuilt || null,
+            description: p.description,
+            amenities: p.amenities || [],
+            nearbyFacilities: p.nearbyFacilities || [],
+            images: p.images || [],
+            listedDaysAgo: 'Recently',
+            featured: p.isFeatured || false,
+            user: p.user || { fullName: 'BOAM Real Estates' },
+          });
+        }
+        setIsRecovering(false);
+      })
+      .catch(() => {
+        if (isMounted) setIsRecovering(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [initialProperty, propertyId]);
 
   /** Native Web Share API + Clipboard Fallback using canonical production URL */
   const handleShare = async () => {
@@ -108,6 +119,15 @@ export default function PropertyDetailsClient({
     setActiveImage((i) => (i - 1 + (property?.images?.length || 1)) % (property?.images?.length || 1));
   const nextImage = () =>
     setActiveImage((i) => (i + 1) % (property?.images?.length || 1));
+
+  if (!property && isRecovering) {
+    return (
+      <div className="min-h-screen bg-navy-50/50 flex flex-col items-center justify-center p-6 text-center pt-24">
+        <div className="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mb-4" />
+        <p className="text-navy-800/60 text-sm font-semibold">Loading property details…</p>
+      </div>
+    );
+  }
 
   if (!property) {
     return (

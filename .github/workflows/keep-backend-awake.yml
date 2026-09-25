@@ -1,0 +1,21 @@
+# Keeps the Render free-tier backend warm so visitors don't wait for a cold start.
+# Render sleeps after 15 minutes without traffic. Vercel's Hobby plan only allows
+# daily cron jobs, so the frequent ping runs here instead (free for public repos).
+name: Keep backend awake
+
+on:
+  schedule:
+    # Every 10 minutes; GitHub can delay scheduled runs by a few minutes
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Ping Render backend
+        run: |
+          curl --fail --silent --show-error --max-time 90 --retry 2 --retry-delay 10 \
+            -o /dev/null -w "HTTP %{http_code} in %{time_total}s\n" \
+            "https://boam-real-estate.onrender.com/api/v1/properties?limit=1"

@@ -37,18 +37,35 @@ export function FeaturedProperties({ properties = [], loading = false }: { prope
       </div>
 
       <div className="-mx-4 mt-10 flex snap-x snap-mandatory gap-5 overflow-x-auto px-4 pb-4 rail-scroll sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-3">
-        {featured.map((property, i) => (
-          <motion.div
-            key={property.id}
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-80px' }}
-            transition={{ duration: 0.5, delay: i * 0.1 }}
-            className="min-w-[290px] max-w-[88vw] shrink-0 snap-start sm:min-w-0 sm:max-w-none sm:shrink"
-          >
-            <PropertyCard property={property} />
-          </motion.div>
-        ))}
+        {loading && featured.length === 0
+          ? // Skeleton cards while live listings load on a first, uncached visit
+            Array.from({ length: 3 }).map((_, i) => (
+              <div
+                key={i}
+                className="min-w-[290px] max-w-[88vw] shrink-0 snap-start sm:min-w-0 sm:max-w-none sm:shrink"
+              >
+                <div className="animate-pulse overflow-hidden rounded-3xl bg-white shadow-card ring-1 ring-navy-100/90">
+                  <div className="aspect-[16/10] bg-navy-100 sm:aspect-[4/3]" />
+                  <div className="space-y-3 p-4 sm:p-5">
+                    <div className="h-3 w-16 rounded-full bg-navy-100" />
+                    <div className="h-4 w-3/4 rounded-full bg-navy-100" />
+                    <div className="h-3 w-1/2 rounded-full bg-navy-100" />
+                  </div>
+                </div>
+              </div>
+            ))
+          : featured.map((property, i) => (
+              <motion.div
+                key={property.id}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-80px' }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+                className="min-w-[290px] max-w-[88vw] shrink-0 snap-start sm:min-w-0 sm:max-w-none sm:shrink"
+              >
+                <PropertyCard property={property} />
+              </motion.div>
+            ))}
       </div>
       </div>
     </section>

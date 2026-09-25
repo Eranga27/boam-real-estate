@@ -1,7 +1,6 @@
 import { v2 as cloudinary } from 'cloudinary';
 import dotenv from 'dotenv';
 import fs from 'fs';
-import path from 'path';
 import sharp from 'sharp';
 
 dotenv.config();
@@ -46,11 +45,11 @@ export const uploadOnCloudinary = async (localFilePath: string, resourceType: "a
         fs.unlinkSync(localFilePath);
         return `data:image/jpeg;base64,${compressedBuffer.toString('base64')}`;
       } else {
-        // For video files or fallback
-        const fileBuffer = fs.readFileSync(localFilePath);
+        // Videos are too large for Base64 and Render's disk is wiped on every restart,
+        // so without Cloudinary there is nowhere durable to keep them
         fs.unlinkSync(localFilePath);
-        const fileName = path.basename(localFilePath);
-        return `/uploads/${fileName}`;
+        console.error('Video upload skipped: Cloudinary is not configured or the upload failed.');
+        return null;
       }
     }
   } catch (err) {

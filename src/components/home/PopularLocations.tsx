@@ -22,8 +22,7 @@ const SriLankaMap = dynamic(() => import('./SriLankaMap').then((m) => m.SriLanka
   ),
 });
 
-import { properties as staticProperties } from '@/data/properties';
-import { fetchLivePropertiesList, getCachedProperties } from '@/lib/api';
+import { fetchLivePropertiesList, getCachedProperties, onPropertiesInvalidated } from '@/lib/api';
 
 function assignCoords(city: string, title: string, id?: string, district?: string) {
   const t = title.toLowerCase();
@@ -92,68 +91,42 @@ function mapToPropertyMapItem(p: any): PropertyMapItem {
   };
 }
 
-const INITIAL_PROPERTIES: PropertyMapItem[] = staticProperties.map((p) => {
-  const coords = assignCoords(p.city || p.district || '', p.title || '', p.id, p.district);
-  return {
-    id: p.id,
-    title: p.title,
-    propertyType: p.type || 'Land',
-    price: p.price,
-    city: p.city || p.district || 'Sri Lanka',
-    address: p.address,
-    images: p.images || [],
-    lat: typeof p.lat === 'number' ? p.lat : coords.lat,
-    lng: typeof p.lng === 'number' ? p.lng : coords.lng,
-    description: p.description,
-  };
-});
-
-function mergeProperties(liveList: any[]): PropertyMapItem[] {
-  if (!Array.isArray(liveList) || liveList.length === 0) return INITIAL_PROPERTIES;
-  // Database is the authoritative source of truth
-  return liveList.map(mapToPropertyMapItem);
-}
-
 export function PopularLocations() {
-  const [properties, setProperties] = useState<PropertyMapItem[]>(() => {
-    const cached = getCachedProperties();
-    if (cached && cached.length > 0) {
-      return mergeProperties(cached);
-    }
-    return INITIAL_PROPERTIES;
-  });
+  // Database is the authoritative source of truth: start empty (matching the server HTML),
+  // then fill from the browser cache and the live API after mount
+  const [properties, setProperties] = useState<PropertyMapItem[]>([]);
+  const [hasLoaded, setHasLoaded] = useState(false);
   const [filter, setFilter] = useState<'All' | 'House' | 'Land'>('All');
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
+
+    const cached = getCachedProperties();
+    if (cached && cached.length > 0) {
+      setProperties(cached.map(mapToPropertyMapItem));
+      setHasLoaded(true);
+    }
+
     const fetchAll = async () => {
       try {
-        const liveData = await fetchLivePropertiesList(60);
+        const liveData = await fetchLivePropertiesList();
         if (isMounted && Array.isArray(liveData) && liveData.length > 0) {
-          setProperties(mergeProperties(liveData));
+          setProperties(liveData.map(mapToPropertyMapItem));
         }
       } catch {
-        // Fall back to INITIAL_PROPERTIES or cached properties
+        // Keep cached properties if the backend is unreachable
+      } finally {
+        if (isMounted) setHasLoaded(true);
       }
     };
 
     fetchAll();
 
-    const handleInvalidate = () => {
-      fetchAll();
-    };
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key === 'boam_properties_cache_time_v2') {
-        fetchAll();
-      }
-    };
-    window.addEventListener('boam:properties_invalidated', handleInvalidate);
-    window.addEventListener('storage', handleStorage);
+    const unsubscribe = onPropertiesInvalidated(fetchAll);
     return () => {
       isMounted = false;
-      window.removeEventListener('boam:properties_invalidated', handleInvalidate);
-      window.removeEventListener('storage', handleStorage);
+      unsubscribe();
     };
   }, []);
 
@@ -193,7 +166,7 @@ export function PopularLocations() {
               }`}
             >
               <Layers className="h-3.5 w-3.5" />
-              <span>All ({properties.length})</span>
+              <span>All{hasLoaded && ` (${properties.length})`}</span>
             </button>
 
             <button
@@ -205,7 +178,7 @@ export function PopularLocations() {
               }`}
             >
               <Home className="h-3.5 w-3.5" />
-              <span>Houses ({houseCount})</span>
+              <span>Houses{hasLoaded && ` (${houseCount})`}</span>
             </button>
 
             <button
@@ -217,7 +190,7 @@ export function PopularLocations() {
               }`}
             >
               <Trees className="h-3.5 w-3.5" />
-              <span>Lands ({landCount})</span>
+              <span>Lands{hasLoaded && ` (${landCount})`}</span>
             </button>
           </div>
         </div>
@@ -237,7 +210,7 @@ export function PopularLocations() {
           <div className="lg:col-span-4 flex flex-col h-[580px] rounded-3xl bg-white p-4 shadow-xl border border-navy-100">
             <div className="flex items-center justify-between px-2 pb-3 border-b border-navy-100">
               <h3 className="text-sm font-extrabold text-navy-900">
-                Available Locations ({filteredProperties.length})
+                Available Locations{hasLoaded && ` (${filteredProperties.length})`}
               </h3>
               <span className="text-[11px] font-semibold text-amber-600">
                 Click listing to view on map

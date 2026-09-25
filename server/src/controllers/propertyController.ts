@@ -3,6 +3,9 @@ import prisma from '../prisma';
 import { AuthRequest } from '../middlewares/authMiddleware';
 import { uploadOnCloudinary } from '../utils/cloudinary';
 
+const VIDEO_UPLOAD_FAILED =
+  'The video could not be uploaded, so the listing was not saved. Video hosting needs Cloudinary to be configured on the server. Remove the video and save again, or try again later.';
+
 export const addProperty = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const {
@@ -37,7 +40,11 @@ export const addProperty = async (req: AuthRequest, res: Response): Promise<void
 
     if (files && files['video'] && files['video'].length > 0) {
       const url = await uploadOnCloudinary(files['video'][0].path, 'video');
-      if (url) videoUrl = url;
+      if (!url) {
+        res.status(400).json({ success: false, message: VIDEO_UPLOAD_FAILED });
+        return;
+      }
+      videoUrl = url;
     }
 
     // Handle thumbnail ordering if designated
@@ -155,7 +162,11 @@ export const editProperty = async (req: AuthRequest, res: Response): Promise<voi
 
     if (files && files['video'] && files['video'].length > 0) {
       const url = await uploadOnCloudinary(files['video'][0].path, 'video');
-      if (url) updateData.video = url;
+      if (!url) {
+        res.status(400).json({ success: false, message: VIDEO_UPLOAD_FAILED });
+        return;
+      }
+      updateData.video = url;
     } else if (req.body.removeVideo === 'true' || req.body.video === '' || req.body.video === 'null') {
       updateData.video = null;
     }

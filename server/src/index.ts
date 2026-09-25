@@ -19,6 +19,9 @@ dotenv.config();
 
 const app = express();
 
+// Render terminates TLS at its proxy; trust that one hop so req.ip is the caller, not the proxy
+app.set('trust proxy', 1);
+
 // Security Hardening
 app.use(
   helmet({
@@ -35,11 +38,14 @@ app.use(
   })
 );
 
-// Rate Limiting (100 requests per 15 minutes)
+// Rate Limiting (100 write/auth requests per 15 minutes)
+// Public reads are skipped: browser traffic arrives through the Vercel proxy, so every
+// visitor would otherwise share a single bucket and one busy period would blank the site.
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, 
-  max: 100, 
-  message: 'Too many requests from this IP, please try again later.',
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  skip: (req) => req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS',
+  message: { success: false, message: 'Too many requests from this IP, please try again later.' },
 });
 app.use('/api/', limiter);
 
@@ -58,6 +64,17 @@ app.use('/api/v1/favorites', favoriteRoutes);
 app.use('/api/v1/dashboard', dashboardRoutes);
 app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/requests', requestRoutes);
+
+// Return JSON for errors thrown by middleware (e.g. rejected upload file types)
+// so the admin UI can show the message instead of failing to parse an HTML error page
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  if (res.headersSent) {
+    next(err);
+    return;
+  }
+  const status = err?.name === 'MulterError' ? 400 : err?.status || 500;
+  res.status(status).json({ success: false, message: err?.message || 'Server error' });
+});
 
 const PORT = process.env.PORT || 5000;
 

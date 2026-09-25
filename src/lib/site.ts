@@ -12,6 +12,10 @@ export function getSiteUrl(): string {
   if (typeof window !== 'undefined' && window.location?.origin) {
     return window.location.origin.replace(/\/+$/, '');
   }
+  // Set automatically by Vercel: the custom domain once connected, otherwise the .vercel.app domain
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  }
   return 'https://boamrealestates.com';
 }
 
