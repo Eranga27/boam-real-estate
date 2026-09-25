@@ -8,6 +8,7 @@ import { WhyChooseUs } from '@/components/home/WhyChooseUs';
 import { HowItWorks } from '@/components/home/HowItWorks';
 import { PopularLocations } from '@/components/home/PopularLocations';
 import { CtaBanner } from '@/components/home/CtaBanner';
+import BoamIntro from '@/components/intro/BoamIntro';
 import { fetchLivePropertiesList, getCachedProperties, onPropertiesInvalidated } from '@/lib/api';
 import { toFeaturedCards } from '@/lib/featured';
 
@@ -56,6 +57,7 @@ export default function HomeClient({ initialFeatured }: HomeClientProps) {
 
   return (
     <div className="w-full">
+      <BoamIntro />
       <Hero />
       <StatsStrip />
       <FeaturedProperties properties={featuredProperties} loading={loadingProperties} />

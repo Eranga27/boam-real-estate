@@ -71,7 +71,7 @@ export const metadata: Metadata = {
   },
 };
 
-import { PagePreloader } from '@/components/ui/PagePreloader';
+import { INTRO_HEAD_SCRIPT } from '@/lib/introScript';
 
 export default function RootLayout({
   children,
@@ -98,8 +98,13 @@ export default function RootLayout({
   };
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Before first paint: skip the homepage intro if it already played this session */}
+        <script dangerouslySetInnerHTML={{ __html: INTRO_HEAD_SCRIPT }} />
+        <noscript>
+          <style>{'[data-intro]{display:none!important}'}</style>
+        </noscript>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -110,7 +115,7 @@ export default function RootLayout({
           <div className="flex flex-col min-h-screen">
             <Navbar />
             <main className="flex-grow">
-              <PagePreloader>{children}</PagePreloader>
+              {children}
             </main>
             <Footer />
           </div>

@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { ChevronDownIcon, MapPinIcon, SearchIcon } from 'lucide-react';
 import { heroImage } from '@/data/locations';
 import { propertyTypes } from '@/data/properties';
+import { getEntranceDelay, useIntroRevealed } from '@/lib/intro';
 
 const CITIES = ['Colombo', 'Kandy', 'Galle', 'Negombo', 'Jaffna', 'Nugegoda', 'Mount Lavinia', 'Matara'];
 
@@ -26,6 +27,9 @@ export function Hero() {
   const [loadedImages, setLoadedImages] = useState<string[]>([heroImage]);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  // Entrance and slideshow wait for the homepage intro to open onto the hero
+  const revealed = useIntroRevealed();
+  const introDelay = revealed ? getEntranceDelay() : 0;
 
   const startTimer = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -56,14 +60,16 @@ export function Hero() {
       });
     }, 800);
 
-    startTimer();
-
     return () => {
       isMounted = false;
       clearTimeout(preloadTimeout);
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [startTimer]);
+  }, []);
+
+  useEffect(() => {
+    if (revealed) startTimer();
+  }, [revealed, startTimer]);
 
   const suggestions = useMemo(() => {
     if (!location.trim()) return CITIES.slice(0, 5);
@@ -88,8 +94,13 @@ export function Hero() {
         backgroundPosition: 'center',
       }}
     >
-      {/* Background Slideshow Layer */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* Background Slideshow Layer — settles from a slight zoom as the intro opens onto it */}
+      <motion.div
+        className="absolute inset-0 overflow-hidden pointer-events-none"
+        initial={{ scale: 1.1 }}
+        animate={revealed ? { scale: 1 } : undefined}
+        transition={{ duration: 2.4, ease: [0.16, 1, 0.3, 1] }}
+      >
         {HERO_SLIDES.map((imgSrc, idx) => {
           const isVisible = idx === currentIndex;
           const isAvailable = idx === 0 || loadedImages.includes(imgSrc);
@@ -107,12 +118,12 @@ export function Hero() {
                 alt=""
                 aria-hidden="true"
                 className="h-full w-full object-cover object-center sm:object-[center_35%]"
-                {...(idx === 0 ? { fetchPriority: 'high' as any } : { loading: 'lazy' })}
+                {...(idx === 0 ? { fetchPriority: 'high' as any, 'data-hero-image': true } : { loading: 'lazy' })}
               />
             </div>
           );
         })}
-      </div>
+      </motion.div>
 
       {/* Atmospheric Overlays preserving right-side photography while guaranteeing left text contrast */}
       <div className="absolute inset-0 bg-navy-950/30 pointer-events-none" />
@@ -125,8 +136,8 @@ export function Hero() {
           {/* Minimal BOAM Brand Treatment */}
           <motion.div
             initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: 'easeOut' }}
+            animate={revealed ? { opacity: 1, y: 0 } : undefined}
+            transition={{ duration: 0.6, delay: introDelay, ease: 'easeOut' }}
             className="flex items-center gap-2.5"
           >
             <img
@@ -142,8 +153,8 @@ export function Hero() {
           {/* Editorial Headline */}
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+            animate={revealed ? { opacity: 1, y: 0 } : undefined}
+            transition={{ duration: 0.7, delay: introDelay + 0.1, ease: [0.16, 1, 0.3, 1] }}
             className="mt-4 text-4xl font-extrabold tracking-tight text-white sm:text-6xl lg:text-7xl leading-[1.05]"
           >
             Property, with{' '}
@@ -155,8 +166,8 @@ export function Hero() {
           {/* Supporting Copy */}
           <motion.p
             initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.22, ease: 'easeOut' }}
+            animate={revealed ? { opacity: 1, y: 0 } : undefined}
+            transition={{ duration: 0.7, delay: introDelay + 0.22, ease: 'easeOut' }}
             className="mt-5 text-base font-normal leading-relaxed text-white/80 sm:text-lg lg:text-xl max-w-lg"
           >
             Explore houses, apartments, villas and prime land opportunities across Sri Lanka.
@@ -165,8 +176,8 @@ export function Hero() {
           {/* Left-Aligned Floating Search Panel */}
           <motion.form
             initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            animate={revealed ? { opacity: 1, y: 0 } : undefined}
+            transition={{ duration: 0.8, delay: introDelay + 0.35, ease: [0.16, 1, 0.3, 1] }}
             onSubmit={submit}
             className="mt-8 w-full max-w-2xl"
             role="search"

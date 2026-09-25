@@ -85,3 +85,37 @@ input[type='range'].brand-range::-moz-range-thumb {
   height: 100% !important;
   border-radius: 1.5rem;
 }
+
+/* ---- Homepage intro (src/components/intro/BoamIntro.tsx) ---- */
+/* Already played this session: the head script adds .intro-seen before first paint */
+html.intro-seen [data-intro] {
+  display: none !important;
+}
+/* Faint architectural blueprint grid, fading out toward the edges */
+.intro-grid {
+  background-image:
+    linear-gradient(rgba(205, 167, 118, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(205, 167, 118, 0.07) 1px, transparent 1px);
+  background-size: 64px 64px;
+  background-position: center center;
+  -webkit-mask-image: radial-gradient(ellipse 60% 55% at 50% 50%, #000 15%, transparent 75%);
+  mask-image: radial-gradient(ellipse 60% 55% at 50% 50%, #000 15%, transparent 75%);
+}
+/* Film grain: a small noise tile jittered in steps, like projected film */
+.intro-grain {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  animation: intro-grain 0.9s steps(6) infinite;
+}
+@keyframes intro-grain {
+  0% { transform: translate(0, 0); }
+  20% { transform: translate(-3%, 2%); }
+  40% { transform: translate(2%, -3%); }
+  60% { transform: translate(-2%, -1%); }
+  80% { transform: translate(3%, 3%); }
+  100% { transform: translate(0, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .intro-grain {
+    animation: none;
+  }
+}
