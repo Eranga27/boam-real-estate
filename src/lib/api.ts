@@ -189,11 +189,11 @@ export async function fetchLivePropertiesList(limit = 100): Promise<any[]> {
       ? { next: { revalidate: 60, tags: ['properties'] } }
       : { cache: 'no-store' }),
   };
+  const timeoutMs = isServer ? 6000 : 25000;
 
   for (const url of candidates) {
     try {
-      // 25-second timeout to allow Render container to wake up from cold sleep
-      const res = await fetchWithTimeout(url, 25000, fetchOptions);
+      const res = await fetchWithTimeout(url, timeoutMs, fetchOptions);
 
       if (res.ok) {
         const json = await res.json();
@@ -249,10 +249,11 @@ export async function fetchLivePropertyById(id: string): Promise<any | null> {
         ? { next: { revalidate: 60, tags: [`property-${id}`, 'properties'] } }
         : { cache: 'no-store' }),
     };
+    const timeoutMs = isServer ? 6000 : 20000;
 
     for (const url of candidates) {
       try {
-        const res = await fetchWithTimeout(url, 20000, fetchOptions);
+        const res = await fetchWithTimeout(url, timeoutMs, fetchOptions);
 
         if (res.ok) {
           const json = await res.json();
