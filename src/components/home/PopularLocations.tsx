@@ -23,6 +23,13 @@ const SriLankaMap = dynamic(() => import('./SriLankaMap').then((m) => m.SriLanka
 });
 
 import { fetchLivePropertiesList, getCachedProperties, onPropertiesInvalidated } from '@/lib/api';
+import { EASE_OUT_EXPO, Eyebrow, Reveal, RevealText } from '@/components/motion/Reveal';
+
+const FILTERS = [
+  { value: 'All', label: 'All', icon: Layers, active: 'bg-navy-900', text: 'text-white' },
+  { value: 'House', label: 'Houses', icon: Home, active: 'bg-amber-500', text: 'text-navy-950' },
+  { value: 'Land', label: 'Lands', icon: Trees, active: 'bg-emerald-600', text: 'text-white' },
+] as const;
 
 function assignCoords(city: string, title: string, id?: string, district?: string) {
   const t = title.toLowerCase();
@@ -166,71 +173,78 @@ export function PopularLocations() {
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-amber-600">
-              Where We Operate
-            </p>
-            <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-navy-900 sm:text-4xl">
-              Explore Available Listings Across Sri Lanka
-            </h2>
-            <p className="mt-2 text-sm text-navy-600 max-w-xl">
-              Click on any location marker on the interactive map to view property details, photos, and explore listings directly.
-            </p>
+            <Eyebrow>Where We Operate</Eyebrow>
+            <RevealText
+              text="Explore Available Listings Across Sri Lanka"
+              className="mt-3 text-3xl font-extrabold tracking-tight text-navy-900 sm:text-4xl"
+              delay={0.1}
+            />
+            <Reveal delay={0.35} y={14}>
+              <p className="mt-2 text-sm text-navy-600 max-w-xl">
+                Tap a group to explore it, or a price tag to see the property. Every listing sits on its real location.
+              </p>
+            </Reveal>
           </div>
 
-          {/* Filter Tabs */}
-          <div className="flex items-center gap-2 rounded-2xl bg-white p-1.5 shadow-sm border border-navy-100">
-            <button
-              onClick={() => setFilter('All')}
-              className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
-                filter === 'All'
-                  ? 'bg-navy-900 text-white shadow-sm'
-                  : 'text-navy-700 hover:bg-navy-50'
-              }`}
-            >
-              <Layers className="h-3.5 w-3.5" />
-              <span>All{hasLoaded && ` (${properties.length})`}</span>
-            </button>
-
-            <button
-              onClick={() => setFilter('House')}
-              className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
-                filter === 'House'
-                  ? 'bg-amber-500 text-navy-950 shadow-sm'
-                  : 'text-navy-700 hover:bg-navy-50'
-              }`}
-            >
-              <Home className="h-3.5 w-3.5" />
-              <span>Houses{hasLoaded && ` (${houseCount})`}</span>
-            </button>
-
-            <button
-              onClick={() => setFilter('Land')}
-              className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
-                filter === 'Land'
-                  ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'text-navy-700 hover:bg-navy-50'
-              }`}
-            >
-              <Trees className="h-3.5 w-3.5" />
-              <span>Lands{hasLoaded && ` (${landCount})`}</span>
-            </button>
-          </div>
+          {/* Filter Tabs: one highlight glides between the options */}
+          <Reveal delay={0.3} y={14}>
+            <div className="flex items-center gap-1 rounded-2xl bg-white p-1.5 shadow-sm border border-navy-100">
+              {FILTERS.map(({ value, label, icon: Icon, active, text }) => {
+                const isActive = filter === value;
+                const count = value === 'All' ? properties.length : value === 'House' ? houseCount : landCount;
+                return (
+                  <button
+                    key={value}
+                    onClick={() => setFilter(value)}
+                    className={`relative flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-colors duration-300 ${
+                      isActive ? text : 'text-navy-700 hover:bg-navy-50'
+                    }`}
+                  >
+                    {isActive && (
+                      <motion.span
+                        layoutId="popular-filter-pill"
+                        className={`absolute inset-0 rounded-xl shadow-sm ${active}`}
+                        transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+                      />
+                    )}
+                    <Icon className="relative h-3.5 w-3.5" />
+                    <span className="relative">
+                      {label}
+                      {hasLoaded && ` (${count})`}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </Reveal>
         </div>
 
         {/* Map & Listings Sidebar Container */}
         <div className="mt-8 grid gap-6 lg:grid-cols-12">
-          {/* Main Interactive Map */}
-          <div className="lg:col-span-8">
+          {/* Main Interactive Map: settles up into place */}
+          <motion.div
+            className="lg:col-span-8"
+            initial={{ opacity: 0, y: 60, scale: 0.97 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            viewport={{ once: true, margin: '0px 0px -10% 0px' }}
+            transition={{ duration: 1.1, ease: EASE_OUT_EXPO }}
+          >
             <SriLankaMap
               properties={filteredProperties}
               selectedId={selectedId}
               hoveredId={hoveredId}
               onSelectProperty={(id) => setSelectedId(id)}
             />
-          </div>
+          </motion.div>
 
-          {/* Quick Property Selector Sidebar */}
-          <div className="lg:col-span-4 flex flex-col h-[580px] rounded-3xl bg-white p-4 shadow-xl border border-navy-100">
+          {/* Quick Property Selector Sidebar: slides in beside the map */}
+          <motion.div
+            className="lg:col-span-4 flex flex-col h-[580px] rounded-3xl bg-white p-4 shadow-xl border border-navy-100"
+            initial={{ opacity: 0, x: 40 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: '0px 0px -10% 0px' }}
+            transition={{ duration: 1.1, delay: 0.15, ease: EASE_OUT_EXPO }}
+          >
             <div className="flex items-center justify-between px-2 pb-3 border-b border-navy-100">
               <h3 className="text-sm font-extrabold text-navy-900">
                 Available Locations{hasLoaded && ` (${filteredProperties.length})`}
@@ -303,7 +317,7 @@ export function PopularLocations() {
                 );
               })}
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>

@@ -1,5 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
+import { MotionConfig } from 'framer-motion';
 import { Hero } from '@/components/home/Hero';
 import { StatsStrip } from '@/components/home/StatsStrip';
 import { FeaturedProperties } from '@/components/home/FeaturedProperties';
@@ -56,16 +57,19 @@ export default function HomeClient({ initialFeatured }: HomeClientProps) {
   }, []);
 
   return (
-    <div className="w-full">
-      <BoamIntro />
-      <Hero />
-      <StatsStrip />
-      <FeaturedProperties properties={featuredProperties} loading={loadingProperties} />
-      <CategoryIntro />
-      <PopularLocations />
-      <WhyChooseUs />
-      <HowItWorks />
-      <CtaBanner />
-    </div>
+    // Visitors who ask for reduced motion get fades instead of movement across every section
+    <MotionConfig reducedMotion="user">
+      <div className="w-full">
+        <BoamIntro />
+        <Hero />
+        <StatsStrip />
+        <FeaturedProperties properties={featuredProperties} loading={loadingProperties} />
+        <CategoryIntro />
+        <PopularLocations />
+        <WhyChooseUs />
+        <HowItWorks />
+        <CtaBanner />
+      </div>
+    </MotionConfig>
   );
 }

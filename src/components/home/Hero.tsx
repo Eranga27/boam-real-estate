@@ -1,75 +1,189 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
 import { useRouter as useNavigate } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { ChevronDownIcon, MapPinIcon, SearchIcon } from 'lucide-react';
+import {
+  AnimatePresence,
+  animate,
+  motion,
+  useMotionValue,
+  useReducedMotion,
+  useScroll,
+  useSpring,
+  useTransform,
+  type AnimationPlaybackControls,
+} from 'framer-motion';
+import { ArrowUpRight, ChevronDownIcon, MapPinIcon, SearchIcon } from 'lucide-react';
 import { heroImage } from '@/data/locations';
 import { propertyTypes } from '@/data/properties';
 import { getEntranceDelay, useIntroRevealed } from '@/lib/intro';
 
 const CITIES = ['Colombo', 'Kandy', 'Galle', 'Negombo', 'Jaffna', 'Nugegoda', 'Mount Lavinia', 'Matara'];
 
-/** Exactly 4 premium property/location hero images */
-const HERO_SLIDES = [
-  heroImage,
-  '/uploads/upkotmaskeliya1.jpeg',
-  '/uploads/kandy1.jpeg',
-  '/uploads/kaluthara1.jpeg',
+/** Hero scenes: the city at night, then three real BOAM listings */
+const SCENES = [
+  {
+    image: heroImage,
+    place: 'Colombo',
+    region: 'Western Province',
+    title: 'Homes and land across Sri Lanka',
+    href: '/search',
+    cta: 'Browse properties',
+  },
+  {
+    image: '/uploads/upkotmaskeliya1.jpeg',
+    place: 'Upkot, Maskeliya',
+    region: 'Hill Country',
+    title: 'Luxury House in Upkot Maskeliya',
+    href: '/properties/upkot-maskeliya-house',
+    cta: 'View property',
+  },
+  {
+    image: '/uploads/kandy1.jpeg',
+    place: 'Kandy',
+    region: 'Central Province',
+    title: 'Three-Storey House in Kandy',
+    href: '/properties/kandy-three-storey-house',
+    cta: 'View property',
+  },
+  {
+    image: '/uploads/kaluthara1.jpeg',
+    place: 'Bulathsinhala',
+    region: 'Kalutara District',
+    title: 'Eco & Agro Tourism Estate',
+    href: '/properties/kalutara-estate-land',
+    cta: 'View property',
+  },
 ];
+
+const SCENE_MS = 6500;
+const WIPE_MS = 1300;
+/** The wipe's leading edge leans like the logo's roofline: its foot trails its head by this % of the width */
+const WIPE_SLANT = 22;
+const WIPE_DONE = 100 + WIPE_SLANT;
+const EASE_OUT_EXPO = [0.16, 1, 0.3, 1] as const;
+/** Ken Burns drift direction per scene, so consecutive scenes don't move the same way */
+const DRIFT = ['-1.5%', '1.5%', '-1%', '1.2%'];
 
 export function Hero() {
   const navigate = useNavigate();
+  const reduceMotion = useReducedMotion();
   const [location, setLocation] = useState('');
   const [type, setType] = useState('');
   const [focused, setFocused] = useState(false);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [loadedImages, setLoadedImages] = useState<string[]>([heroImage]);
+  const [scene, setScene] = useState({ current: 0, previous: -1 });
+  const [mountAll, setMountAll] = useState(false);
+  const [size, setSize] = useState({ w: 1440, h: 900 });
 
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+  const autoplayRef = useRef<AnimationPlaybackControls | null>(null);
+  const inViewRef = useRef(true);
+
   // Entrance and slideshow wait for the homepage intro to open onto the hero
   const revealed = useIntroRevealed();
   const introDelay = revealed ? getEntranceDelay() : 0;
 
-  const startTimer = useCallback(() => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    timerRef.current = setInterval(() => {
-      if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  // ---- Scene wipe: the incoming photo is revealed behind a slanted, gold-lit edge ----
+  const wipe = useMotionValue(WIPE_DONE);
+  const wipeClip = useTransform(wipe, (w) => `polygon(0% 0%, ${w}% 0%, ${w - WIPE_SLANT}% 100%, 0% 100%)`);
+  const edgeLeft = useTransform(wipe, (w) => `${w - WIPE_SLANT / 2}%`);
+  const edgeOpacity = useTransform(wipe, [0, 6, WIPE_DONE - 6, WIPE_DONE], [0, 1, 1, 0]);
+  const edgeAngle = (Math.atan(((WIPE_SLANT / 100) * size.w) / size.h) * 180) / Math.PI;
+
+  // ---- Autoplay progress for the chapter bars ----
+  const progress = useMotionValue(0);
+
+  // ---- Depth: background drifts against the cursor, content with it ----
+  const pointerX = useMotionValue(0);
+  const pointerY = useMotionValue(0);
+  const spring = { stiffness: 60, damping: 20, mass: 0.6 };
+  const bgX = useSpring(useTransform(pointerX, (v) => v * -22), spring);
+  const bgY = useSpring(useTransform(pointerY, (v) => v * -14), spring);
+  const fgX = useSpring(useTransform(pointerX, (v) => v * 8), spring);
+  const fgY = useSpring(useTransform(pointerY, (v) => v * 5), spring);
+
+  // ---- Scroll exit: the photo pushes in and darkens as the content lifts away ----
+  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end start'] });
+  const exitScale = useTransform(scrollYProgress, [0, 1], [1, 1.14]);
+  const exitShade = useTransform(scrollYProgress, [0, 1], [0, 0.6]);
+  const exitContentY = useTransform(scrollYProgress, [0, 1], [0, -150]);
+  const exitContentOpacity = useTransform(scrollYProgress, [0, 0.55], [1, 0]);
+  const exitChromeOpacity = useTransform(scrollYProgress, [0, 0.3], [1, 0]);
+
+  const goTo = useCallback(
+    (next: number) => {
+      setScene((s) => (s.current === next ? s : { current: next, previous: s.current }));
+      if (reduceMotion) {
+        wipe.set(WIPE_DONE);
         return;
       }
-      setCurrentIndex((prev) => (prev + 1) % HERO_SLIDES.length);
-    }, 3500);
-  }, []);
+      wipe.set(0);
+      animate(wipe, WIPE_DONE, { duration: WIPE_MS / 1000, ease: [0.65, 0, 0.35, 1] });
+    },
+    [reduceMotion, wipe]
+  );
 
-  const goToSlide = (idx: number) => {
-    setCurrentIndex(idx);
-    startTimer();
-  };
-
+  // Autoplay: each scene's chapter bar fills, then the next scene wipes in
   useEffect(() => {
-    let isMounted = true;
-    const preloadTimeout = setTimeout(() => {
-      HERO_SLIDES.slice(1).forEach((src) => {
-        const img = new Image();
-        img.src = src;
-        img.onload = () => {
-          if (isMounted) {
-            setLoadedImages((prev) => (prev.includes(src) ? prev : [...prev, src]));
-          }
-        };
-      });
-    }, 800);
+    if (!revealed || reduceMotion) return;
+    progress.set(0);
+    const controls = animate(progress, 1, {
+      duration: SCENE_MS / 1000,
+      ease: 'linear',
+      onComplete: () => goTo((scene.current + 1) % SCENES.length),
+    });
+    autoplayRef.current = controls;
+    if (!inViewRef.current || document.hidden) controls.pause();
+    return () => controls.stop();
+  }, [revealed, reduceMotion, scene.current, goTo, progress]);
 
+  // Pause autoplay while the hero is off screen or the tab is hidden
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const sync = () => {
+      const controls = autoplayRef.current;
+      if (!controls) return;
+      if (inViewRef.current && !document.hidden) controls.play();
+      else controls.pause();
+    };
+    const observer = new IntersectionObserver(([entry]) => {
+      inViewRef.current = entry.isIntersecting;
+      sync();
+    });
+    observer.observe(el);
+    document.addEventListener('visibilitychange', sync);
     return () => {
-      isMounted = false;
-      clearTimeout(preloadTimeout);
-      if (timerRef.current) clearInterval(timerRef.current);
+      observer.disconnect();
+      document.removeEventListener('visibilitychange', sync);
     };
   }, []);
 
+  // Later scenes load after the first photo, well before their turn
   useEffect(() => {
-    if (revealed) startTimer();
-  }, [revealed, startTimer]);
+    const t = setTimeout(() => setMountAll(true), 1200);
+    return () => clearTimeout(t);
+  }, []);
+
+  // Wipe angle depends on the hero's aspect ratio
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect;
+      if (width && height) setSize({ w: width, h: height });
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (e.pointerType !== 'mouse' || reduceMotion || !sectionRef.current) return;
+    const r = sectionRef.current.getBoundingClientRect();
+    pointerX.set((e.clientX - r.left) / r.width - 0.5);
+    pointerY.set((e.clientY - r.top) / r.height - 0.5);
+  };
 
   const suggestions = useMemo(() => {
     if (!location.trim()) return CITIES.slice(0, 5);
@@ -84,105 +198,151 @@ export function Hero() {
     navigate.push(`/search${params.toString() ? `?${params.toString()}` : ''}`);
   };
 
+  const active = SCENES[scene.current];
+  const enter = (delay: number) => ({
+    initial: { opacity: 0, y: 22 },
+    animate: revealed ? { opacity: 1, y: 0 } : undefined,
+    transition: { duration: 0.9, delay: introDelay + delay, ease: EASE_OUT_EXPO },
+  });
+
   return (
     <section
-      className="relative flex min-h-[100svh] items-center overflow-hidden pt-24 pb-20 lg:py-32"
-      style={{
-        backgroundColor: '#0E2A49',
-        backgroundImage: `url(${heroImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }}
+      ref={sectionRef}
+      onPointerMove={onPointerMove}
+      className="relative flex min-h-[100svh] items-center overflow-hidden bg-navy-950 pt-24 pb-28 lg:py-32"
     >
-      {/* Background Slideshow Layer — settles from a slight zoom as the intro opens onto it */}
-      <motion.div
-        className="absolute inset-0 overflow-hidden pointer-events-none"
-        initial={{ scale: 1.1 }}
-        animate={revealed ? { scale: 1 } : undefined}
-        transition={{ duration: 2.4, ease: [0.16, 1, 0.3, 1] }}
-      >
-        {HERO_SLIDES.map((imgSrc, idx) => {
-          const isVisible = idx === currentIndex;
-          const isAvailable = idx === 0 || loadedImages.includes(imgSrc);
-          if (!isAvailable) return null;
+      {/* ---- Scenes ---- */}
+      <motion.div className="absolute inset-0" style={{ scale: reduceMotion ? 1 : exitScale }}>
+        {/* Settles from a slight zoom as the intro opens onto it */}
+        <motion.div
+          className="absolute inset-0"
+          initial={{ scale: 1.1 }}
+          animate={revealed ? { scale: 1 } : undefined}
+          transition={{ duration: 2.4, ease: EASE_OUT_EXPO }}
+        >
+          <motion.div className="absolute -inset-6" style={{ x: bgX, y: bgY }}>
+            {SCENES.map((s, idx) => {
+              const isCurrent = idx === scene.current;
+              const isPrevious = idx === scene.previous;
+              if (idx !== 0 && !mountAll) return null;
+              return (
+                <motion.div
+                  key={s.image}
+                  className="absolute inset-0 overflow-hidden"
+                  style={{
+                    zIndex: isCurrent ? 3 : isPrevious ? 2 : 1,
+                    opacity: isCurrent || isPrevious ? 1 : 0,
+                    clipPath: isCurrent ? wipeClip : undefined,
+                  }}
+                  aria-hidden="true"
+                >
+                  {/* Ken Burns: a slow push and drift while the scene is on */}
+                  <motion.img
+                    src={s.image}
+                    alt=""
+                    draggable={false}
+                    className="h-full w-full object-cover object-center"
+                    initial={{ scale: 1.04, x: '0%' }}
+                    animate={isCurrent && revealed ? { scale: 1.16, x: DRIFT[idx] } : isPrevious ? undefined : { scale: 1.04, x: '0%' }}
+                    transition={
+                      isCurrent
+                        ? { duration: (SCENE_MS + WIPE_MS) / 1000 + 1, ease: 'linear' }
+                        : { duration: 0, delay: WIPE_MS / 1000 }
+                    }
+                    {...(idx === 0 ? { fetchPriority: 'high' as any, 'data-hero-image': true } : {})}
+                  />
+                </motion.div>
+              );
+            })}
+          </motion.div>
+        </motion.div>
 
-          return (
-            <div
-              key={imgSrc}
-              className={`absolute inset-0 h-full w-full transition-opacity duration-[950ms] ease-in-out ${
-                isVisible ? 'opacity-100' : 'opacity-0'
-              }`}
-            >
-              <img
-                src={imgSrc}
-                alt=""
-                aria-hidden="true"
-                className="h-full w-full object-cover object-center sm:object-[center_35%]"
-                {...(idx === 0 ? { fetchPriority: 'high' as any, 'data-hero-image': true } : { loading: 'lazy' })}
-              />
-            </div>
-          );
-        })}
+        {/* Gold light along the wipe's leading edge */}
+        <motion.div
+          aria-hidden="true"
+          className="pointer-events-none absolute top-1/2 z-[4] w-[2px]"
+          style={{
+            left: edgeLeft,
+            opacity: edgeOpacity,
+            height: `${(size.h / Math.cos((edgeAngle * Math.PI) / 180)) * 1.1}px`,
+            translateY: '-50%',
+            rotate: edgeAngle,
+            background: 'linear-gradient(180deg, transparent, #FFD98A 20%, #F4A300 50%, #FFD98A 80%, transparent)',
+            boxShadow: '0 0 18px 4px rgba(244,163,0,0.55), 0 0 60px 12px rgba(244,163,0,0.25)',
+          }}
+        />
       </motion.div>
 
-      {/* Atmospheric Overlays preserving right-side photography while guaranteeing left text contrast */}
-      <div className="absolute inset-0 bg-navy-950/30 pointer-events-none" />
-      <div className="absolute inset-0 bg-gradient-to-r from-navy-950/90 via-navy-950/50 to-transparent pointer-events-none" />
-      <div className="absolute inset-0 bg-gradient-to-t from-navy-950/70 via-transparent to-navy-950/30 pointer-events-none" />
+      {/* Atmosphere: left-side contrast for the headline, floor shade, and the scroll-exit darkening */}
+      <div className="pointer-events-none absolute inset-0 bg-navy-950/25" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-navy-950/90 via-navy-950/45 to-transparent" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-navy-950/85 via-transparent to-navy-950/35" />
+      <motion.div className="pointer-events-none absolute inset-0 bg-navy-950" style={{ opacity: reduceMotion ? 0 : exitShade }} />
 
-      {/* Left-Aligned Editorial Composition */}
-      <div className="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="max-w-xl lg:max-w-2xl text-left">
-          {/* Minimal BOAM Brand Treatment */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={revealed ? { opacity: 1, y: 0 } : undefined}
-            transition={{ duration: 0.6, delay: introDelay, ease: 'easeOut' }}
-            className="flex items-center gap-2.5"
-          >
-            <img
-              src="/images/boamcompactmonogram.png"
-              alt="BOAM Monogram"
-              className="h-6 w-auto brightness-0 invert opacity-90"
-            />
-            <span className="text-xs font-bold uppercase tracking-[0.25em] text-white/80">
-              BOAM Real-Estates
-            </span>
+      {/* ---- Headline, copy and search ---- */}
+      <motion.div
+        className="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8"
+        style={reduceMotion ? undefined : { y: exitContentY, opacity: exitContentOpacity }}
+      >
+        <motion.div className="max-w-xl lg:max-w-2xl text-left" style={reduceMotion ? undefined : { x: fgX, y: fgY }}>
+          <motion.div {...enter(0)} className="flex items-center gap-2.5">
+            <img src="/images/boamcompactmonogram.png" alt="" className="h-6 w-auto brightness-0 invert opacity-90" />
+            <span className="text-xs font-bold uppercase tracking-[0.25em] text-white/80">BOAM Real-Estates</span>
           </motion.div>
 
-          {/* Editorial Headline */}
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={revealed ? { opacity: 1, y: 0 } : undefined}
-            transition={{ duration: 0.7, delay: introDelay + 0.1, ease: [0.16, 1, 0.3, 1] }}
+          <h1
             className="mt-4 text-4xl font-extrabold tracking-tight text-white sm:text-6xl lg:text-7xl leading-[1.05]"
+            aria-label="Property, with confidence."
           >
-            Property, with{' '}
-            <span className="text-amber-400">
-              confidence.
+            <span aria-hidden="true" className="block overflow-hidden pb-[0.08em] -mb-[0.08em]">
+              <motion.span
+                className="block"
+                initial={{ y: '110%' }}
+                animate={revealed ? { y: '0%' } : undefined}
+                transition={{ duration: 1.05, delay: introDelay + 0.08, ease: EASE_OUT_EXPO }}
+              >
+                Property, with
+              </motion.span>
             </span>
-          </motion.h1>
+            <span aria-hidden="true" className="block overflow-hidden pb-[0.32em] -mb-[0.32em]">
+              <motion.span
+                className="relative inline-block text-amber-400"
+                initial={{ y: '110%' }}
+                animate={revealed ? { y: '0%' } : undefined}
+                transition={{ duration: 1.05, delay: introDelay + 0.2, ease: EASE_OUT_EXPO }}
+              >
+                confidence.
+                {/* Brush-stroke underline drawn after the word lands */}
+                <svg
+                  className="absolute -bottom-[0.22em] left-0 h-[0.28em] w-[94%]"
+                  viewBox="0 0 300 24"
+                  preserveAspectRatio="none"
+                  fill="none"
+                >
+                  <motion.path
+                    d="M3 17 C 70 6, 160 4, 297 12"
+                    stroke="#F4A300"
+                    strokeWidth="5"
+                    strokeLinecap="round"
+                    initial={{ pathLength: 0, opacity: 0 }}
+                    animate={revealed ? { pathLength: 1, opacity: 0.9 } : undefined}
+                    transition={{ duration: 1.1, delay: introDelay + 0.9, ease: [0.65, 0, 0.35, 1] }}
+                  />
+                </svg>
+              </motion.span>
+            </span>
+          </h1>
 
-          {/* Supporting Copy */}
           <motion.p
-            initial={{ opacity: 0, y: 16 }}
-            animate={revealed ? { opacity: 1, y: 0 } : undefined}
-            transition={{ duration: 0.7, delay: introDelay + 0.22, ease: 'easeOut' }}
-            className="mt-5 text-base font-normal leading-relaxed text-white/80 sm:text-lg lg:text-xl max-w-lg"
+            {...enter(0.34)}
+            className="mt-6 text-base font-normal leading-relaxed text-white/80 sm:text-lg lg:text-xl max-w-lg"
           >
             Explore houses, apartments, villas and prime land opportunities across Sri Lanka.
           </motion.p>
 
-          {/* Left-Aligned Floating Search Panel */}
-          <motion.form
-            initial={{ opacity: 0, y: 24 }}
-            animate={revealed ? { opacity: 1, y: 0 } : undefined}
-            transition={{ duration: 0.8, delay: introDelay + 0.35, ease: [0.16, 1, 0.3, 1] }}
-            onSubmit={submit}
-            className="mt-8 w-full max-w-2xl"
-            role="search"
-          >
-            <div className="flex flex-col gap-2.5 rounded-3xl bg-white/95 p-3 shadow-2xl backdrop-blur-md border border-white/20 sm:flex-row sm:items-center sm:rounded-full sm:p-2 sm:pr-2.5">
+          {/* Search Panel */}
+          <motion.form {...enter(0.48)} onSubmit={submit} className="mt-8 w-full max-w-2xl" role="search">
+            <div className="flex flex-col gap-2.5 rounded-3xl bg-white/95 p-3 shadow-2xl backdrop-blur-md border border-white/20 transition-shadow duration-300 focus-within:shadow-[0_0_0_3px_rgba(244,163,0,0.45),0_25px_50px_-12px_rgba(0,0,0,0.5)] sm:flex-row sm:items-center sm:rounded-full sm:p-2 sm:pr-2.5">
               {/* Location Autocomplete Input */}
               <div className="relative flex-1">
                 <label htmlFor="hero-location" className="sr-only">
@@ -203,25 +363,32 @@ export function Hero() {
                 </div>
 
                 {/* Suggestions Popover */}
-                {focused && suggestions.length > 0 && (
-                  <ul className="absolute left-0 top-full z-30 mt-2.5 w-full overflow-hidden rounded-2xl bg-white py-2 text-left shadow-2xl border border-navy-100">
-                    {suggestions.map((city) => (
-                      <li key={city}>
-                        <button
-                          type="button"
-                          onClick={() => setLocation(city)}
-                          className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm font-semibold text-navy-800 transition-colors hover:bg-navy-50"
-                        >
-                          <MapPinIcon className="h-4 w-4 text-navy-400" aria-hidden="true" />
-                          {city}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+                <AnimatePresence>
+                  {focused && suggestions.length > 0 && (
+                    <motion.ul
+                      initial={{ opacity: 0, y: -6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.18 }}
+                      className="absolute left-0 top-full z-30 mt-2.5 w-full overflow-hidden rounded-2xl bg-white py-2 text-left shadow-2xl border border-navy-100"
+                    >
+                      {suggestions.map((city) => (
+                        <li key={city}>
+                          <button
+                            type="button"
+                            onClick={() => setLocation(city)}
+                            className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm font-semibold text-navy-800 transition-colors hover:bg-navy-50"
+                          >
+                            <MapPinIcon className="h-4 w-4 text-navy-400" aria-hidden="true" />
+                            {city}
+                          </button>
+                        </li>
+                      ))}
+                    </motion.ul>
+                  )}
+                </AnimatePresence>
               </div>
 
-              {/* Vertical Separator */}
               <div className="hidden h-7 w-px bg-navy-100 sm:block" />
 
               {/* Property Type Dropdown */}
@@ -248,48 +415,129 @@ export function Hero() {
                 />
               </div>
 
-              {/* Search Submit Button */}
               <button
                 type="submit"
-                className="flex items-center justify-center gap-2 rounded-2xl bg-amber-500 px-7 py-3 text-sm font-bold text-navy-950 transition-all duration-200 hover:bg-amber-400 hover:shadow-[0_8px_24px_-6px_rgba(244,163,0,0.6)] active:scale-[0.99] sm:rounded-full shrink-0"
+                className="group flex items-center justify-center gap-2 rounded-2xl bg-amber-500 px-7 py-3 text-sm font-bold text-navy-950 transition-all duration-200 hover:bg-amber-400 hover:shadow-[0_8px_24px_-6px_rgba(244,163,0,0.6)] active:scale-[0.99] sm:rounded-full shrink-0"
               >
-                <SearchIcon className="h-4 w-4" aria-hidden="true" />
+                <SearchIcon className="h-4 w-4 transition-transform group-hover:scale-110" aria-hidden="true" />
                 <span>Search</span>
               </button>
             </div>
           </motion.form>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
-      {/* Accessible Minimal Pagination Dots (Exactly 4 Dots) */}
-      <div
-        className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1"
-        role="tablist"
-        aria-label="Hero Image Slideshow Controls"
+      {/* ---- "Now showing" chapter card (desktop) ---- */}
+      <motion.div
+        className="absolute bottom-10 right-6 z-20 hidden w-[340px] lg:block xl:right-10"
+        style={reduceMotion ? undefined : { opacity: exitChromeOpacity }}
       >
-        {HERO_SLIDES.map((_, idx) => {
-          const isActive = idx === currentIndex;
-          return (
-            <button
-              key={idx}
-              type="button"
-              role="tab"
-              aria-selected={isActive}
-              aria-label={`Go to slide ${idx + 1}`}
-              onClick={() => goToSlide(idx)}
-              className="min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer group focus:outline-none"
-            >
-              <span
-                className={`block transition-all duration-300 rounded-full ${
-                  isActive
-                    ? 'w-7 h-2 bg-amber-500 shadow-md ring-2 ring-amber-400/40'
-                    : 'w-2.5 h-2.5 bg-white/45 group-hover:bg-white/80'
-                }`}
-              />
-            </button>
-          );
-        })}
-      </div>
+        <motion.div
+          {...enter(0.7)}
+          className="rounded-2xl border border-white/10 bg-navy-950/55 p-4 shadow-2xl backdrop-blur-md"
+        >
+          <div className="flex items-center justify-between">
+            <span className="font-mono text-[11px] font-bold tracking-[0.2em] text-amber-400">
+              {String(scene.current + 1).padStart(2, '0')} / {String(SCENES.length).padStart(2, '0')}
+            </span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.28em] text-white/45">Now showing</span>
+          </div>
+
+          <div className="relative mt-3 h-[78px] overflow-hidden">
+            <AnimatePresence mode="popLayout" initial={false}>
+              <motion.div
+                key={scene.current}
+                className="absolute inset-0"
+                initial={{ opacity: 0, y: 18, filter: 'blur(6px)' }}
+                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                exit={{ opacity: 0, y: -18, filter: 'blur(6px)' }}
+                transition={{ duration: 0.55, ease: EASE_OUT_EXPO }}
+              >
+                <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-amber-300/90">
+                  <MapPinIcon className="h-3 w-3" aria-hidden="true" />
+                  {active.place} · {active.region}
+                </p>
+                <p className="mt-1 line-clamp-1 text-[15px] font-extrabold text-white">{active.title}</p>
+                <Link
+                  href={active.href}
+                  className="group mt-2 inline-flex items-center gap-1 text-xs font-bold text-white/70 transition-colors hover:text-amber-400"
+                >
+                  {active.cta}
+                  <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                </Link>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          <div className="mt-3 grid grid-cols-4 gap-1.5" role="tablist" aria-label="Hero scenes">
+            {SCENES.map((s, idx) => (
+              <button
+                key={s.image}
+                type="button"
+                role="tab"
+                aria-selected={idx === scene.current}
+                aria-label={`Show ${s.place}`}
+                onClick={() => goTo(idx)}
+                className="group flex h-6 items-center"
+              >
+                <span className="relative block h-[3px] w-full overflow-hidden rounded-full bg-white/20 transition-colors group-hover:bg-white/35">
+                  <motion.span
+                    className="absolute inset-0 origin-left rounded-full bg-amber-400"
+                    style={{ scaleX: idx === scene.current ? (reduceMotion ? 1 : progress) : idx < scene.current ? 1 : 0 }}
+                  />
+                </span>
+              </button>
+            ))}
+          </div>
+        </motion.div>
+      </motion.div>
+
+      {/* ---- Mobile chapter bars + place ---- */}
+      <motion.div
+        className="absolute inset-x-4 bottom-16 z-20 lg:hidden"
+        style={reduceMotion ? undefined : { opacity: exitChromeOpacity }}
+      >
+        <motion.div {...enter(0.7)}>
+          <p className="mb-2 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-white/70">
+            <MapPinIcon className="h-3 w-3 text-amber-400" aria-hidden="true" />
+            {active.place}
+          </p>
+          <div className="grid grid-cols-4 gap-1.5" role="tablist" aria-label="Hero scenes">
+            {SCENES.map((s, idx) => (
+              <button
+                key={s.image}
+                type="button"
+                role="tab"
+                aria-selected={idx === scene.current}
+                aria-label={`Show ${s.place}`}
+                onClick={() => goTo(idx)}
+                className="flex h-8 items-center"
+              >
+                <span className="relative block h-[3px] w-full overflow-hidden rounded-full bg-white/25">
+                  <motion.span
+                    className="absolute inset-0 origin-left rounded-full bg-amber-400"
+                    style={{ scaleX: idx === scene.current ? (reduceMotion ? 1 : progress) : idx < scene.current ? 1 : 0 }}
+                  />
+                </span>
+              </button>
+            ))}
+          </div>
+        </motion.div>
+      </motion.div>
+
+      {/* ---- Scroll cue (desktop) ---- */}
+      <motion.div
+        className="absolute bottom-10 left-1/2 z-20 hidden -translate-x-1/2 flex-col items-center gap-2 lg:flex"
+        style={reduceMotion ? undefined : { opacity: exitChromeOpacity }}
+        aria-hidden="true"
+      >
+        <motion.span {...enter(0.9)} className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/55">
+          Scroll
+        </motion.span>
+        <span className="relative block h-10 w-px overflow-hidden bg-white/20">
+          <span className="hero-scroll-cue absolute inset-x-0 top-0 h-1/2 bg-amber-400" />
+        </span>
+      </motion.div>
     </section>
   );
 }

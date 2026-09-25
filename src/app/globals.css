@@ -456,3 +456,66 @@ html.intro-seen [data-intro] {
     transition: none;
   }
 }
+
+/* ---- Homepage sections ---- */
+/* Hero scroll cue: a short gold segment sliding down its track */
+.hero-scroll-cue {
+  animation: hero-scroll-cue 1.8s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+@keyframes hero-scroll-cue {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(200%);
+  }
+}
+/* Journey section: stars coming out as the page turns to night */
+.journey-star {
+  opacity: 0.2;
+  animation: journey-twinkle 3.5s ease-in-out infinite;
+}
+@keyframes journey-twinkle {
+  0%,
+  100% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+/* Call-to-action: slow drifting light (individual transform properties, so they
+   compose with Tailwind's centring transforms) and a sheen across the main button */
+.cta-aurora {
+  animation: cta-aurora 14s ease-in-out infinite;
+}
+.cta-aurora--slow {
+  animation-duration: 19s;
+  animation-direction: reverse;
+}
+@keyframes cta-aurora {
+  0%,
+  100% {
+    translate: 0 0;
+    scale: 1;
+  }
+  50% {
+    translate: 60px -40px;
+    scale: 1.18;
+  }
+}
+@keyframes cta-sheen {
+  from {
+    transform: translateX(0) skewX(-12deg);
+  }
+  to {
+    transform: translateX(420%) skewX(-12deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-scroll-cue,
+  .journey-star,
+  .cta-aurora {
+    animation: none;
+  }
+}
