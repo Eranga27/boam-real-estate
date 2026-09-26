@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
@@ -9,38 +9,38 @@ import { BookMarked, MapPin, Bed, Bath, Square, X, ExternalLink } from 'lucide-r
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { getImageUrl } from '@/lib/format';
+import { fetchLivePropertiesList, getCachedProperties } from '@/lib/api';
+import { optimizedImage } from '@/lib/listingImages';
+import { toggleSaved, useSavedIds } from '@/lib/savedListings';
 
 export default function SavedPropertiesPage() {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
-  const [savedIds, setSavedIds] = useState<string[]>([]);
-  const [properties, setProperties] = useState<any[]>([]);
-  const [fetching, setFetching] = useState(true);
+  // Same shortlist as the hearts on listing cards
+  const savedIds = useSavedIds();
+  const [listings, setListings] = useState<any[] | null>(null);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) router.push('/login');
   }, [isAuthenticated, isLoading, router]);
 
   useEffect(() => {
-    // Saved properties are stored in localStorage as IDs
-    const ids: string[] = JSON.parse(localStorage.getItem('savedProperties') || '[]');
-    setSavedIds(ids);
-    if (ids.length === 0) { setFetching(false); return; }
+    // One small request for all published listings (photos as URLs), not one per saved listing
+    const cached = getCachedProperties();
+    if (cached && cached.length > 0) setListings(cached);
+    fetchLivePropertiesList(100)
+      .then(setListings)
+      .catch(() => setListings((current) => current ?? []));
+  }, []);
 
-    // Fetch each property
-    Promise.all(
-      ids.map(id => fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/v1/properties/${id}`).then(r => r.json()))
-    ).then(results => {
-      setProperties(results.filter(r => r.success).map(r => r.data));
-    }).catch(console.error).finally(() => setFetching(false));
-  }, [isAuthenticated]);
+  // In the order they were saved; listings no longer published drop out
+  const properties = useMemo(
+    () => (listings ? savedIds.map((id) => listings.find((p) => p.id === id)).filter(Boolean) : []),
+    [listings, savedIds]
+  );
+  const fetching = listings === null && savedIds.length > 0;
 
-  const removeItem = (id: string) => {
-    const updated = savedIds.filter(sid => sid !== id);
-    setSavedIds(updated);
-    localStorage.setItem('savedProperties', JSON.stringify(updated));
-    setProperties(prev => prev.filter(p => p.id !== id));
-  };
+  const removeItem = (id: string) => toggleSaved(id);
 
   if (isLoading || fetching) return (
     <div className="flex items-center justify-center h-64">
@@ -59,7 +59,7 @@ export default function SavedPropertiesPage() {
         <div className="bg-white rounded-2xl p-16 text-center shadow-sm border border-gray-100">
           <BookMarked className="w-14 h-14 mx-auto mb-4 text-gray-200" />
           <h3 className="text-xl font-bold text-gray-900 mb-2">Nothing saved yet</h3>
-          <p className="text-gray-500 mb-6">When viewing a property, click the bookmark icon to save it here for later.</p>
+          <p className="text-gray-500 mb-6">Tap the heart on any listing to keep it here for later.</p>
           <Link href="/search"><Button>Browse Properties</Button></Link>
         </div>
       ) : (
@@ -74,7 +74,7 @@ export default function SavedPropertiesPage() {
             >
               <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
                 {p.images?.[0] ? (
-                  <img src={getImageUrl(p.images[0])} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <img src={optimizedImage(getImageUrl(p.images[0]), 640)} alt={p.title} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 ) : <div className="w-full h-full bg-gray-100" />}
                 <div className="absolute top-3 left-3">
                   <Badge variant={p.saleOrRent === 'Sale' ? 'accent' : 'secondary'}>For {p.saleOrRent}</Badge>

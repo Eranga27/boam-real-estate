@@ -274,6 +274,9 @@ async function requestPropertiesList(limit: number, timeoutOverrideMs?: number):
  * in-memory caching, and request deduplication.
  */
 export async function fetchLivePropertyById(id: string): Promise<any | null> {
+  // Returns null when the backend says the listing doesn't exist (e.g. an admin deleted it)
+  // and throws when no endpoint could be reached, so callers only fall back to bundled data
+  // for outages, never for deleted listings.
   // 1. Check memory cache for instant response
   const cached = memoryDetailCache.get(id);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
@@ -308,10 +311,15 @@ export async function fetchLivePropertyById(id: string): Promise<any | null> {
         : { cache: 'no-store' }),
     };
     const timeoutMs = isServer ? 6000 : 20000;
+    let notFound = false;
 
     for (const url of candidates) {
       try {
         const res = await fetchWithTimeout(url, timeoutMs, fetchOptions);
+        if (res.status === 404) {
+          notFound = true;
+          continue;
+        }
 
         if (res.ok) {
           const json = await res.json();
@@ -327,7 +335,8 @@ export async function fetchLivePropertyById(id: string): Promise<any | null> {
       }
     }
 
-    return null;
+    if (notFound) return null;
+    throw new Error(`Property ${id}: no API endpoint could be reached`);
   })().finally(() => {
     inFlightDetailRequests.delete(id);
   });

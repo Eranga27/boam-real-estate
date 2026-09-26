@@ -11,8 +11,12 @@ export type DescriptionBlock =
   | { kind: 'list'; items: string[] };
 
 // Leading emoji (pictographs live in surrogate pairs D83C–D83E; symbols in 2190–2BFF)
-const LEADING_EMOJI = /^(?:[\uD83C-\uD83E][\uDC00-\uDFFF]|[←-⯿☀-➿])️?\s*/;
-const BULLET = /^(?:[-*•▪►➤✔✓]|🔹|🔸|✅|☑️?)\s*/;
+const LEADING_EMOJI = /^(?:[\uD83C-\uD83E][\uDC00-\uDFFF]|[\u2190-\u2BFF\u2600-\u27BF])\uFE0F?\s*/;
+const BULLET = /^(?:[-*•▪►➤✔✓]|🔹|🔸|✅|☑)\uFE0F?\s*/;
+
+export function hasLeadingEmoji(text: string): boolean {
+  return LEADING_EMOJI.test(text);
+}
 
 function stripLeadingEmoji(text: string): string {
   let out = text;
@@ -62,6 +66,15 @@ export function parseDescription(source: string | null | undefined): Description
       } else {
         blocks.push({ kind: 'para', lines });
       }
+      return;
+    }
+
+    // "✨ Ground Floor:" followed by its own bullets: a small heading over a list
+    const label = plain(stripLeadingEmoji(lines[0]));
+    const rest = lines.slice(1);
+    if (/:$/.test(label) && label.length <= 60 && rest.every(startsLikeBullet)) {
+      blocks.push({ kind: 'heading', text: label.replace(/:$/, '') });
+      blocks.push({ kind: 'list', items: rest.map((l) => l.replace(BULLET, '')) });
       return;
     }
 

@@ -13,14 +13,19 @@ export const maxDuration = 20;
 const ALLOWED_TYPES = new Set(['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/avif']);
 const RECENT_TTL_MS = 60_000;
 
+interface ListingPhotos {
+  version: string;
+  images: string[];
+}
+
 // One backend fetch per listing when a page requests several of its photos at once
-const recent = new Map<string, { at: number; images: Promise<string[] | null> }>();
+const recent = new Map<string, { at: number; photos: Promise<ListingPhotos | null> }>();
 
 function backendBase(): string {
   return (process.env.NEXT_PUBLIC_API_URL || PRODUCTION_BACKEND_URL).replace(/\/+$/, '');
 }
 
-async function fetchImages(id: string): Promise<string[] | null> {
+async function fetchPhotos(id: string): Promise<ListingPhotos | null> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 15_000);
   try {
@@ -31,7 +36,7 @@ async function fetchImages(id: string): Promise<string[] | null> {
     });
     if (!res.ok) return null;
     const json = await res.json();
-    return Array.isArray(json?.data?.images) ? json.data.images : null;
+    return Array.isArray(json?.data?.images) ? { version: listingVersion(json.data), images: json.data.images } : null;
   } catch {
     return null;
   } finally {
@@ -39,17 +44,21 @@ async function fetchImages(id: string): Promise<string[] | null> {
   }
 }
 
-function loadImages(id: string): Promise<string[] | null> {
+async function loadPhotos(id: string, version: string | null): Promise<ListingPhotos | null> {
   const hit = recent.get(id);
-  if (hit && Date.now() - hit.at < RECENT_TTL_MS) return hit.images;
+  if (hit && Date.now() - hit.at < RECENT_TTL_MS) {
+    const cached = await hit.photos;
+    // An admin edit since the last fetch: the cached photos belong to the old version
+    if (cached && (!version || cached.version === version)) return cached;
+  }
 
-  const images = fetchImages(id).then((result) => {
+  const photos = fetchPhotos(id).then((result) => {
     if (!result) recent.delete(id);
     return result;
   });
-  recent.set(id, { at: Date.now(), images });
+  recent.set(id, { at: Date.now(), photos });
   if (recent.size > 50) recent.delete(recent.keys().next().value as string);
-  return images;
+  return photos;
 }
 
 /*
@@ -106,10 +115,13 @@ export async function GET(request: Request, { params }: { params: { id: string; 
 
   const version = new URL(request.url).searchParams.get('v');
   let src: string | null | undefined = index === 0 ? await loadCover(params.id, version) : null;
+  // Whether the photo served is exactly the version the URL names (only then cache it forever)
+  let exact = !!src && !!version;
   if (!src) {
-    const images = await loadImages(params.id);
-    if (!images) return notFound(503);
-    src = images[index];
+    const photos = await loadPhotos(params.id, version);
+    if (!photos) return notFound(503);
+    src = photos.images[index];
+    exact = !!version && photos.version === version;
   }
   if (typeof src !== 'string' || !src) return notFound();
 
@@ -124,16 +136,15 @@ export async function GET(request: Request, { params }: { params: { id: string; 
 
   const payload = src.slice(match[0].length);
   const body = match[2] ? Buffer.from(payload, 'base64') : Buffer.from(decodeURIComponent(payload));
-  const versioned = !!version;
 
   return new Response(body, {
     headers: {
       'Content-Type': type === 'image/jpg' ? 'image/jpeg' : type,
       'Content-Length': String(body.length),
       'X-Content-Type-Options': 'nosniff',
-      'Cache-Control': versioned
+      'Cache-Control': exact
         ? 'public, max-age=31536000, s-maxage=31536000, immutable'
-        : 'public, max-age=300, s-maxage=3600',
+        : 'public, max-age=60, s-maxage=60',
     },
   });
 }

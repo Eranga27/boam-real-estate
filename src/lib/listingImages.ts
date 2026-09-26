@@ -31,7 +31,7 @@ function isDataUri(src: unknown): boolean {
 }
 
 // Widths must be in Next's default deviceSizes/imageSizes, or the optimizer rejects them
-export type ImageWidth = 384 | 640 | 828 | 1080 | 1200 | 1920;
+export type ImageWidth = 256 | 384 | 640 | 828 | 1080 | 1200 | 1920;
 
 /**
  * A resized, re-encoded (AVIF/WebP) copy of a listing photo via Next's image optimizer.

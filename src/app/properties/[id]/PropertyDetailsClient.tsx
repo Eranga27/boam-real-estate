@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence, MotionConfig, motion } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Check, Heart, ImageOff, Share2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, EyeOff, Heart, Share2 } from 'lucide-react';
 import { fetchLivePropertyById } from '@/lib/api';
 import { formatPrice } from '@/lib/format';
 import { getPropertyUrl } from '@/lib/site';
@@ -30,6 +30,7 @@ import {
   SpecSheet,
   VideoTour,
 } from '@/components/listing-detail/ListingSections';
+import { ListingGone } from '@/components/listing-detail/ListingGone';
 import { DetailSkeleton } from './DetailSkeleton';
 
 interface PropertyDetailsClientProps {
@@ -77,25 +78,22 @@ function SaveToggle({ id, title }: { id: string; title: string }) {
   );
 }
 
-function NotFound() {
+const STATUS_NOTES: Record<string, string> = {
+  PENDING_APPROVAL: 'is waiting for approval',
+  DRAFT: 'is a draft',
+  REJECTED: 'was not approved',
+};
+
+/** Unpublished listings open by direct link (e.g. an admin reviewing one); say so plainly */
+function UnpublishedNotice({ status }: { status: string }) {
+  if (status === 'PUBLISHED') return null;
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-navy-50/50 p-6 pt-24 text-center">
-      <span className="mb-5 grid h-16 w-16 place-items-center rounded-2xl bg-white shadow-card ring-1 ring-navy-100">
-        <ImageOff className="h-7 w-7 text-navy-400" aria-hidden="true" />
-      </span>
-      <h1 className="text-3xl font-extrabold tracking-tight text-navy-950">This property has moved on</h1>
-      <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-navy-800/60">
-        The listing may have sold or been withdrawn. There&apos;s plenty more to explore, or ask us to find something similar.
+    <div role="status" className="mb-4 flex items-start gap-3 rounded-2xl bg-amber-50 px-4 py-3 text-[13px] font-medium text-amber-900 ring-1 ring-amber-200">
+      <EyeOff className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" aria-hidden="true" />
+      <p>
+        <span className="font-bold">Not live on the site.</span> This listing {STATUS_NOTES[status] || 'is not published'}, so it
+        doesn&apos;t appear in search. Only people with this link can open it.
       </p>
-      <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-        <Link href="/search" className="inline-flex h-12 items-center gap-2 rounded-full bg-navy-950 px-6 text-sm font-bold text-white transition hover:bg-navy-800">
-          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          Browse all properties
-        </Link>
-        <Link href="/request" className="inline-flex h-12 items-center gap-2 rounded-full bg-amber-500 px-6 text-sm font-extrabold text-navy-950 transition hover:bg-amber-400">
-          Request a property
-        </Link>
-      </div>
     </div>
   );
 }
@@ -144,7 +142,7 @@ export default function PropertyDetailsClient({ listing: initial, similar, prope
   }, [listing, similar.length]);
 
   if (!listing && isRecovering) return <DetailSkeleton handoff={handoff} />;
-  if (!listing) return <NotFound />;
+  if (!listing) return <ListingGone />;
 
   const shortPrice = formatPrice(listing.price, listing.saleOrRent === 'Rent' ? 'rent' : 'sale');
   const hasPhotos = listing.images.length > 0;
@@ -172,6 +170,7 @@ export default function PropertyDetailsClient({ listing: initial, similar, prope
     <MotionConfig reducedMotion="user">
       <div className="min-h-screen bg-navy-50/50 pb-32 pt-[84px] sm:pt-24 md:pb-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <UnpublishedNotice status={listing.status} />
           <div className="mb-4 flex items-center justify-between gap-3">
             <BackLink />
             <div className="flex items-center gap-2">

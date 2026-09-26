@@ -134,9 +134,16 @@ export const getAllListings = async (req: AuthRequest, res: Response): Promise<v
       prisma.property.count({ where })
     ]);
 
+    // The table only shows a thumbnail; the edit form fetches the full listing when opened
+    const rows = properties.map((p: any) => ({
+      ...p,
+      images: Array.isArray(p.images) && p.images.length > 0 ? [p.images[0]] : [],
+      imageCount: Array.isArray(p.images) ? p.images.length : 0,
+    }));
+
     res.status(200).json({
       success: true,
-      data: { properties, total, page: Number(page), pages: Math.ceil(total / Number(limit)) }
+      data: { properties: rows, total, page: Number(page), pages: Math.ceil(total / Number(limit)) }
     });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });

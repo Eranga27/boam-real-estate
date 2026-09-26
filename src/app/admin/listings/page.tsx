@@ -8,6 +8,21 @@ import {
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import { invalidatePropertiesCache } from '@/lib/api';
+import { getImageUrl } from '@/lib/format';
+import { optimizedImage } from '@/lib/listingImages';
+import { RichDescription } from '@/components/listing-detail/ListingSections';
+
+const STATUS_OPTIONS = [
+  { value: 'PUBLISHED', label: 'Published' },
+  { value: 'PENDING_APPROVAL', label: 'Pending approval' },
+  { value: 'DRAFT', label: 'Draft' },
+  { value: 'REJECTED', label: 'Rejected' },
+];
+
+/** Table thumbnail: Base64 photos are already in memory; hosted ones are fetched small */
+function thumbSrc(src: string): string {
+  return src.startsWith('data:') ? src : optimizedImage(getImageUrl(src), 256);
+}
 
 const DISTRICTS = [
   'Colombo', 'Kandy', 'Galle', 'Gampaha', 'Kalutara', 'Matara', 'Hambantota',
@@ -20,7 +35,9 @@ export default function AdminListingsPage() {
   const [properties, setProperties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState(() =>
+    typeof window === 'undefined' ? '' : new URLSearchParams(window.location.search).get('status') || ''
+  );
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
@@ -30,6 +47,9 @@ export default function AdminListingsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [successLink, setSuccessLink] = useState<string | null>(null);
+  const [descriptionTab, setDescriptionTab] = useState<'write' | 'preview'>('write');
+  const [loadingPhotos, setLoadingPhotos] = useState(false);
 
   // Form Fields
   const [title, setTitle] = useState('');
@@ -131,6 +151,7 @@ export default function AdminListingsPage() {
     setExistingVideo(null);
     setRemoveVideo(false);
     setFormError('');
+    setDescriptionTab('write');
     setShowModal(true);
   };
 
@@ -151,13 +172,28 @@ export default function AdminListingsPage() {
     setLongitude(p.longitude ? p.longitude.toString() : '');
     setContactNumber(p.contactPhone || '');
     setImageFiles([]);
-    setImagePreviews(p.images || []);
+    setImagePreviews((p.images || []).map((src: string) => getImageUrl(src)));
     setThumbnailIndex(0);
     setVideoFile(null);
     setExistingVideo(p.video || null);
     setRemoveVideo(false);
     setFormError('');
+    setDescriptionTab('write');
     setShowModal(true);
+
+    // The table carries one photo per listing; load them all for the cover picker
+    if ((p.imageCount ?? p.images?.length ?? 0) > (p.images?.length ?? 0)) {
+      setLoadingPhotos(true);
+      fetch(`${getApiUrl()}/api/v1/properties/${encodeURIComponent(p.id)}`)
+        .then((res) => res.json())
+        .then((json) => {
+          if (json?.success && Array.isArray(json.data?.images)) {
+            setImagePreviews(json.data.images.map((src: string) => getImageUrl(src)));
+          }
+        })
+        .catch(() => {})
+        .finally(() => setLoadingPhotos(false));
+    }
   };
 
   const triggerRevalidation = async (id?: string) => {
@@ -243,7 +279,8 @@ export default function AdminListingsPage() {
       await triggerRevalidation(createdId);
 
       setSuccessMsg(editingId ? 'Listing updated successfully!' : 'Listing published directly to live site!');
-      setTimeout(() => setSuccessMsg(''), 4000);
+      setSuccessLink(createdId ? `/properties/${createdId}` : null);
+      setTimeout(() => setSuccessMsg(''), 8000);
 
       setShowModal(false);
       fetchProperties();
@@ -274,10 +311,12 @@ export default function AdminListingsPage() {
   };
 
   const handleStatusToggle = async (id: string, status: string, isFeatured: boolean) => {
+    // Show the change at once; the list reloads from the server afterwards
+    setProperties((list) => list.map((p) => (p.id === id ? { ...p, status, isFeatured } : p)));
     try {
       const token = localStorage.getItem('token');
       const apiUrl = getApiUrl();
-      await fetch(`${apiUrl}/api/v1/admin/properties/${id}`, {
+      const res = await fetch(`${apiUrl}/api/v1/admin/properties/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -285,10 +324,18 @@ export default function AdminListingsPage() {
         },
         body: JSON.stringify({ status, isFeatured })
       });
+      if (!res.ok) throw new Error('Update failed');
       invalidatePropertiesCache();
       await triggerRevalidation(id);
+      setSuccessMsg(status === 'PUBLISHED' ? 'Listing updated. Changes are live on the site.' : 'Listing updated. It is hidden from search until published.');
+      setSuccessLink(null);
+      setTimeout(() => setSuccessMsg(''), 5000);
+    } catch (err) {
+      setSuccessMsg('');
+      alert('Could not update the listing. Please try again.');
+    } finally {
       fetchProperties();
-    } catch (err) {}
+    }
   };
 
   return (
@@ -318,6 +365,11 @@ export default function AdminListingsPage() {
         <div className="p-4 rounded-2xl bg-green-500/10 border border-green-500/30 flex items-center gap-3 text-green-700 text-sm font-bold animate-in fade-in duration-200">
           <CheckCircle2 className="w-5 h-5 text-green-600" />
           <span>{successMsg}</span>
+          {successLink && (
+            <Link href={successLink} target="_blank" className="ml-auto inline-flex items-center gap-1 underline underline-offset-4 hover:text-green-800">
+              View on site <ExternalLink className="w-3.5 h-3.5" />
+            </Link>
+          )}
         </div>
       )}
 
@@ -390,7 +442,7 @@ export default function AdminListingsPage() {
                       <div className="flex items-center gap-3">
                         <div className="w-14 h-12 rounded-xl bg-gray-100 overflow-hidden shrink-0 border border-gray-200 relative">
                           {p.images?.[0] ? (
-                            <img src={p.images[0]} alt="" className="w-full h-full object-cover" />
+                            <img src={thumbSrc(p.images[0])} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
                           ) : (
                             <Building2 className="w-6 h-6 m-3 text-gray-300" />
                           )}
@@ -406,6 +458,7 @@ export default function AdminListingsPage() {
                           </Link>
                           <p className="text-xs text-gray-500 mt-0.5 font-medium">
                             {p.propertyType} • For {p.saleOrRent}
+                            {typeof p.imageCount === 'number' && ` • ${p.imageCount} photo${p.imageCount === 1 ? '' : 's'}`}
                           </p>
                         </div>
                       </div>
@@ -417,16 +470,35 @@ export default function AdminListingsPage() {
                       LKR {p.price ? p.price.toLocaleString() : 'N/A'}
                     </td>
                     <td className="py-4 px-6">
-                      <span className={`inline-flex px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${
-                        p.status === 'PUBLISHED' ? 'bg-green-100 text-green-800' :
-                        p.status === 'PENDING_APPROVAL' ? 'bg-amber-100 text-amber-800' :
-                        'bg-gray-100 text-gray-600'
-                      }`}>
-                        {p.status}
-                      </span>
+                      {/* Only published listings appear in search and on the homepage */}
+                      <select
+                        value={p.status}
+                        onChange={(e) => handleStatusToggle(p.id, e.target.value, !!p.isFeatured)}
+                        aria-label={`Status of ${p.title}`}
+                        className={`rounded-full border-0 py-1 pl-2.5 pr-7 text-[10px] font-extrabold uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-amber-500/40 ${
+                          p.status === 'PUBLISHED' ? 'bg-green-100 text-green-800' :
+                          p.status === 'PENDING_APPROVAL' ? 'bg-amber-100 text-amber-800' :
+                          p.status === 'REJECTED' ? 'bg-red-50 text-red-700' :
+                          'bg-gray-100 text-gray-600'
+                        }`}
+                      >
+                        {STATUS_OPTIONS.map((o) => (
+                          <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
+                      </select>
                     </td>
                     <td className="py-4 px-6 text-right">
                       <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => handleStatusToggle(p.id, p.status, !p.isFeatured)}
+                          aria-pressed={!!p.isFeatured}
+                          className={`p-1.5 rounded-lg border transition-colors ${
+                            p.isFeatured ? 'border-amber-300 bg-amber-50 text-amber-600 hover:bg-amber-100' : 'border-gray-200 text-gray-400 hover:bg-gray-100 hover:text-gray-700'
+                          }`}
+                          title={p.isFeatured ? 'Featured on the homepage (click to remove)' : 'Feature on the homepage'}
+                        >
+                          <Star className={`w-4 h-4 ${p.isFeatured ? 'fill-amber-500' : ''}`} />
+                        </button>
                         <button
                           onClick={() => openEditModal(p)}
                           className="p-1.5 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-100 transition-colors"
@@ -664,19 +736,50 @@ export default function AdminListingsPage() {
                 </div>
               </div>
 
-              {/* Description */}
+              {/* Description, with a preview of how the listing page lays it out */}
               <div className="border-t border-gray-100 pt-4">
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
-                  Full Property Description *
-                </label>
-                <textarea
-                  required
-                  rows={4}
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Detailed description of features, views, road access, distance to main towns..."
-                  className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/30"
-                />
+                <div className="mb-1 flex items-center justify-between gap-3">
+                  <label htmlFor="listing-description" className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+                    Full Property Description *
+                  </label>
+                  <div className="flex rounded-lg bg-gray-100 p-0.5 text-xs font-bold" role="tablist" aria-label="Description view">
+                    {(['write', 'preview'] as const).map((tab) => (
+                      <button
+                        key={tab}
+                        type="button"
+                        role="tab"
+                        aria-selected={descriptionTab === tab}
+                        onClick={() => setDescriptionTab(tab)}
+                        className={`rounded-md px-3 py-1 capitalize transition-colors ${descriptionTab === tab ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}
+                      >
+                        {tab}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {descriptionTab === 'write' ? (
+                  <textarea
+                    id="listing-description"
+                    required
+                    rows={10}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder={'A spacious four-bedroom house with **private balconies**...\n\n### Property Features\n🔹 **Land Extent:** 14 Perches\n🔹 **Bedrooms:** 4'}
+                    className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+                  />
+                ) : (
+                  <div className="max-h-[420px] overflow-y-auto rounded-xl border border-gray-200 bg-navy-50/50 p-5">
+                    {description.trim() ? (
+                      <RichDescription text={description} collapsible={false} />
+                    ) : (
+                      <p className="text-sm text-gray-400">Nothing to preview yet.</p>
+                    )}
+                  </div>
+                )}
+                <p className="mt-1.5 text-[11px] leading-relaxed text-gray-500">
+                  <b>**bold**</b> for emphasis · <b>### Heading</b> for a section title · one item per line starting with 🔹 or - for a bullet list ·
+                  a blank line starts a new paragraph. A first line in CAPITALS is treated as the title and not repeated on the page.
+                </p>
               </div>
 
               {/* Media Upload & Thumbnail Selection */}
@@ -694,11 +797,22 @@ export default function AdminListingsPage() {
                   />
                 </div>
 
+                {editingId && (
+                  <p className="text-[11px] text-gray-500 -mt-2">
+                    Choosing new photos replaces all of this listing&apos;s current photos. To keep them, leave this empty.
+                  </p>
+                )}
+
                 {/* Image Previews with Thumbnail Selector */}
+                {loadingPhotos && (
+                  <p className="flex items-center gap-2 text-xs font-medium text-gray-500">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading this listing&apos;s photos…
+                  </p>
+                )}
                 {imagePreviews.length > 0 && (
                   <div>
                     <p className="text-xs font-bold text-gray-700 mb-2">
-                      Click an image preview below to set it as the <span className="text-amber-600">★ Main Thumbnail</span>:
+                      Click a photo to make it the <span className="text-amber-600">★ Main Thumbnail</span>, the cover shown on listing cards and at the top of the listing page:
                     </p>
                     <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
                       {imagePreviews.map((src, idx) => (

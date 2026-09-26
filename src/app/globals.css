@@ -626,6 +626,65 @@ html[data-search-pending] [data-search-results] {
   to { transform: translate3d(-90px, 70px, 0) scale(1.15); }
 }
 
+/* Search header film: letterbox bars part, the soft still pushes in, then the film fades in
+   over it like a focus pull. Transform and opacity only. */
+.search-film__push {
+  animation: search-film-push 2.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes search-film-push {
+  from { transform: scale(1.16); }
+  to { transform: scale(1.04); }
+}
+.search-film__still {
+  animation: search-film-still 1.4s ease 0.15s both;
+}
+@keyframes search-film-still {
+  from { opacity: 0; }
+}
+.search-film__video {
+  opacity: 0;
+  transition: opacity 1.8s ease;
+}
+.search-film[data-playing] .search-film__video {
+  opacity: 1;
+}
+.search-film__bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 18%;
+  background: #081a2e;
+  animation: search-film-bar 1.6s cubic-bezier(0.76, 0, 0.24, 1) 0.3s both;
+}
+.search-film__bar--top {
+  top: 0;
+  transform-origin: top;
+}
+.search-film__bar--bottom {
+  bottom: 0;
+  transform-origin: bottom;
+}
+@keyframes search-film-bar {
+  to { transform: scaleY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .search-film__bar { display: none; }
+}
+/* Grade: dense navy behind the copy, easing off to the right so the film shows through,
+   and fading to solid navy along the bottom where the filter bar docks */
+.search-film-grade {
+  background:
+    linear-gradient(to top, #081a2e 0%, rgba(8, 26, 46, 0.55) 22%, rgba(8, 26, 46, 0) 48%),
+    linear-gradient(90deg, rgba(8, 26, 46, 0.95) 0%, rgba(8, 26, 46, 0.84) 32%, rgba(8, 26, 46, 0.5) 64%, rgba(8, 26, 46, 0.62) 100%);
+}
+@media (max-width: 767px) {
+  .search-film-grade {
+    background:
+      linear-gradient(to top, #081a2e 0%, rgba(8, 26, 46, 0.6) 30%, rgba(8, 26, 46, 0.72) 100%),
+      rgba(8, 26, 46, 0.2);
+  }
+}
+
 .skeleton-shimmer {
   background: linear-gradient(100deg, #e2ebf5 30%, #f2f6fb 50%, #e2ebf5 70%);
   background-size: 300% 100%;
@@ -731,6 +790,8 @@ html.vt-listing::view-transition-new(root) {
   }
   .results-rise > li,
   .gallery-tile,
+  .search-film__push,
+  .search-film__still,
   .search-glow,
   .skeleton-shimmer,
   .listing-save[data-saved] svg {

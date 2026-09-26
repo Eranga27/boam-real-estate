@@ -172,11 +172,17 @@ export const editProperty = async (req: AuthRequest, res: Response): Promise<voi
     }
 
     const thumbnailIndex = req.body.thumbnailIndex;
-    if (updateData.images && thumbnailIndex !== undefined && thumbnailIndex !== null) {
+    if (thumbnailIndex !== undefined && thumbnailIndex !== null) {
       const idx = parseInt(thumbnailIndex.toString());
-      if (!isNaN(idx) && idx > 0 && idx < updateData.images.length) {
-        const selectedThumb = updateData.images.splice(idx, 1)[0];
-        updateData.images.unshift(selectedThumb);
+      if (!isNaN(idx) && idx > 0) {
+        // New uploads are reordered as sent; otherwise reorder the photos already saved
+        if (!updateData.images && Array.isArray(property.images)) {
+          updateData.images = [...property.images];
+        }
+        if (updateData.images && idx < updateData.images.length) {
+          const selectedThumb = updateData.images.splice(idx, 1)[0];
+          updateData.images.unshift(selectedThumb);
+        }
       }
     }
 

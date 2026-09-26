@@ -19,7 +19,7 @@ import {
 import { EASE_OUT_EXPO, RevealText } from '@/components/motion/Reveal';
 import { formatFullPrice } from '@/lib/format';
 import { formatLand, formatPlace, type ListingDetail } from '@/lib/listings';
-import { parseDescription, type DescriptionBlock } from '@/lib/description';
+import { hasLeadingEmoji, parseDescription, type DescriptionBlock } from '@/lib/description';
 import { optimizedImage } from '@/lib/listingImages';
 
 /* ---------------------------------------------------------------- Shared */
@@ -237,7 +237,8 @@ function Block({ block }: { block: DescriptionBlock }) {
         <ul className="grid gap-x-8 gap-y-3 sm:grid-cols-2">
           {block.items.map((item, i) => (
             <li key={i} className="flex gap-3 text-[15px] leading-relaxed text-navy-800/85">
-              <span aria-hidden="true" className="mt-[9px] h-1.5 w-1.5 shrink-0 rotate-45 bg-amber-500" />
+              {/* Items that open with their own emoji don't need a second marker */}
+              {!hasLeadingEmoji(item) && <span aria-hidden="true" className="mt-[9px] h-1.5 w-1.5 shrink-0 rotate-45 bg-amber-500" />}
               <span>
                 <Inline text={item} />
               </span>
@@ -261,7 +262,7 @@ function Block({ block }: { block: DescriptionBlock }) {
 
 const COLLAPSED_HEIGHT = 380;
 
-export function RichDescription({ text }: { text: string }) {
+export function RichDescription({ text, collapsible = true }: { text: string; collapsible?: boolean }) {
   const blocks = parseDescription(text);
   const innerRef = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState(false);
@@ -279,7 +280,7 @@ export function RichDescription({ text }: { text: string }) {
 
   if (blocks.length === 0) return <p className="text-[15px] text-navy-800/60">Ask our broker for the full property details.</p>;
 
-  const collapsed = overflows && !expanded;
+  const collapsed = collapsible && overflows && !expanded;
 
   return (
     <div>
@@ -299,7 +300,7 @@ export function RichDescription({ text }: { text: string }) {
           className={`pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[#f8fafd] to-transparent transition-opacity duration-500 ${collapsed ? 'opacity-100' : 'opacity-0'}`}
         />
       </motion.div>
-      {overflows && (
+      {collapsible && overflows && (
         <button
           type="button"
           onClick={() => setExpanded((e) => !e)}

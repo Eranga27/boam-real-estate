@@ -132,6 +132,8 @@ export interface ListingDetail extends Listing {
   nearby: string[];
   parking: number;
   yearBuilt: number;
+  /** PUBLISHED, PENDING_APPROVAL, DRAFT or REJECTED (bundled listings count as published) */
+  status: string;
 }
 
 export function toListingDetail(p: any): ListingDetail {
@@ -146,5 +148,6 @@ export function toListingDetail(p: any): ListingDetail {
     nearby: Array.isArray(p.nearbyFacilities) ? p.nearbyFacilities.filter(Boolean) : Array.isArray(p.nearby) ? p.nearby.filter(Boolean) : [],
     parking: Number(p.parking) || 0,
     yearBuilt: Number(p.yearBuilt) || 0,
+    status: typeof p.status === 'string' ? p.status : 'PUBLISHED',
   };
 }

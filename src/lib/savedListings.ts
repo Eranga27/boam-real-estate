@@ -5,9 +5,10 @@ import { useCallback, useSyncExternalStore } from 'react';
 /**
  * A visitor's shortlist of listings, kept in this browser only. Cards subscribe to their
  * own id, so saving one listing re-renders just that card and the shortlist counter.
+ * Shares its storage key with the dashboard's "Saved Properties" page.
  */
 
-const STORAGE_KEY = 'boam:saved-listings';
+const STORAGE_KEY = 'savedProperties';
 const listeners = new Set<() => void>();
 const EMPTY: string[] = [];
 let saved: string[] | null = null;

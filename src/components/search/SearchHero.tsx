@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { EASE_OUT_EXPO, Eyebrow, RevealText } from '@/components/motion/Reveal';
+import { HeroFilm } from './HeroFilm';
 
 interface SearchHeroProps {
   total: number;
@@ -31,9 +32,11 @@ export function SearchHero({ total, districts, fromPrice, loading }: SearchHeroP
 
   return (
     <section className="relative isolate overflow-hidden bg-navy-950 pb-24 pt-28 text-white sm:pb-28 sm:pt-32">
-      {/* Backdrop: survey grid and a slow gold glow (transform-only, so it costs nothing to animate) */}
-      <div aria-hidden="true" className="intro-grid absolute inset-0 -z-10 opacity-70" />
-      <div aria-hidden="true" className="search-glow absolute -right-40 -top-40 -z-10 h-[520px] w-[520px] rounded-full" />
+      {/* Backdrop: aerial film under a navy grade, a faint survey grid and a warm light leak */}
+      <HeroFilm />
+      <div aria-hidden="true" className="search-film-grade absolute inset-0 -z-10" />
+      <div aria-hidden="true" className="intro-grid absolute inset-0 -z-10 opacity-40" />
+      <div aria-hidden="true" className="search-glow absolute -right-40 -top-40 -z-10 h-[520px] w-[520px] rounded-full opacity-70" />
       <div aria-hidden="true" className="absolute inset-x-0 bottom-0 -z-10 h-px bg-gradient-to-r from-transparent via-amber-500/40 to-transparent" />
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

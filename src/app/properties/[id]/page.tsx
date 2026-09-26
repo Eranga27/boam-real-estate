@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import { cache } from 'react';
 import { properties as staticProperties } from '@/data/properties';
 import { getPropertyUrl, getOgImageUrl, SITE_SEO } from '@/lib/site';
@@ -25,16 +26,19 @@ const getCachedPropertyById = cache(async (id: string) => {
   return fetchLivePropertyById(id);
 });
 
-/** Live listing first (so admin edits show), then the bundled dataset if the API has nothing */
-async function loadListing(id: string): Promise<ListingDetail | null> {
+/**
+ * Live listing first, so admin edits show. The bundled dataset is only a stand-in while the
+ * backend is unreachable: a listing the backend reports missing (deleted) is `gone`.
+ */
+async function loadListing(id: string): Promise<{ listing: ListingDetail | null; gone: boolean }> {
   try {
     const live = await getCachedPropertyById(id);
-    if (live) return toListingDetail(live);
+    return live ? { listing: toListingDetail(live), gone: false } : { listing: null, gone: true };
   } catch (err) {
     console.error('Failed fetching dynamic property details from API', err);
   }
   const staticMatch = staticProperties.find((p) => p.id === id);
-  return staticMatch ? toListingDetail(staticMatch) : null;
+  return { listing: staticMatch ? toListingDetail(staticMatch) : null, gone: false };
 }
 
 async function loadAllListings(): Promise<Listing[]> {
@@ -48,7 +52,7 @@ async function loadAllListings(): Promise<Listing[]> {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const listing = await loadListing(params.id);
+  const { listing } = await loadListing(params.id);
 
   if (!listing) {
     return {
@@ -68,6 +72,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title,
     description,
+    // Drafts and listings awaiting approval can be opened by link, but stay out of search engines
+    ...(listing.status !== 'PUBLISHED' ? { robots: { index: false, follow: false } } : {}),
     alternates: {
       canonical,
     },
@@ -97,8 +103,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PropertyDetailsPage({ params }: Props) {
   const { id } = params;
-  const [listing, all] = await Promise.all([loadListing(id), loadAllListings()]);
+  const [{ listing, gone }, all] = await Promise.all([loadListing(id), loadAllListings()]);
 
+  if (gone) notFound();
   if (!listing) {
     return <PropertyDetailsClient listing={null} similar={[]} propertyId={id} />;
   }
