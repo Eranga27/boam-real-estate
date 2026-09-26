@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import prisma from '../prisma';
 import { AuthRequest } from '../middlewares/authMiddleware';
 import { uploadOnCloudinary } from '../utils/cloudinary';
+import { propertyWithoutImages, withCovers } from '../listingQueries';
+import { cacheKey, currentGeneration, getCached, setCached } from '../responseCache';
 
 const VIDEO_UPLOAD_FAILED =
   'The video could not be uploaded, so the listing was not saved. Video hosting needs Cloudinary to be configured on the server. Remove the video and save again, or try again later.';
@@ -225,10 +227,12 @@ export const deleteProperty = async (req: AuthRequest, res: Response): Promise<v
 
 export const getMyProperties = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const properties = await prisma.property.findMany({
+    const rows = await prisma.property.findMany({
       where: { userId: req.user.id },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
+      select: propertyWithoutImages,
     });
+    const properties = await withCovers(rows as any[]);
     res.status(200).json({ success: true, data: properties });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
@@ -284,6 +288,14 @@ export const adminUpdatePropertyStatus = async (req: AuthRequest, res: Response)
 
 export const getAllProperties = async (req: Request, res: Response): Promise<void> => {
   try {
+    const key = cacheKey('list', req.query as Record<string, unknown>);
+    const cached = getCached<object>(key);
+    if (cached) {
+      res.status(200).json(cached);
+      return;
+    }
+    const generation = currentGeneration();
+
     const { 
       saleOrRent, propertyType, district, city,
       minPrice, maxPrice, bedrooms, bathrooms,
@@ -314,35 +326,26 @@ export const getAllProperties = async (req: Request, res: Response): Promise<voi
     const skip = (parseInt(page as string) - 1) * take;
     const includeFullImages = req.query.fullImages === 'true';
 
-    const [properties, total] = await Promise.all([
-      prisma.property.findMany({
-        where: whereClause,
-        orderBy: orderByClause,
-        take,
-        skip,
-        include: {
-          user: { select: { fullName: true, profilePicture: true } }
-        }
-      }),
+    const user = { select: { fullName: true, profilePicture: true } };
+    // Cards need only the cover photo: never read the rest of the photos out of the database
+    const [rows, total] = await Promise.all([
+      includeFullImages
+        ? prisma.property.findMany({ where: whereClause, orderBy: orderByClause, take, skip, include: { user } })
+        : prisma.property.findMany({ where: whereClause, orderBy: orderByClause, take, skip, select: { ...propertyWithoutImages, user } }),
       prisma.property.count({ where: whereClause })
     ]);
+    const optimizedProperties = includeFullImages ? rows : await withCovers(rows as any[]);
 
-    // Optimize listing payload: return only primary thumbnail for listing cards unless fullImages=true
-    const optimizedProperties = includeFullImages
-      ? properties
-      : properties.map((p: any) => ({
-          ...p,
-          images: Array.isArray(p.images) && p.images.length > 0 ? [p.images[0]] : [],
-        }));
-
-    res.status(200).json({ 
-      success: true, 
+    const body = {
+      success: true,
       count: optimizedProperties.length,
       total,
       totalPages: Math.ceil(total / take),
       currentPage: parseInt(page as string),
-      data: optimizedProperties 
-    });
+      data: optimizedProperties
+    };
+    setCached(key, body, generation);
+    res.status(200).json(body);
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -350,6 +353,14 @@ export const getAllProperties = async (req: Request, res: Response): Promise<voi
 
 export const getPropertyById = async (req: Request, res: Response): Promise<void> => {
   try {
+    const key = cacheKey(`detail:${req.params.id}`);
+    const cached = getCached<object>(key);
+    if (cached) {
+      res.status(200).json(cached);
+      return;
+    }
+    const generation = currentGeneration();
+
     const property = await prisma.property.findUnique({
       where: { id: req.params.id },
       include: {
@@ -364,7 +375,9 @@ export const getPropertyById = async (req: Request, res: Response): Promise<void
       return;
     }
 
-    res.status(200).json({ success: true, data: property });
+    const body = { success: true, data: property };
+    setCached(key, body, generation);
+    res.status(200).json(body);
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
   }

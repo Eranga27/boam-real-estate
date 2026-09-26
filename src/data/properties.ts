@@ -100,8 +100,15 @@ export const properties: Property[] = [
     description: `Four-bedroom house (each bedroom features a private balcony), three bathrooms, living room, main kitchen, and separate servant's kitchen/room/toilet. Situated on 14 perches of land. Includes access to Millennium City resident amenities such as the swimming pool and gym facilities.`,
     amenities: [],
     nearby: [],
+    // The listing's current photos, in the order the admin panel shows them
     images: [
-      '/uploads/ekala1.jpeg',
+      '/uploads/ekala-house-1.jpg',
+      '/uploads/ekala-house-2.jpg',
+      '/uploads/ekala-house-3.jpg',
+      '/uploads/ekala-house-4.jpg',
+      '/uploads/ekala-house-5.jpg',
+      '/uploads/ekala-house-6.jpg',
+      '/uploads/ekala-house-7.jpg',
     ],
     video: '/uploads/ekala1vid.mp4',
     listedDaysAgo: 3,

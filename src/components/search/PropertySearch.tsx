@@ -61,6 +61,8 @@ export default function PropertySearch({ initialProperties }: PropertySearchProp
   const hasInitial = !!initialProperties && initialProperties.length > 0;
   const [listings, setListings] = useState<Listing[]>(() => (hasInitial ? initialProperties!.map(toListing) : []));
   const [isLoading, setIsLoading] = useState(!hasInitial);
+  // Showing the bundled listings because the backend couldn't be reached
+  const [offline, setOffline] = useState(false);
   const [state, setState] = useState<SearchState>(DEFAULT_STATE);
   const [visible, setVisible] = useState(PAGE_SIZE);
   const savedIds = useSavedIds();
@@ -69,6 +71,9 @@ export default function PropertySearch({ initialProperties }: PropertySearchProp
   // ---- Data: server props first, then browser cache, then the live API ----
   useEffect(() => {
     let alive = true;
+    let hasData = hasInitial;
+    let retries = 0;
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
     if (hasInitial) {
       setCachedProperties(initialProperties!);
     } else {
@@ -76,15 +81,33 @@ export default function PropertySearch({ initialProperties }: PropertySearchProp
       if (cached && cached.length > 0) {
         setListings(cached.map(toListing));
         setIsLoading(false);
+        hasData = true;
       }
     }
 
     const load = async () => {
       try {
         const live = await fetchLivePropertiesList(100);
-        if (alive && Array.isArray(live) && live.length > 0) setListings(live.map(toListing));
+        if (alive && Array.isArray(live) && live.length > 0) {
+          setListings(live.map(toListing));
+          setOffline(false);
+          hasData = true;
+        }
       } catch {
-        // Keep what we have; the page still works from the cache
+        // Backend unreachable with nothing cached: show the bundled listings, not "0 properties"
+        if (alive && !hasData) {
+          const { getBundledListings } = await import('@/lib/fallbackListings');
+          if (alive) {
+            setListings(getBundledListings().map(toListing));
+            setOffline(true);
+            hasData = true;
+          }
+        }
+        // Try the live list again shortly (e.g. while the backend wakes up)
+        if (alive && retries < 3) {
+          retries += 1;
+          retryTimer = setTimeout(load, 30_000);
+        }
       } finally {
         if (alive) setIsLoading(false);
       }
@@ -93,6 +116,7 @@ export default function PropertySearch({ initialProperties }: PropertySearchProp
     const unsubscribe = onPropertiesInvalidated(load);
     return () => {
       alive = false;
+      clearTimeout(retryTimer);
       unsubscribe();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -221,6 +245,12 @@ export default function PropertySearch({ initialProperties }: PropertySearchProp
                   )}
                 </p>
                 {!isLoading && <p className="mt-0.5 text-sm font-medium text-navy-800/55">{summary.where}</p>}
+              {offline && (
+                <p className="mt-2 text-[13px] font-medium text-amber-800">
+                  We&apos;re having trouble reaching our live listings, so the newest ones may be missing. This page will update
+                  automatically.
+                </p>
+              )}
               </div>
 
               <button

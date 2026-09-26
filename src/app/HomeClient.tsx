@@ -42,7 +42,11 @@ export default function HomeClient({ initialFeatured }: HomeClientProps) {
           setFeaturedProperties(toFeaturedCards(liveData));
         }
       } catch {
-        // Backend offline — server-rendered or cached featured data already showing
+        // Backend offline: server-rendered or cached cards stay; with neither, use the bundled listings
+        if (isMounted) {
+          const { getBundledListings } = await import('@/lib/fallbackListings');
+          if (isMounted) setFeaturedProperties((current) => (current.length > 0 ? current : toFeaturedCards(getBundledListings())));
+        }
       } finally {
         if (isMounted) setLoadingProperties(false);
       }

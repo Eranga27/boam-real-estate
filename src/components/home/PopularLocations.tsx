@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { MapPin, ArrowRight, Home, Trees, Building2, ChevronRight, Layers } from 'lucide-react';
 import { formatFullPrice, formatPrice, getImageUrl } from '@/lib/format';
 import type { PropertyMapItem } from './SriLankaMap';
+import { approximateLocation } from '@/lib/geo';
 
 const SriLankaMap = dynamic(() => import('./SriLankaMap').then((m) => m.SriLankaMap), {
   ssr: false,
@@ -31,59 +32,14 @@ const FILTERS = [
   { value: 'Land', label: 'Lands', icon: Trees, active: 'bg-emerald-600', text: 'text-white' },
 ] as const;
 
-function assignCoords(city: string, title: string, id?: string, district?: string) {
-  const t = title.toLowerCase();
-  const c = city.toLowerCase();
-  const d = (district || '').toLowerCase();
+const toMapItems = (rows: any[]): PropertyMapItem[] =>
+  rows.map(mapToPropertyMapItem).filter((item): item is PropertyMapItem => item !== null);
 
-  // Hikkaduwa / Galle district
-  if (c.includes('hikkaduwa') || c.includes('galle') || d === 'galle' || t.includes('galle')) return { lat: 6.1395, lng: 80.1063 };
-  // Wattegama
-  if (c.includes('wattegama') || t.includes('wattegama')) return { lat: 7.3502, lng: 80.7015 };
-  // Nuwara Eliya / Katukithula
-  if (c.includes('nuwara eliya') || c.includes('katukithula') || d.includes('nuwara eliya') || t.includes('nuwara eliya')) return { lat: 6.9700, lng: 80.7500 };
-  // Athurugiriya
-  if (c.includes('athurugiriya') || t.includes('athurugiriya')) return { lat: 6.8789, lng: 79.9956 };
-  // Matale district
-  if (c.includes('matale') || d.includes('matale') || t.includes('matale')) return { lat: 7.4675, lng: 80.6234 };
-  if (id === 'polgolla-house' || t.includes('polgolla') || c.includes('polgolla')) return { lat: 7.3210, lng: 80.6410 };
-  if (id === 'katugastota-double-storey-house' || t.includes('balangoda road') || t.includes('double-storey')) return { lat: 7.3310, lng: 80.6250 };
-  if (id === 'katugastota-station-road-land' || t.includes('station road')) return { lat: 7.3310, lng: 80.6240 };
-  if (id === 'katugastota-land' || t.includes('kahalla')) return { lat: 7.3275, lng: 80.6219 };
-  if (t.includes('udathalawinna') || c.includes('udathalawinna') || t.includes('thungadhura') || c.includes('thungadhura')) return { lat: 7.3385, lng: 80.6480 };
-  if (t.includes('amunugama') || c.includes('amunugama')) return { lat: 7.3050, lng: 80.6720 };
-  if (t.includes('nugegoda') || c.includes('nugegoda') || c.includes('thalapathpitiya')) return { lat: 6.8625, lng: 79.9125 };
-  if (t.includes('upkot') || c.includes('maskeliya')) return { lat: 6.8347, lng: 80.5732 };
-  if (t.includes('three-storey') || t.includes('george e')) return { lat: 7.2783, lng: 80.6321 };
-  if (c.includes('nillamba')) return { lat: 7.1850, lng: 80.6025 };
-  if (c.includes('bulathsinhala') || c.includes('kalutara')) return { lat: 6.6478, lng: 80.1458 };
-  // Kandy / Aniwatte
-  if (c.includes('kandy') || t.includes('kandy') || d.includes('kandy') || c.includes('aniwatte')) return { lat: 7.2906, lng: 80.6337 };
-  // Dickwella / Hiriketiyawa
-  if (c.includes('dickwella') || t.includes('hiriketiyawa') || c.includes('hiriketiyawa')) return { lat: 5.9620, lng: 80.6974 };
-  // Boralasgamuwa
-  if (c.includes('boralasgamuwa') || t.includes('boralasgamuwa')) return { lat: 6.8436, lng: 79.9018 };
-  // Kelaniya / Kohawila
-  if (c.includes('kelaniya') || t.includes('kelaniya') || t.includes('kohawila')) return { lat: 6.9553, lng: 79.9186 };
-  // Kalubowila / Dehiwala
-  if (c.includes('kalubowila') || t.includes('kalubowila')) return { lat: 6.8631, lng: 79.8824 };
-  if (c.includes('ekala')) return { lat: 7.0863, lng: 79.9041 };
-  if (c.includes('kadawatha')) return { lat: 7.0016, lng: 79.9515 };
-  if (c.includes('rajagiriya')) return { lat: 6.9083, lng: 79.8967 };
-  if (c.includes('welisara')) return { lat: 7.0270, lng: 79.9048 };
-  if (c.includes('malabe')) return { lat: 6.9061, lng: 79.9647 };
-  if (c.includes('mount lavinia')) return { lat: 6.8301, lng: 79.8654 };
-  if (c.includes('panadura')) return { lat: 6.7106, lng: 79.9074 };
-  if (c.includes('katugastota')) return { lat: 7.3275, lng: 80.6219 };
-  if (c.includes('ratnapura')) return { lat: 6.6828, lng: 80.3992 };
-  if (c.includes('velipenna') || c.includes('aluthgama')) return { lat: 6.4258, lng: 80.0521 };
-  if (c.includes('kurunegala')) return { lat: 7.4863, lng: 80.3647 };
-
-  return { lat: 6.9271, lng: 79.8612 };
-}
-
-function mapToPropertyMapItem(p: any): PropertyMapItem {
-  const coords = assignCoords(p.city || p.district || '', p.title || '', p.id, p.district);
+/** Map pin for a listing: its saved coordinates, or its town's approximate position */
+function mapToPropertyMapItem(p: any): PropertyMapItem | null {
+  const exact = typeof p.latitude === 'number' && typeof p.longitude === 'number' ? { lat: p.latitude, lng: p.longitude } : null;
+  const coords = exact || (typeof p.lat === 'number' && typeof p.lng === 'number' ? { lat: p.lat, lng: p.lng } : approximateLocation(p));
+  if (!coords) return null;
   return {
     id: p.id,
     title: p.title,
@@ -92,8 +48,8 @@ function mapToPropertyMapItem(p: any): PropertyMapItem {
     city: p.city || p.district || 'Sri Lanka',
     address: p.address,
     images: p.images || [],
-    lat: typeof p.latitude === 'number' ? p.latitude : (typeof p.lat === 'number' ? p.lat : coords.lat),
-    lng: typeof p.longitude === 'number' ? p.longitude : (typeof p.lng === 'number' ? p.lng : coords.lng),
+    lat: coords.lat,
+    lng: coords.lng,
     description: p.description,
     saleOrRent: p.saleOrRent,
     district: p.district,
@@ -117,7 +73,7 @@ export function PopularLocations() {
 
     const cached = getCachedProperties();
     if (cached && cached.length > 0) {
-      setProperties(cached.map(mapToPropertyMapItem));
+      setProperties(toMapItems(cached));
       setHasLoaded(true);
     }
 
@@ -125,10 +81,14 @@ export function PopularLocations() {
       try {
         const liveData = await fetchLivePropertiesList();
         if (isMounted && Array.isArray(liveData) && liveData.length > 0) {
-          setProperties(liveData.map(mapToPropertyMapItem));
+          setProperties(toMapItems(liveData));
         }
       } catch {
-        // Keep cached properties if the backend is unreachable
+        // Keep cached properties if the backend is unreachable; with none, pin the bundled listings
+        if (isMounted) {
+          const { getBundledListings } = await import('@/lib/fallbackListings');
+          if (isMounted) setProperties((current) => (current.length > 0 ? current : toMapItems(getBundledListings())));
+        }
       } finally {
         if (isMounted) setHasLoaded(true);
       }

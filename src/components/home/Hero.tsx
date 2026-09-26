@@ -39,12 +39,12 @@ const SCENES: Array<{
     cta: 'Browse properties',
   },
   {
-    image: '/images/hero/ekala-1920.jpg',
-    srcSet: '/images/hero/ekala-1280.jpg 1280w, /images/hero/ekala-1920.jpg 1920w',
-    place: 'Ekala',
-    region: 'Gampaha District',
-    title: 'House in Ekala',
-    href: '/properties/ekala-house',
+    // The listing's own cover photo (every scene must show the property its caption names)
+    image: '/images/hero/hikkaduwa-1280.jpg',
+    place: 'Hikkaduwa',
+    region: 'Galle District',
+    title: 'Rare Property for Sale – Hikkaduwa',
+    href: '/properties/hikkaduwa-house',
     cta: 'View property',
   },
   {

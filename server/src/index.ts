@@ -14,6 +14,7 @@ import favoriteRoutes from './routes/favoriteRoutes';
 import dashboardRoutes from './routes/dashboardRoutes';
 import adminRoutes from './routes/adminRoutes';
 import requestRoutes from './routes/requestRoutes';
+import { clearListingCache } from './responseCache';
 
 dotenv.config();
 
@@ -52,6 +53,23 @@ app.use('/api/', limiter);
 app.use(express.json({ limit: '10mb' })); // Input size limit for basic sanitization
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
+
+// Keep-alive target: proves the server is up without touching the database, so pings keep
+// Render awake while the database can still scale to zero
+app.get('/api/v1/health', (_req, res) => {
+  res.status(200).json({ status: 'ok', uptime: Math.round(process.uptime()) });
+});
+
+// Any successful change to listings (or to admin-managed data) drops the cached listing
+// responses, so the next read comes fresh from the database
+app.use(['/api/v1/properties', '/api/v1/admin'], (req, res, next) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'OPTIONS') {
+    res.on('finish', () => {
+      if (res.statusCode < 400) clearListingCache();
+    });
+  }
+  next();
+});
 
 // Serve uploads as static files
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));

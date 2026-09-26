@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence, MotionConfig, motion } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Check, EyeOff, Heart, Share2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, EyeOff, Heart, RotateCw, Share2, WifiOff } from 'lucide-react';
 import { fetchLivePropertyById } from '@/lib/api';
 import { formatPrice } from '@/lib/format';
 import { getPropertyUrl } from '@/lib/site';
@@ -78,6 +78,31 @@ function SaveToggle({ id, title }: { id: string; title: string }) {
   );
 }
 
+/** The backend couldn't be reached (as opposed to the listing not existing) */
+function ListingUnavailable({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center bg-navy-50/50 p-6 pt-24 text-center">
+      <span className="mb-5 grid h-16 w-16 place-items-center rounded-2xl bg-white shadow-card ring-1 ring-navy-100">
+        <WifiOff className="h-7 w-7 text-navy-400" aria-hidden="true" />
+      </span>
+      <h1 className="text-3xl font-extrabold tracking-tight text-navy-950">We couldn&apos;t load this property</h1>
+      <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-navy-800/60">
+        Our listings service didn&apos;t respond just now. Please try again in a moment.
+      </p>
+      <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+        <button type="button" onClick={onRetry} className="inline-flex h-12 items-center gap-2 rounded-full bg-amber-500 px-6 text-sm font-extrabold text-navy-950 transition hover:bg-amber-400">
+          <RotateCw className="h-4 w-4" aria-hidden="true" />
+          Try again
+        </button>
+        <Link href="/search" className="inline-flex h-12 items-center gap-2 rounded-full bg-navy-950 px-6 text-sm font-bold text-white transition hover:bg-navy-800">
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          Browse all properties
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 const STATUS_NOTES: Record<string, string> = {
   PENDING_APPROVAL: 'is waiting for approval',
   DRAFT: 'is a draft',
@@ -102,6 +127,8 @@ export default function PropertyDetailsClient({ listing: initial, similar, prope
   const [listing, setListing] = useState<ListingDetail | null>(initial);
   // The server fetch can time out while the backend cold-starts; retry from the browser
   const [isRecovering, setIsRecovering] = useState(!initial && !!propertyId);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const [lightboxAt, setLightboxAt] = useState<number | null>(null);
   const [toast, setToast] = useState(false);
   const headerOffset = useHeaderOffset();
@@ -115,18 +142,23 @@ export default function PropertyDetailsClient({ listing: initial, similar, prope
   useEffect(() => {
     if (initial || !propertyId) return;
     let alive = true;
+    setIsRecovering(true);
+    setLoadFailed(false);
     fetchLivePropertyById(propertyId)
       .then((p) => {
         if (alive && p) setListing(toListingDetail(p));
       })
-      .catch(() => {})
+      // Unreachable, not missing: offer a retry rather than "this property has moved on"
+      .catch(() => {
+        if (alive) setLoadFailed(true);
+      })
       .finally(() => {
         if (alive) setIsRecovering(false);
       });
     return () => {
       alive = false;
     };
-  }, [initial, propertyId]);
+  }, [initial, propertyId, attempt]);
 
   const sections = useMemo(() => {
     if (!listing) return [];
@@ -142,6 +174,7 @@ export default function PropertyDetailsClient({ listing: initial, similar, prope
   }, [listing, similar.length]);
 
   if (!listing && isRecovering) return <DetailSkeleton handoff={handoff} />;
+  if (!listing && loadFailed) return <ListingUnavailable onRetry={() => setAttempt((n) => n + 1)} />;
   if (!listing) return <ListingGone />;
 
   const shortPrice = formatPrice(listing.price, listing.saleOrRent === 'Rent' ? 'rent' : 'sale');

@@ -10,7 +10,8 @@ import { PRODUCTION_BACKEND_URL } from '@/lib/api';
 export async function GET() {
   const startTime = Date.now();
   try {
-    const res = await fetch(`${PRODUCTION_BACKEND_URL}/api/v1/properties?limit=1`, {
+    // Health route: wakes the server without querying (and waking) the database
+    const res = await fetch(`${PRODUCTION_BACKEND_URL}/api/v1/health`, {
       headers: { Accept: 'application/json' },
       cache: 'no-store',
     });

@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import prisma from '../prisma';
 import { AuthRequest } from '../middlewares/authMiddleware';
+import { propertyWithoutImages, withCovers } from '../listingQueries';
 
 const logAdminAction = async (adminId: string, action: string, details: string, targetId?: string) => {
   await prisma.auditLog.create({
@@ -123,23 +124,19 @@ export const getAllListings = async (req: AuthRequest, res: Response): Promise<v
       where.status = status;
     }
 
+    // The table only shows a cover photo (and the photo count); the edit form fetches the
+    // full listing when opened, so the rest of the photos never leave the database here
     const [properties, total] = await Promise.all([
       prisma.property.findMany({
         where,
         skip,
         take: Number(limit),
         orderBy: { createdAt: 'desc' },
-        include: { user: { select: { fullName: true, email: true } } }
+        select: { ...propertyWithoutImages, user: { select: { fullName: true, email: true } } }
       }),
       prisma.property.count({ where })
     ]);
-
-    // The table only shows a thumbnail; the edit form fetches the full listing when opened
-    const rows = properties.map((p: any) => ({
-      ...p,
-      images: Array.isArray(p.images) && p.images.length > 0 ? [p.images[0]] : [],
-      imageCount: Array.isArray(p.images) ? p.images.length : 0,
-    }));
+    const rows = await withCovers(properties as any[]);
 
     res.status(200).json({
       success: true,

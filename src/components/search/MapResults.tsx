@@ -3,11 +3,12 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
-import { MapPinOff } from 'lucide-react';
+import { MapPin, MapPinOff } from 'lucide-react';
 import { ListingCard } from '@/components/listing/ListingCard';
 import { EASE_OUT_EXPO } from '@/components/motion/Reveal';
 import type { PropertyMapItem } from '@/components/home/SriLankaMap';
 import type { Listing } from '@/lib/listings';
+import { approximateLocation } from '@/lib/geo';
 
 const SriLankaMap = dynamic(() => import('@/components/home/SriLankaMap').then((m) => m.SriLankaMap), {
   ssr: false,
@@ -20,7 +21,7 @@ interface MapResultsProps {
   stickyTop: number;
 }
 
-function toMapItem(l: Listing): PropertyMapItem {
+function toMapItem(l: Listing, point: { lat: number; lng: number }): PropertyMapItem {
   return {
     id: l.id,
     title: l.title,
@@ -31,8 +32,8 @@ function toMapItem(l: Listing): PropertyMapItem {
     district: l.district,
     saleOrRent: l.saleOrRent,
     images: l.image ? [l.image] : [],
-    lat: l.lat as number,
-    lng: l.lng as number,
+    lat: point.lat,
+    lng: point.lng,
   };
 }
 
@@ -42,8 +43,23 @@ export function MapResults({ listings, stickyTop }: MapResultsProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const itemRefs = useRef(new Map<string, HTMLLIElement>());
 
-  const mapped = useMemo(() => listings.filter((l) => l.lat != null && l.lng != null).map(toMapItem), [listings]);
-  const unmapped = listings.length - mapped.length;
+  // Saved coordinates where the listing has them, otherwise its town's approximate position
+  const { mapped, approximate, unmapped } = useMemo(() => {
+    const items: PropertyMapItem[] = [];
+    let approx = 0;
+    for (const l of listings) {
+      if (l.lat != null && l.lng != null) {
+        items.push(toMapItem(l, { lat: l.lat, lng: l.lng }));
+        continue;
+      }
+      const point = approximateLocation(l);
+      if (point) {
+        items.push(toMapItem(l, point));
+        approx += 1;
+      }
+    }
+    return { mapped: items, approximate: approx, unmapped: listings.length - items.length };
+  }, [listings]);
 
   const onHover = useCallback((id: string | null) => setHoveredId(id), []);
 
@@ -74,8 +90,14 @@ export function MapResults({ listings, stickyTop }: MapResultsProps) {
             onSelectProperty={onSelect}
             heightClassName="h-[52vh] min-h-[340px] lg:h-[calc(100vh-var(--map-offset))] lg:min-h-[480px]"
           />
-          {unmapped > 0 && (
+          {approximate > 0 && (
             <p className="mt-3 flex items-center gap-2 text-xs font-medium text-navy-800/55">
+              <MapPin className="h-3.5 w-3.5 text-amber-500" aria-hidden="true" />
+              {approximate} {approximate === 1 ? 'listing is' : 'listings are'} pinned at {approximate === 1 ? 'its' : 'their'} town; ask us for the exact location.
+            </p>
+          )}
+          {unmapped > 0 && (
+            <p className="mt-2 flex items-center gap-2 text-xs font-medium text-navy-800/55">
               <MapPinOff className="h-3.5 w-3.5 text-navy-400" aria-hidden="true" />
               {unmapped} {unmapped === 1 ? 'listing has' : 'listings have'} no map location yet and {unmapped === 1 ? 'appears' : 'appear'} in the list only.
             </p>

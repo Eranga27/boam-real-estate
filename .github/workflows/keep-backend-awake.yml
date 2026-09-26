@@ -1,6 +1,7 @@
 # Keeps the Render free-tier backend warm so visitors don't wait for a cold start.
 # Render sleeps after 15 minutes without traffic. Vercel's Hobby plan only allows
 # daily cron jobs, so the frequent ping runs here instead (free for public repos).
+# The health route doesn't query the database, so the database can still sleep between visits.
 name: Keep backend awake
 
 on:
@@ -18,4 +19,4 @@ jobs:
         run: |
           curl --fail --silent --show-error --max-time 90 --retry 2 --retry-delay 10 \
             -o /dev/null -w "HTTP %{http_code} in %{time_total}s\n" \
-            "https://boam-real-estate.onrender.com/api/v1/properties?limit=1"
+            "https://boam-real-estate.onrender.com/api/v1/health"
