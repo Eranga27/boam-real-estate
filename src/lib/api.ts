@@ -10,10 +10,14 @@
  * 6. Cache-busting mechanism for instant synchronization when listings are modified via the Admin Portal.
  */
 
+import { withImageRoutes } from './listingImages';
+
 export const PRODUCTION_BACKEND_URL = 'https://boam-real-estate.onrender.com';
 
-const CACHE_KEY = 'boam_properties_cache_v3';
-const CACHE_TIMESTAMP_KEY = 'boam_properties_cache_time_v3';
+// v4: cached listings reference photos by URL instead of holding Base64 data
+const CACHE_KEY = 'boam_properties_cache_v4';
+const CACHE_TIMESTAMP_KEY = 'boam_properties_cache_time_v4';
+const LEGACY_CACHE_KEYS = ['boam_properties_cache_v3', 'boam_properties_cache_time_v3'];
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes freshness window
 // Written only when an admin changes listings; other tabs listen for it to refresh
 const INVALIDATION_KEY = 'boam_properties_invalidated_at';
@@ -131,6 +135,12 @@ export function getCachedProperties(): any[] | null {
 
   // 2. Browser storage check
   try {
+    // Free the space older, Base64-heavy caches used
+    LEGACY_CACHE_KEYS.forEach((key) => {
+      localStorage.removeItem(key);
+      sessionStorage.removeItem(key);
+    });
+
     const raw = sessionStorage.getItem(CACHE_KEY) || localStorage.getItem(CACHE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
@@ -191,12 +201,12 @@ async function fetchWithTimeout(url: string, timeoutMs: number, init: RequestIni
  * if the primary fails, returns a non-200 status, or times out.
  * Concurrent callers (e.g. the homepage's featured and map sections) share one request.
  */
-export async function fetchLivePropertiesList(limit = 100): Promise<any[]> {
+export async function fetchLivePropertiesList(limit = 100, timeoutMs?: number): Promise<any[]> {
   if (inFlightListRequests.has(limit)) {
     return inFlightListRequests.get(limit)!;
   }
 
-  const fetchPromise: Promise<any[]> = requestPropertiesList(limit).finally(() => {
+  const fetchPromise: Promise<any[]> = requestPropertiesList(limit, timeoutMs).finally(() => {
     // An invalidation may have started a newer request under the same key; keep that one
     if (inFlightListRequests.get(limit) === fetchPromise) {
       inFlightListRequests.delete(limit);
@@ -206,11 +216,16 @@ export async function fetchLivePropertiesList(limit = 100): Promise<any[]> {
   return fetchPromise;
 }
 
-async function requestPropertiesList(limit: number): Promise<any[]> {
+async function requestPropertiesList(limit: number, timeoutOverrideMs?: number): Promise<any[]> {
   const query = `limit=${limit}&sort=newest&_t=${Date.now()}`;
   const primaryBase = getBaseApiUrl();
+  const isServer = typeof window === 'undefined';
 
   const candidates: string[] = [];
+  // Browsers first ask this site's slim listings route (photos as URLs, not Base64)
+  if (!isServer) {
+    candidates.push(`/api/listings?limit=${limit}`);
+  }
   if (primaryBase) {
     candidates.push(`${primaryBase}/api/v1/properties?${query}`);
   } else {
@@ -224,14 +239,13 @@ async function requestPropertiesList(limit: number): Promise<any[]> {
     candidates.push(directUrl);
   }
 
-  const isServer = typeof window === 'undefined';
   const fetchOptions: any = {
     headers: { Accept: 'application/json' },
     ...(isServer
       ? { next: { revalidate: 60, tags: ['properties'] } }
       : { cache: 'no-store' }),
   };
-  const timeoutMs = isServer ? 6000 : 25000;
+  const timeoutMs = timeoutOverrideMs ?? (isServer ? 6000 : 25000);
 
   for (const url of candidates) {
     try {
@@ -240,8 +254,10 @@ async function requestPropertiesList(limit: number): Promise<any[]> {
       if (res.ok) {
         const json = await res.json();
         if (json.success && Array.isArray(json.data) && json.data.length > 0) {
-          setCachedProperties(json.data);
-          return json.data;
+          // Server-rendered pages and the listings route never embed Base64 photos
+          const data = isServer ? json.data.map(withImageRoutes) : json.data;
+          setCachedProperties(data);
+          return data;
         }
       }
     } catch {
@@ -300,8 +316,10 @@ export async function fetchLivePropertyById(id: string): Promise<any | null> {
         if (res.ok) {
           const json = await res.json();
           if (json.success && json.data) {
-            memoryDetailCache.set(id, { data: json.data, timestamp: Date.now() });
-            return json.data;
+            // Server-rendered detail pages load Base64 photos by URL instead of inline
+            const data = isServer ? withImageRoutes(json.data) : json.data;
+            memoryDetailCache.set(id, { data, timestamp: Date.now() });
+            return data;
           }
         }
       } catch {

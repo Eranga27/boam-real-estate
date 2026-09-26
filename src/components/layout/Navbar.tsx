@@ -36,7 +36,7 @@ export function Navbar() {
 
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-50 transition-all duration-350 ease-in-out ${
+      className={`site-header fixed inset-x-0 top-0 z-50 transition-all duration-350 ease-in-out ${
         solid
           ? 'bg-white shadow-[0_2px_15px_-3px_rgba(14,42,73,0.06)] border-b border-navy-100/80 py-3'
           : 'bg-transparent py-5'

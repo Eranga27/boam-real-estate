@@ -1,576 +1,306 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
-import ContactForm from '@/components/ContactForm';
-import {
-  MapPin, Bed, Bath, Square, Calendar, CheckCircle2,
-  Share2, ChevronLeft, ChevronRight, Car,
-  LandPlot, ExternalLink, ArrowLeft, ImageOff, Check, Play
-} from 'lucide-react';
-import { formatFullPrice, formatPrice, getImageUrl } from '@/lib/format';
-import { getPropertyUrl } from '@/lib/site';
+import { useRouter } from 'next/navigation';
+import { AnimatePresence, MotionConfig, motion } from 'framer-motion';
+import { ArrowLeft, ArrowRight, Check, Heart, ImageOff, Share2 } from 'lucide-react';
 import { fetchLivePropertyById } from '@/lib/api';
+import { formatPrice } from '@/lib/format';
+import { getPropertyUrl } from '@/lib/site';
+import { getPropertyWhatsAppHref } from '@/lib/contact';
+import { toListingDetail, type Listing, type ListingDetail } from '@/lib/listings';
+import { useIsSaved } from '@/lib/savedListings';
+import { getHandoff, getPreviousPath } from '@/lib/listingTransition';
+import { useHeaderOffset } from '@/components/search/SearchToolbar';
+import { ListingCard } from '@/components/listing/ListingCard';
 import MobileContactBar from '@/components/detail/MobileContactBar';
+import { GalleryHero } from '@/components/listing-detail/GalleryHero';
+import { Lightbox } from '@/components/listing-detail/Lightbox';
+import { EnquiryCard } from '@/components/listing-detail/EnquiryCard';
+import { SectionNav } from '@/components/listing-detail/SectionNav';
+import {
+  FeatureLists,
+  KeyFacts,
+  ListingHeader,
+  LocationSection,
+  RevealSection,
+  RichDescription,
+  SectionTitle,
+  SpecSheet,
+  VideoTour,
+} from '@/components/listing-detail/ListingSections';
+import { DetailSkeleton } from './DetailSkeleton';
 
 interface PropertyDetailsClientProps {
-  property: any;
-  relatedProperties: any[];
+  listing: ListingDetail | null;
+  similar: Listing[];
+  /** Set when the server couldn't load the listing, so the browser retries */
   propertyId?: string;
 }
 
-export default function PropertyDetailsClient({
-  property: initialProperty,
-  relatedProperties,
-  propertyId,
-}: PropertyDetailsClientProps) {
-  // Server data when available; otherwise filled by the client-side recovery fetch below
-  const [property, setProperty] = useState(initialProperty);
+function BackLink() {
+  const router = useRouter();
+  // Coming from search: step back so the visitor lands on their filters and scroll position
+  const fromSearch = getPreviousPath() === '/search';
+  return (
+    <Link
+      href="/search"
+      onClick={(e) => {
+        if (fromSearch && window.history.length > 1) {
+          e.preventDefault();
+          router.back();
+        }
+      }}
+      className="group inline-flex h-10 items-center gap-2 rounded-full bg-white pl-3 pr-4 text-[13px] font-bold text-navy-950 shadow-sm ring-1 ring-navy-100 transition hover:ring-navy-300"
+    >
+      <ArrowLeft className="h-4 w-4 transition-transform duration-300 group-hover:-translate-x-0.5" aria-hidden="true" />
+      {fromSearch ? 'Back to results' : 'All properties'}
+    </Link>
+  );
+}
+
+function SaveToggle({ id, title }: { id: string; title: string }) {
+  const [saved, toggle] = useIsSaved(id);
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      aria-pressed={saved}
+      aria-label={saved ? `Remove ${title} from your shortlist` : `Save ${title} to your shortlist`}
+      data-saved={saved || undefined}
+      className="listing-save inline-flex h-10 items-center gap-2 rounded-full bg-white px-4 text-[13px] font-bold text-navy-950 shadow-sm ring-1 ring-navy-100 transition hover:ring-navy-300"
+    >
+      <Heart className={`h-4 w-4 transition-colors ${saved ? 'fill-amber-500 text-amber-500' : ''}`} aria-hidden="true" />
+      <span className="hidden sm:inline">{saved ? 'Saved' : 'Save'}</span>
+    </button>
+  );
+}
+
+function NotFound() {
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center bg-navy-50/50 p-6 pt-24 text-center">
+      <span className="mb-5 grid h-16 w-16 place-items-center rounded-2xl bg-white shadow-card ring-1 ring-navy-100">
+        <ImageOff className="h-7 w-7 text-navy-400" aria-hidden="true" />
+      </span>
+      <h1 className="text-3xl font-extrabold tracking-tight text-navy-950">This property has moved on</h1>
+      <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-navy-800/60">
+        The listing may have sold or been withdrawn. There&apos;s plenty more to explore, or ask us to find something similar.
+      </p>
+      <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+        <Link href="/search" className="inline-flex h-12 items-center gap-2 rounded-full bg-navy-950 px-6 text-sm font-bold text-white transition hover:bg-navy-800">
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          Browse all properties
+        </Link>
+        <Link href="/request" className="inline-flex h-12 items-center gap-2 rounded-full bg-amber-500 px-6 text-sm font-extrabold text-navy-950 transition hover:bg-amber-400">
+          Request a property
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+export default function PropertyDetailsClient({ listing: initial, similar, propertyId }: PropertyDetailsClientProps) {
+  const [listing, setListing] = useState<ListingDetail | null>(initial);
   // The server fetch can time out while the backend cold-starts; retry from the browser
-  const [isRecovering, setIsRecovering] = useState(!initialProperty && !!propertyId);
-  const [activeImage, setActiveImage] = useState(0);
-  const [showShareToast, setShowShareToast] = useState(false);
-  const [isDescExpanded, setIsDescExpanded] = useState(false);
+  const [isRecovering, setIsRecovering] = useState(!initial && !!propertyId);
+  const [lightboxAt, setLightboxAt] = useState<number | null>(null);
+  const [toast, setToast] = useState(false);
+  const headerOffset = useHeaderOffset();
+  // The cover photo a search card handed over (client navigations only; null on first load)
+  const [handoff] = useState(() => {
+    const id = initial?.id || propertyId;
+    return id ? getHandoff(id) : null;
+  });
+  const coverPreview = handoff?.preview || null;
 
-  React.useEffect(() => {
-    if (initialProperty || !propertyId) return;
-    let isMounted = true;
-
+  useEffect(() => {
+    if (initial || !propertyId) return;
+    let alive = true;
     fetchLivePropertyById(propertyId)
       .then((p) => {
-        if (!isMounted) return;
-        if (p) {
-          setProperty({
-            id: p.id,
-            title: p.title,
-            propertyType: p.propertyType,
-            saleOrRent: p.saleOrRent || 'Sale',
-            price: p.price,
-            pricePerPerch: p.pricePerPerch,
-            video: p.video,
-            negotiable: p.negotiable,
-            city: p.city,
-            district: p.district,
-            address: p.address,
-            latitude: p.latitude,
-            longitude: p.longitude,
-            bedrooms: p.bedrooms || null,
-            bathrooms: p.bathrooms || null,
-            beds: p.bedrooms || 0,
-            baths: p.bathrooms || 0,
-            parking: p.parking || null,
-            landSize: p.landSize || null,
-            landUnit: p.landUnit || 'perches',
-            houseSize: p.houseSize || null,
-            yearBuilt: p.yearBuilt || null,
-            description: p.description,
-            amenities: p.amenities || [],
-            nearbyFacilities: p.nearbyFacilities || [],
-            images: p.images || [],
-            listedDaysAgo: 'Recently',
-            featured: p.isFeatured || false,
-            user: p.user || { fullName: 'BOAM Real Estates' },
-          });
-        }
-        setIsRecovering(false);
+        if (alive && p) setListing(toListingDetail(p));
       })
-      .catch(() => {
-        if (isMounted) setIsRecovering(false);
+      .catch(() => {})
+      .finally(() => {
+        if (alive) setIsRecovering(false);
       });
-
     return () => {
-      isMounted = false;
+      alive = false;
     };
-  }, [initialProperty, propertyId]);
+  }, [initial, propertyId]);
 
-  /** Native Web Share API + Clipboard Fallback using canonical production URL */
-  const handleShare = async () => {
-    if (typeof window === 'undefined' || !property) return;
+  const sections = useMemo(() => {
+    if (!listing) return [];
+    const list = [
+      { id: 'overview', label: 'Overview' },
+      { id: 'details', label: 'Details' },
+    ];
+    if (listing.amenities.length || listing.nearby.length) list.push({ id: 'features', label: 'Features' });
+    if (listing.tour && listing.images.length > 0) list.push({ id: 'tour', label: 'Video tour' });
+    list.push({ id: 'location', label: 'Location' });
+    if (similar.length) list.push({ id: 'similar', label: 'Similar' });
+    return list;
+  }, [listing, similar.length]);
 
-    const canonicalUrl = getPropertyUrl(property.id);
+  if (!listing && isRecovering) return <DetailSkeleton handoff={handoff} />;
+  if (!listing) return <NotFound />;
 
-    const shareData = {
-      title: property.title,
-      text: `Take a look at this property listed by BOAM Real Estates: ${property.title}`,
-      url: canonicalUrl,
-    };
+  const shortPrice = formatPrice(listing.price, listing.saleOrRent === 'Rent' ? 'rent' : 'sale');
+  const hasPhotos = listing.images.length > 0;
 
+  const share = async () => {
+    const url = getPropertyUrl(listing.id);
     if (navigator.share) {
       try {
-        await navigator.share(shareData);
+        await navigator.share({ title: listing.title, text: `Take a look at this property listed by BOAM Real Estates: ${listing.title}`, url });
       } catch {
-        // User cancelled or share dismissed
+        // Dismissed
       }
-    } else if (navigator.clipboard) {
-      try {
-        await navigator.clipboard.writeText(canonicalUrl);
-        setShowShareToast(true);
-        setTimeout(() => setShowShareToast(false), 2500);
-      } catch {
-        window.prompt('Copy listing URL:', canonicalUrl);
-      }
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setToast(true);
+      setTimeout(() => setToast(false), 2500);
+    } catch {
+      window.prompt('Copy listing link:', url);
     }
   };
 
-  const prevImage = () =>
-    setActiveImage((i) => (i - 1 + (property?.images?.length || 1)) % (property?.images?.length || 1));
-  const nextImage = () =>
-    setActiveImage((i) => (i + 1) % (property?.images?.length || 1));
-
-  if (!property && isRecovering) {
-    return (
-      <div className="min-h-screen bg-navy-50/50 flex flex-col items-center justify-center p-6 text-center pt-24">
-        <div className="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mb-4" />
-        <p className="text-navy-800/60 text-sm font-semibold">Loading property details…</p>
-      </div>
-    );
-  }
-
-  if (!property) {
-    return (
-      <div className="min-h-screen bg-navy-50/50 flex flex-col items-center justify-center p-6 text-center pt-24">
-        <div className="w-16 h-16 rounded-full bg-navy-100 flex items-center justify-center mb-4 text-navy-400">
-          <ImageOff className="w-8 h-8" />
-        </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-navy-950 mb-2">Property Not Found</h1>
-        <p className="text-navy-800/60 max-w-md mx-auto mb-6 text-sm leading-relaxed">
-          That listing may have been removed or is no longer available. Explore our available real estate portfolio.
-        </p>
-        <Link href="/search">
-          <Button variant="primary" className="rounded-full bg-amber-500 hover:bg-amber-400 text-navy-950 font-bold px-6">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Browse All Properties
-          </Button>
-        </Link>
-      </div>
-    );
-  }
-
-  const locationQuery = `${property.address || ''}, ${property.city || ''}, Sri Lanka`;
-  const hasCoords = property.latitude && property.longitude;
-  const mapEmbedSrc = hasCoords
-    ? `https://maps.google.com/maps?q=${property.latitude},${property.longitude}&t=&z=15&ie=UTF8&iwloc=B&output=embed`
-    : `https://maps.google.com/maps?q=${encodeURIComponent(locationQuery)}&t=&z=14&ie=UTF8&iwloc=&output=embed`;
-  const mapsOpenUrl = hasCoords
-    ? `https://www.google.com/maps/search/?api=1&query=${property.latitude},${property.longitude}`
-    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationQuery)}`;
-  const isLongDescription = property.description && property.description.length > 320;
-
   return (
-    <div className="min-h-screen bg-navy-50/50 pt-20 sm:pt-24 pb-32 md:pb-16">
-      {/* Clipboard Toast Notification */}
-      {showShareToast && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-2xl bg-navy-950 px-4 py-3 text-xs font-bold text-white shadow-2xl border border-navy-700">
-          <Check className="w-4 h-4 text-amber-400" />
-          <span>Listing link copied to clipboard</span>
-        </div>
-      )}
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Semantic Breadcrumb Navigation */}
-        <nav aria-label="Breadcrumb" className="flex items-center gap-2 mb-4 sm:mb-6 text-xs sm:text-sm">
-          <ol className="flex items-center gap-2 flex-wrap">
-            <li>
-              <Link href="/" className="text-navy-800/60 hover:text-navy-950 transition-colors font-medium">
-                Home
-              </Link>
-            </li>
-            <li className="text-navy-300">/</li>
-            <li>
-              <Link href="/search" className="text-navy-800/60 hover:text-navy-950 transition-colors font-medium">
-                Properties
-              </Link>
-            </li>
-            <li className="text-navy-300">/</li>
-            <li>
-              <span className="text-navy-800/60 font-medium">{property.propertyType}</span>
-            </li>
-            <li className="text-navy-300">/</li>
-            <li>
-              <span className="text-navy-950 font-semibold line-clamp-1 max-w-[200px] sm:max-w-[320px]">
-                {property.title}
-              </span>
-            </li>
-          </ol>
-        </nav>
-
-        {/* Header Title & Pricing Card */}
-        <div className="bg-white rounded-3xl p-5 sm:p-8 shadow-sm border border-navy-100/80 mb-6">
-          <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-            <div className="flex-1">
-              <div className="flex flex-wrap items-center gap-2 mb-2.5">
-                <Badge variant={property.saleOrRent === 'Sale' ? 'accent' : 'secondary'}>
-                  For {property.saleOrRent}
-                </Badge>
-                <Badge variant="outline">{property.propertyType}</Badge>
-                {property.negotiable && <Badge variant="gray">Negotiable</Badge>}
-              </div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-navy-950 leading-tight">
-                {property.title}
-              </h1>
-              <p className="flex items-center text-navy-800/70 text-xs sm:text-sm mt-2">
-                <MapPin className="w-4 h-4 mr-1.5 flex-shrink-0 text-amber-500" aria-hidden="true" />
-                {property.address}, {property.city}, {property.district}
-              </p>
-            </div>
-
-            <div className="flex flex-row md:flex-col items-center md:items-end justify-between border-t md:border-t-0 pt-3 md:pt-0 border-navy-100/80">
-              <div className="text-2xl sm:text-3xl font-extrabold text-navy-950">
-                {formatFullPrice(property.price)}
-                {property.saleOrRent === 'Rent' && (
-                  <span className="text-sm font-normal text-navy-800/60">/mo</span>
-                )}
-              </div>
-
-              {/* Share Action Button */}
+    <MotionConfig reducedMotion="user">
+      <div className="min-h-screen bg-navy-50/50 pb-32 pt-[84px] sm:pt-24 md:pb-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <BackLink />
+            <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={handleShare}
-                aria-label="Share property listing"
-                className="inline-flex items-center gap-1.5 rounded-full border border-navy-200 bg-white px-4 py-2 text-xs font-bold text-navy-800 transition-all hover:border-navy-950 hover:bg-navy-950 hover:text-white mt-0 md:mt-3"
+                onClick={share}
+                aria-label="Share this property"
+                className="inline-flex h-10 items-center gap-2 rounded-full bg-white px-4 text-[13px] font-bold text-navy-950 shadow-sm ring-1 ring-navy-100 transition hover:ring-navy-300"
               >
-                <Share2 className="w-3.5 h-3.5" aria-hidden="true" />
-                <span>Share</span>
+                <Share2 className="h-4 w-4" aria-hidden="true" />
+                <span className="hidden sm:inline">Share</span>
               </button>
+              <SaveToggle id={listing.id} title={listing.title} />
             </div>
           </div>
-        </div>
 
-        {/* Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Primary Details Column */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Gallery / Video */}
-            <div className="bg-white rounded-3xl overflow-hidden shadow-sm border border-navy-100/80">
-              {property.images && property.images.length > 0 ? (
-                <>
-                  <div className="relative aspect-[16/9] bg-navy-950">
-                    <motion.img
-                      key={activeImage}
-                      src={getImageUrl(property.images[activeImage])}
-                      alt={`${property.title} - Image ${activeImage + 1} of ${property.images.length}`}
-                      className="w-full h-full object-cover"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.3 }}
-                    />
-                    {property.images.length > 1 && (
-                      <div className="absolute inset-0 flex items-center justify-between px-3">
-                        <button
-                          onClick={prevImage}
-                          className="w-9 h-9 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center shadow-md hover:bg-white transition-colors"
-                          aria-label="Previous image"
-                        >
-                          <ChevronLeft className="w-5 h-5 text-navy-950" />
-                        </button>
-                        <button
-                          onClick={nextImage}
-                          className="w-9 h-9 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center shadow-md hover:bg-white transition-colors"
-                          aria-label="Next image"
-                        >
-                          <ChevronRight className="w-5 h-5 text-navy-950" />
-                        </button>
-                      </div>
-                    )}
-                    <div className="absolute bottom-3 right-3 bg-navy-950/80 text-white text-[11px] font-bold px-3 py-1 rounded-full backdrop-blur-sm">
-                      {activeImage + 1} / {property.images.length}
-                    </div>
-                  </div>
-                  {property.images.length > 1 && (
-                    <div className="flex gap-2 p-3.5 overflow-x-auto">
-                      {property.images.map((img: string, idx: number) => (
-                        <button
-                          key={idx}
-                          onClick={() => setActiveImage(idx)}
-                          aria-label={`Select photo ${idx + 1}`}
-                          className={`flex-shrink-0 w-20 h-14 rounded-xl overflow-hidden border-2 transition-all ${
-                            activeImage === idx
-                              ? 'border-amber-500 scale-95'
-                              : 'border-transparent opacity-60 hover:opacity-100'
-                          }`}
-                        >
-                          <img src={getImageUrl(img)} alt="" className="w-full h-full object-cover" />
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </>
-              ) : property.video && property.id !== 'ekala-house' && property.id !== 'katukithula-nuwaraeliya-land' ? (
-                <div className="relative aspect-[16/9] bg-black">
-                  <video
-                    src={getImageUrl(property.video)}
-                    controls
-                    preload="metadata"
-                    playsInline
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-              ) : (
-                <div className="aspect-[16/9] flex flex-col items-center justify-center bg-gradient-to-br from-navy-950 via-navy-900 to-navy-950 p-6 text-center">
-                  <div className="w-12 h-12 rounded-full bg-navy-800 flex items-center justify-center mb-3 border border-navy-700">
-                    <ImageOff className="w-6 h-6 text-amber-400" />
-                  </div>
-                  <span className="text-sm font-bold text-white/80 uppercase tracking-wider">
-                    Image Unavailable
-                  </span>
-                  <span className="text-xs text-white/40 mt-1">
-                    Please contact the BOAM broker for full imagery
-                  </span>
-                </div>
+          <GalleryHero
+            images={listing.images}
+            title={listing.title}
+            video={hasPhotos ? null : listing.tour}
+            onOpen={setLightboxAt}
+            coverPreview={coverPreview}
+          />
+
+          <div className="mt-10 grid gap-12 lg:grid-cols-[minmax(0,1fr)_360px] xl:gap-16">
+            <div className="min-w-0 space-y-16">
+              <div id="listing-header" className="space-y-8">
+                <ListingHeader listing={listing} />
+                <KeyFacts listing={listing} />
+              </div>
+
+              <RevealSection id="overview">
+                <SectionTitle eyebrow="Overview" title="About this property" />
+                <RichDescription text={listing.description} />
+              </RevealSection>
+
+              <RevealSection id="details">
+                <SectionTitle eyebrow="Details" title="The facts at a glance" />
+                <SpecSheet listing={listing} />
+              </RevealSection>
+
+              {(listing.amenities.length > 0 || listing.nearby.length > 0) && (
+                <RevealSection id="features">
+                  <SectionTitle eyebrow="Features" title="What comes with it" />
+                  <FeatureLists amenities={listing.amenities} nearby={listing.nearby} />
+                </RevealSection>
               )}
-            </div>
 
-            {/* Specifications */}
-            <div className="bg-white rounded-3xl p-5 sm:p-6 shadow-sm border border-navy-100/80">
-              <h2 className="text-xs font-extrabold uppercase tracking-widest text-amber-600 mb-4">
-                Property Specifications
-              </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 text-center">
-                {property.beds > 0 && (
-                  <div className="flex flex-col items-center p-3 bg-navy-50/70 rounded-2xl">
-                    <Bed className="w-5 h-5 text-amber-500 mb-1" aria-hidden="true" />
-                    <span className="text-xl font-bold text-navy-950">{property.beds}</span>
-                    <span className="text-[11px] font-semibold text-navy-800/60 uppercase tracking-wider">
-                      Bedrooms
-                    </span>
-                  </div>
-                )}
-                {property.baths > 0 && (
-                  <div className="flex flex-col items-center p-3 bg-navy-50/70 rounded-2xl">
-                    <Bath className="w-5 h-5 text-amber-500 mb-1" aria-hidden="true" />
-                    <span className="text-xl font-bold text-navy-950">{property.baths}</span>
-                    <span className="text-[11px] font-semibold text-navy-800/60 uppercase tracking-wider">
-                      Bathrooms
-                    </span>
-                  </div>
-                )}
-                {property.parking > 0 && (
-                  <div className="flex flex-col items-center p-3 bg-navy-50/70 rounded-2xl">
-                    <Car className="w-5 h-5 text-amber-500 mb-1" aria-hidden="true" />
-                    <span className="text-xl font-bold text-navy-950">{property.parking}</span>
-                    <span className="text-[11px] font-semibold text-navy-800/60 uppercase tracking-wider">
-                      Parking
-                    </span>
-                  </div>
-                )}
-                {property.pricePerPerch && (
-                  <div className="flex flex-col items-center p-3 bg-navy-50/70 rounded-2xl">
-                    <LandPlot className="w-5 h-5 text-amber-500 mb-1" aria-hidden="true" />
-                    <span className="text-base font-bold text-navy-950 line-clamp-1">
-                      {property.pricePerPerch}
-                    </span>
-                    <span className="text-[11px] font-semibold text-navy-800/60 uppercase tracking-wider">
-                      Rate / Unit
-                    </span>
-                  </div>
-                )}
-                {property.landSize > 0 && (
-                  <div className="flex flex-col items-center p-3 bg-navy-50/70 rounded-2xl">
-                    <LandPlot className="w-5 h-5 text-amber-500 mb-1" aria-hidden="true" />
-                    <span className="text-xl font-bold text-navy-950">
-                      {property.landSize.toLocaleString()}
-                    </span>
-                    <span className="text-[11px] font-semibold text-navy-800/60 uppercase tracking-wider">
-                      {property.landUnit === 'acres' ? 'Acres' : 'Perches'}
-                    </span>
-                  </div>
-                )}
-                {property.houseSize > 0 && (
-                  <div className="flex flex-col items-center p-3 bg-navy-50/70 rounded-2xl">
-                    <Square className="w-5 h-5 text-amber-500 mb-1" aria-hidden="true" />
-                    <span className="text-xl font-bold text-navy-950">
-                      {property.houseSize.toLocaleString()}
-                    </span>
-                    <span className="text-[11px] font-semibold text-navy-800/60 uppercase tracking-wider">
-                      House sqft
-                    </span>
-                  </div>
-                )}
-                {property.yearBuilt > 0 && (
-                  <div className="flex flex-col items-center p-3 bg-navy-50/70 rounded-2xl">
-                    <Calendar className="w-5 h-5 text-amber-500 mb-1" aria-hidden="true" />
-                    <span className="text-xl font-bold text-navy-950">{property.yearBuilt}</span>
-                    <span className="text-[11px] font-semibold text-navy-800/60 uppercase tracking-wider">
-                      Year Built
-                    </span>
-                  </div>
-                )}
+              {listing.tour && hasPhotos && (
+                <RevealSection id="tour">
+                  <SectionTitle eyebrow="Video tour" title="Walk through it first" />
+                  <VideoTour src={listing.tour} poster={listing.images[0]} />
+                </RevealSection>
+              )}
+
+              <RevealSection id="location">
+                <SectionTitle eyebrow="Location" title={`In ${listing.city || listing.district}`} />
+                <LocationSection listing={listing} />
+              </RevealSection>
+
+              <div className="lg:hidden">
+                <EnquiryCard listing={listing} />
               </div>
             </div>
 
-            {/* Description */}
-            <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-navy-100/80">
-              <h2 className="text-xl font-extrabold text-navy-950 mb-3">About this Property</h2>
-              <div className="relative">
-                <p
-                  className={`text-navy-800/80 text-sm sm:text-base leading-relaxed whitespace-pre-wrap ${
-                    !isDescExpanded && isLongDescription ? 'line-clamp-5' : ''
-                  }`}
+            <aside className="hidden lg:block">
+              <div className="sticky" style={{ top: headerOffset + 80 }}>
+                <motion.div
+                  initial={{ opacity: 0, y: 24 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.9, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
                 >
-                  {property.description}
-                </p>
-                {isLongDescription && (
-                  <button
-                    type="button"
-                    onClick={() => setIsDescExpanded(!isDescExpanded)}
-                    className="mt-3 text-xs sm:text-sm font-bold text-amber-600 hover:text-amber-700 transition-colors"
-                  >
-                    {isDescExpanded ? 'Read less ↑' : 'Read more →'}
-                  </button>
-                )}
+                  <EnquiryCard listing={listing} />
+                </motion.div>
               </div>
-            </div>
-
-            {/* Optional Video Tour for properties that have both images and a video (excluding Ekala and Katukithula) */}
-            {property.video && property.images && property.images.length > 0 && property.id !== 'ekala-house' && property.id !== 'katukithula-nuwaraeliya-land' && (
-              <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-navy-100/80 space-y-4">
-                <h3 className="text-lg font-bold text-navy-950 font-display flex items-center gap-2">
-                  <Play className="w-5 h-5 text-amber-500 fill-amber-500/20" />
-                  Property Video Tour
-                </h3>
-                <div className="relative aspect-[16/9] rounded-2xl overflow-hidden bg-black shadow-inner">
-                  <video
-                    src={getImageUrl(property.video)}
-                    controls
-                    preload="metadata"
-                    playsInline
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Amenities / Nearby */}
-            {(property.amenities?.length > 0 || property.nearbyFacilities?.length > 0) && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {property.amenities?.length > 0 && (
-                  <div className="bg-white rounded-3xl p-6 shadow-sm border border-navy-100/80">
-                    <h3 className="text-lg font-bold text-navy-950 mb-3">Amenities</h3>
-                    <ul className="space-y-2.5">
-                      {property.amenities.map((item: string, i: number) => (
-                        <li key={i} className="flex items-center gap-2.5 text-xs sm:text-sm text-navy-800">
-                          <CheckCircle2 className="w-4 h-4 text-sea-500 flex-shrink-0" />
-                          <span>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                {property.nearbyFacilities?.length > 0 && (
-                  <div className="bg-white rounded-3xl p-6 shadow-sm border border-navy-100/80">
-                    <h3 className="text-lg font-bold text-navy-950 mb-3">Nearby Facilities</h3>
-                    <ul className="space-y-2.5">
-                      {property.nearbyFacilities.map((item: string, i: number) => (
-                        <li key={i} className="flex items-center gap-2.5 text-xs sm:text-sm text-navy-800">
-                          <CheckCircle2 className="w-4 h-4 text-amber-500 flex-shrink-0" />
-                          <span>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Map — coordinate-precise embed */}
-            <div className="bg-white rounded-3xl p-5 sm:p-6 shadow-sm border border-navy-100/80">
-              <h3 className="text-lg font-bold text-navy-950 mb-1 flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-amber-500" /> Location
-              </h3>
-              <p className="text-xs text-navy-800/50 mb-3">
-                {property.address}, {property.city}, {property.district}
-              </p>
-              <div className="rounded-2xl overflow-hidden border border-navy-100/80 relative" style={{ paddingBottom: '56.25%', height: 0 }}>
-                <iframe
-                  title={`Map location for ${property.title}`}
-                  src={mapEmbedSrc}
-                  width="100%"
-                  height="100%"
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  className="absolute inset-0 w-full h-full"
-                  style={{ border: 0 }}
-                  allowFullScreen
-                />
-              </div>
-              <div className="mt-3 flex items-center justify-between">
-                <span className="text-[11px] text-navy-800/40">
-                  {hasCoords ? 'Exact pin location' : 'Approximate area shown'}
-                </span>
-                <a
-                  href={mapsOpenUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-navy-950 hover:text-amber-600 transition-colors"
-                >
-                  <ExternalLink className="w-4 h-4" /> Open in Google Maps
-                </a>
-              </div>
-            </div>
-
-            {/* Similar Properties */}
-            {relatedProperties.length > 0 && (
-              <div className="pt-4">
-                <h3 className="text-xl font-extrabold text-navy-950 mb-4">Similar Properties</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {relatedProperties.slice(0, 4).map((rel: any) => (
-                    <Link
-                      key={rel.id}
-                      href={`/properties/${rel.id}`}
-                      className="bg-white rounded-2xl overflow-hidden shadow-sm border border-navy-100/80 hover:shadow-md transition-all group flex"
-                    >
-                      <div className="w-28 h-24 flex-shrink-0 bg-navy-900 overflow-hidden relative">
-                        {rel.images?.[0] ? (
-                          <img
-                            src={getImageUrl(rel.images[0])}
-                            alt={rel.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-[10px] text-white/50 bg-navy-950 font-semibold">
-                            No Image
-                          </div>
-                        )}
-                      </div>
-                      <div className="p-3 flex-1 min-w-0 flex flex-col justify-between">
-                        <div>
-                          <p className="font-bold text-xs sm:text-sm text-navy-950 line-clamp-1 group-hover:text-amber-600 transition-colors">
-                            {rel.title}
-                          </p>
-                          <p className="text-[11px] text-navy-800/60 flex items-center mt-0.5">
-                            <MapPin className="w-3 h-3 mr-1 text-amber-500" />
-                            {rel.city}
-                          </p>
-                        </div>
-                        <p className="text-xs sm:text-sm font-extrabold text-navy-950">
-                          {formatPrice(rel.price, rel.saleOrRent === 'Rent' ? 'rent' : 'sale')}
-                        </p>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
+            </aside>
           </div>
 
-          {/* Right Sidebar — Broker Contact */}
-          <div className="space-y-6">
-            <div className="sticky top-24">
-              <ContactForm
-                propertyId={property.id}
-                propertyTitle={property.title}
-                sellerName={property.user?.fullName || 'BOAM Real Estates'}
-              />
-            </div>
-          </div>
+          {similar.length > 0 && (
+            <RevealSection id="similar" className="mt-24">
+              <div className="flex flex-wrap items-end justify-between gap-4">
+                <SectionTitle eyebrow="Keep exploring" title="You might also like" />
+                <Link href="/search" className="group mb-6 inline-flex items-center gap-2 text-sm font-bold text-navy-950">
+                  View all properties
+                  <span className="grid h-8 w-8 place-items-center rounded-full bg-amber-500 transition-transform duration-500 group-hover:translate-x-1">
+                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                  </span>
+                </Link>
+              </div>
+              <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
+                {similar.map((item) => (
+                  <li key={item.id}>
+                    <ListingCard listing={item} />
+                  </li>
+                ))}
+              </ul>
+            </RevealSection>
+          )}
         </div>
-      </div>
 
-      {/* Sticky Mobile Conversion Contact Bar */}
-      <MobileContactBar propertyId={property.id} propertyTitle={property.title} />
-    </div>
+        <SectionNav
+          sections={sections}
+          title={listing.title}
+          price={shortPrice}
+          triggerId="listing-header"
+          headerOffset={headerOffset}
+          enquireHref={getPropertyWhatsAppHref(listing.id, listing.title)}
+        />
+
+        <Lightbox images={listing.images} title={listing.title} openAt={lightboxAt} onClose={() => setLightboxAt(null)} />
+
+        <div className="pointer-events-none fixed inset-x-0 bottom-24 z-50 flex justify-center md:bottom-8" role="status">
+          <AnimatePresence>
+            {toast && (
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 16 }}
+                className="flex items-center gap-2 rounded-full bg-navy-950 px-5 py-3 text-[13px] font-bold text-white shadow-2xl"
+              >
+                <Check className="h-4 w-4 text-amber-400" aria-hidden="true" />
+                Link copied
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        <MobileContactBar propertyId={listing.id} propertyTitle={listing.title} price={shortPrice} negotiable={listing.negotiable} />
+      </div>
+    </MotionConfig>
   );
 }

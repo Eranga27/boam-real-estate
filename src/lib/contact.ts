@@ -82,6 +82,17 @@ export function getPropertyWhatsAppHref(propertyId: string, propertyTitle: strin
 }
 
 /**
+ * WhatsApp URL asking to arrange a viewing of a property.
+ * Uses the canonical production URL — never localhost.
+ */
+export function getPropertyViewingWhatsAppHref(propertyId: string, propertyTitle: string): string {
+  const num = SITE_SEO.whatsappNumber.replace(/[^0-9]/g, '');
+  const url = getCanonicalPropertyUrl(propertyId);
+  const text = `Hello BOAM, I'd like to arrange a viewing of:\n\n${propertyTitle}\n\n${url}`;
+  return `https://wa.me/${num}?text=${encodeURIComponent(text)}`;
+}
+
+/**
  * mailto: href pre-filled with property subject and body.
  *
  * Subject: Enquiry: [Property Title]

@@ -4,6 +4,7 @@ import { AuthProvider } from '@/context/AuthContext';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import BackToTop from '@/components/ui/BackToTop';
+import { RouteTransitionListener } from '@/lib/listingTransition';
 import { getSiteUrl, SITE_SEO, getOgImageUrl } from '@/lib/site';
 
 export const viewport: Viewport = {
@@ -103,7 +104,7 @@ export default function RootLayout({
         {/* Before first paint: skip the homepage intro if it already played this session */}
         <script dangerouslySetInnerHTML={{ __html: INTRO_HEAD_SCRIPT }} />
         <noscript>
-          <style>{'[data-intro]{display:none!important}'}</style>
+          <style>{'[data-intro]{display:none!important}.listing-photo,.gallery-photo{opacity:1!important}'}</style>
         </noscript>
         <script
           type="application/ld+json"
@@ -120,6 +121,7 @@ export default function RootLayout({
             <Footer />
           </div>
           <BackToTop />
+          <RouteTransitionListener />
         </AuthProvider>
       </body>
     </html>

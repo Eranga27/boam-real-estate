@@ -10,6 +10,9 @@ const nextConfig = {
       { protocol: 'https', hostname: 'res.cloudinary.com' },
     ],
     formats: ['image/avif', 'image/webp'],
+    // Listing photos rarely change (edited listings get new URLs), so keep optimized copies
+    // for a month instead of re-encoding them every minute
+    minimumCacheTTL: 2678400,
   },
   // Enable compression
   compress: true,

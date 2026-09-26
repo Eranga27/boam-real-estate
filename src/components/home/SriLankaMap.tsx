@@ -28,6 +28,8 @@ interface SriLankaMapProps {
   /** Listing hovered in a linked list; its pin (or the group holding it) is highlighted */
   hoveredId?: string | null;
   onSelectProperty?: (id: string) => void;
+  /** Height of the map canvas (Tailwind classes) */
+  heightClassName?: string;
 }
 
 // Map Tile Layers (Free, non-API-key tile layers)
@@ -206,7 +208,13 @@ function clusterHtml(group: Group, delayMs: number) {
   </div>`;
 }
 
-export function SriLankaMap({ properties, selectedId, hoveredId, onSelectProperty }: SriLankaMapProps) {
+export function SriLankaMap({
+  properties,
+  selectedId,
+  hoveredId,
+  onSelectProperty,
+  heightClassName = 'h-[580px] min-h-[580px]',
+}: SriLankaMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const leafletRef = useRef<any>(null);
@@ -720,7 +728,7 @@ export function SriLankaMap({ properties, selectedId, hoveredId, onSelectPropert
       </div>
 
       {/* Map Canvas Container */}
-      <div ref={mapContainerRef} className="h-[580px] w-full z-0 min-h-[580px] bg-[#f8fafc]" />
+      <div ref={mapContainerRef} className={`${heightClassName} w-full z-0 bg-[#f8fafc]`} />
 
       {/* Floating Active Mini Card Popup */}
       <AnimatePresence>
