@@ -2,21 +2,36 @@
 # Render sleeps after 15 minutes without traffic. Vercel's Hobby plan only allows
 # daily cron jobs, so the frequent ping runs here instead (free for public repos).
 # The health route doesn't query the database, so the database can still sleep between visits.
+#
+# GitHub runs frequent schedules only a few times a day in practice, so an external uptime
+# monitor pinging the same URL every 5 minutes is the dependable keep-alive; this job is the
+# backup, and it emails only when the backend stays unreachable for several minutes.
 name: Keep backend awake
 
 on:
   schedule:
-    # Every 10 minutes; GitHub can delay scheduled runs by a few minutes
+    # Every 10 minutes; GitHub can delay or skip scheduled runs
     - cron: '*/10 * * * *'
   workflow_dispatch:
 
+# A delayed run never overlaps the next one
+concurrency:
+  group: keep-backend-awake
+  cancel-in-progress: false
+
 jobs:
   ping:
-    runs-on: ubuntu-latest
-    timeout-minutes: 3
+    # Pinned so runner-image migrations can't change behaviour unannounced
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
     steps:
       - name: Ping Render backend
+        # A waking or restarting Render instance can answer 502/503 for a short while, so
+        # retry every 15 seconds for up to 4 minutes before calling it a failure
         run: |
-          curl --fail --silent --show-error --max-time 90 --retry 2 --retry-delay 10 \
+          curl --fail --silent --show-error \
+            --max-time 100 \
+            --retry 12 --retry-delay 15 --retry-max-time 240 \
+            --retry-all-errors --retry-connrefused \
             -o /dev/null -w "HTTP %{http_code} in %{time_total}s\n" \
             "https://boam-real-estate.onrender.com/api/v1/health"
