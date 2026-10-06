@@ -201,7 +201,10 @@ export default function AdminListingsPage() {
       invalidatePropertiesCache();
       await fetch('/api/revalidate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+        },
         body: JSON.stringify({
           id,
           paths: ['/', '/search', '/buy', '/rent', '/properties']

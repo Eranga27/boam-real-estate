@@ -5,8 +5,13 @@ const prisma = new PrismaClient();
 
 async function main() {
   const email = process.env.ADMIN_EMAIL || 'admin@boamrealtors.lk';
-  const password = process.env.ADMIN_PASSWORD || 'BoamAdmin2026!';
+  const password = process.env.ADMIN_PASSWORD;
   const fullName = process.env.ADMIN_NAME || 'BOAM System Admin';
+
+  // No default password: a value in the source code is a value anyone with the repo knows
+  if (!password || password.length < 12) {
+    throw new Error('Set ADMIN_PASSWORD (at least 12 characters) before seeding the admin account.');
+  }
 
   console.log(`⏳ Seeding admin account: ${email}...`);
 
@@ -35,8 +40,7 @@ async function main() {
   console.log(`   ID:       ${admin.id}`);
   console.log(`   Email:    ${admin.email}`);
   console.log(`   Role:     ${admin.role}`);
-  console.log(`   Password: ${password}`);
-  console.log(`\n🔑 You can now log in at /admin/login using these credentials.`);
+  console.log(`\n🔑 You can now log in at /admin/login with ADMIN_EMAIL and ADMIN_PASSWORD.`);
 }
 
 main()

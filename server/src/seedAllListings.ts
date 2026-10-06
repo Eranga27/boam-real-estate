@@ -722,30 +722,34 @@ const initialListings = [
 
 async function main() {
   const email = process.env.ADMIN_EMAIL || 'admin@boamrealtors.lk';
-  const password = process.env.ADMIN_PASSWORD || 'BoamAdmin2026!';
   const fullName = process.env.ADMIN_NAME || 'BOAM System Admin';
 
   console.log(`⏳ Ensuring admin user exists: ${email}...`);
-  const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash(password, salt);
-
-  const admin = await prisma.user.upsert({
-    where: { email },
-    update: {
-      role: 'ADMIN',
-      password: hashedPassword,
-      isEmailVerified: true,
-      isActive: true,
-    },
-    create: {
-      fullName,
-      email,
-      password: hashedPassword,
-      role: 'ADMIN',
-      isEmailVerified: true,
-      isActive: true,
-    },
-  });
+  // An existing admin keeps their password; a new one needs ADMIN_PASSWORD, since a default
+  // written in the source code is a password anyone with the repo knows
+  let admin = await prisma.user.findUnique({ where: { email } });
+  if (admin) {
+    admin = await prisma.user.update({
+      where: { email },
+      data: { role: 'ADMIN', isEmailVerified: true, isActive: true },
+    });
+  } else {
+    const password = process.env.ADMIN_PASSWORD;
+    if (!password || password.length < 12) {
+      throw new Error(`No admin ${email} exists yet: set ADMIN_PASSWORD (at least 12 characters) to create one.`);
+    }
+    const salt = await bcrypt.genSalt(10);
+    admin = await prisma.user.create({
+      data: {
+        fullName,
+        email,
+        password: await bcrypt.hash(password, salt),
+        role: 'ADMIN',
+        isEmailVerified: true,
+        isActive: true,
+      },
+    });
+  }
 
   console.log(`✅ Admin account confirmed (ID: ${admin.id})`);
 

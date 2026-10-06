@@ -18,6 +18,32 @@ import { clearListingCache } from './responseCache';
 
 dotenv.config();
 
+// Without a secret every login fails and tokens can't be checked; stop at startup with a
+// clear message instead of failing on each request
+if (!process.env.JWT_SECRET) {
+  console.error('JWT_SECRET is not set. Add it to the environment before starting the server.');
+  process.exit(1);
+}
+
+// Sites allowed to call the API from a browser with credentials. Most browser traffic comes
+// through the Vercel same-origin proxy and never needs CORS; this covers direct calls.
+const allowedOrigins = new Set(
+  [
+    'https://boamrealestates.com',
+    'https://www.boamrealestates.com',
+    process.env.FRONTEND_URL,
+  ]
+    .filter((origin): origin is string => Boolean(origin))
+    .map((origin) => origin.trim().replace(/\/+$/, ''))
+);
+// The project's Vercel production and preview domains (boam-realestate.vercel.app,
+// boam-realestate-git-<branch>-<team>.vercel.app, ...)
+const vercelOrigin = /^https:\/\/boam-?real-?estates?(-[a-z0-9-]+)?\.vercel\.app$/;
+const isAllowedOrigin = (origin: string) =>
+  allowedOrigins.has(origin) ||
+  vercelOrigin.test(origin) ||
+  (process.env.NODE_ENV !== 'production' && /^http:\/\/localhost:\d+$/.test(origin));
+
 const app = express();
 
 // Render terminates TLS at its proxy; trust that one hop so req.ip is the caller, not the proxy
@@ -32,8 +58,9 @@ app.use(
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Echo requesting origin to support credentials across vercel/production domains
-      callback(null, origin || true);
+      // No Origin header: server-to-server calls (Vercel proxy, uptime pings), not a browser
+      // on another site. Unknown origins get no CORS headers, so the browser blocks them.
+      callback(null, !origin || isAllowedOrigin(origin));
     },
     credentials: true,
   })
