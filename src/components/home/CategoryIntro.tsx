@@ -13,12 +13,13 @@ const CATEGORIES = [
     alt: 'Places worth coming home to - Boam Homes',
     icon: Home,
     badge: 'Residences & Villas',
-    title: 'Places worth coming home to.',
+    // Two deliberate lines so both cards' titles have the same height and no word is left alone
+    title: ['Places worth', 'coming home to.'],
     copy: 'Discover houses, apartments and villas across Sri Lanka.',
     href: '/search?type=House',
     cta: 'Explore Homes',
     base: 'bg-navy-950',
-    overlay: 'from-navy-950 via-navy-950/40',
+    overlay: 'from-navy-950 via-navy-950/60',
     badgeClass: 'bg-white/10 text-amber-300 border-white/15',
     iconClass: 'text-amber-400',
     hoverCta: 'group-hover:bg-amber-500 group-hover:text-navy-950',
@@ -29,12 +30,12 @@ const CATEGORIES = [
     alt: 'Land with room to grow - Boam Land',
     icon: Trees,
     badge: 'Plots & Estates',
-    title: 'Land with room to grow.',
+    title: ['Land with', 'room to grow.'],
     copy: 'Explore residential, commercial and investment land across Sri Lanka.',
     href: '/search?type=Land',
     cta: 'Explore Land',
     base: 'bg-emerald-950',
-    overlay: 'from-emerald-950 via-emerald-950/40',
+    overlay: 'from-emerald-950 via-emerald-950/60',
     badgeClass: 'bg-emerald-900/40 text-emerald-300 border-emerald-500/30',
     iconClass: 'text-emerald-400',
     hoverCta: 'group-hover:bg-emerald-500 group-hover:text-white',
@@ -88,9 +89,16 @@ function CategoryCard({ category, index }: { category: (typeof CATEGORIES)[numbe
         </div>
 
         <h3 className="text-2xl font-extrabold leading-snug tracking-tight text-white sm:text-3xl lg:text-4xl">
-          {category.title}
+          {category.title.map((line) => (
+            <span key={line} className="block">
+              {line}
+            </span>
+          ))}
         </h3>
-        <p className="mt-2 max-w-md text-sm font-medium leading-relaxed text-white/80 sm:text-base">{category.copy}</p>
+        {/* Room for two lines on side-by-side cards, so both cards line up whichever copy wraps */}
+        <p className="mt-2 max-w-md text-pretty text-sm font-medium leading-relaxed text-white/85 sm:text-base md:min-h-[3.25em]">
+          {category.copy}
+        </p>
 
         <div className="mt-6 flex items-center justify-between border-t border-white/15 pt-4">
           <Link
@@ -109,7 +117,7 @@ function CategoryCard({ category, index }: { category: (typeof CATEGORIES)[numbe
 
 export function CategoryIntro() {
   return (
-    <section className="relative overflow-hidden bg-white pb-16 pt-4 sm:pb-20 lg:pb-24">
+    <section className="relative overflow-hidden bg-white pb-4 pt-16 sm:pt-20 lg:pt-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:gap-8">
           {CATEGORIES.map((category, i) => (

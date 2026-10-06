@@ -67,8 +67,8 @@ export default function HomeClient({ initialFeatured }: HomeClientProps) {
         <BoamIntro />
         <Hero />
         <StatsStrip />
-        <FeaturedProperties properties={featuredProperties} loading={loadingProperties} />
         <CategoryIntro />
+        <FeaturedProperties properties={featuredProperties} loading={loadingProperties} />
         <PopularLocations />
         <WhyChooseUs />
         <HowItWorks />
